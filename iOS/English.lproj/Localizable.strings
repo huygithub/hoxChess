@@ -1,0 +1,92 @@
+/* 
+   Localizable.strings (English version)
+   HOXChess
+
+   Copyright 2010 PlayXiangqi. All rights reserved.
+   
+   Language: English
+   Translator: Huy Phan
+ */
+
+/* Commonly shared keys to be used across the App. */
+"Yes" = "Yes";
+"No" = "No";
+"You" = "You";
+"Other" = "Other";
+"Required" = "Required";
+"Default" = "Default";
+
+/* HOME menu keys. */
+"Home" = "Home";
+"Practice" = "Practice";
+"Play Online" = "Play Online";
+"Settings" = "Settings";
+
+/* Menu (navigation) keys */
+"Logout" = "Logout";
+"Cancel" = "Cancel";
+"Resign" = "Resign";
+"Draw" = "Draw";
+"Close Table" = "Close Table";
+"Reset Table" = "Reset Table";
+"Undo Move" = "Undo Move";
+"Resume game?" = "Resume game?";
+"New game?" = "New game?";
+
+/* The main Settings page */
+"Sound" = "Sound";
+"Board" = "Board";
+"Piece" = "Piece";
+"AI Type" = "AI Type";
+"AI Level" = "AI Level";
+"Network" = "Network";
+"About" = "About";
+
+/* Piece Types */
+"Chinese" = "Chinese";
+"Western" = "Western";
+
+/* AI Levels */
+"Easy" = "Easy";
+"Normal" = "Normal";
+"Hard" = "Hard";
+"Master" = "Master";
+
+/* Game status messages. */
+"Game Over" = "Game Over";
+"You won. Congratulations!" = "You won. Congratulations!";
+"Computer won. Don't give up. Please try again!" = "Computer won. Don't give up. Please try again!";
+"You lost. You may try again!" = "You lost. You may try again!";
+"Sorry, we are in draw!" = "Sorry, we are in draw!";
+"Sorry, we made too many moves. Please restart again!" = "Sorry, we made too many moves. Please restart again!";
+
+/* Network-Login view */
+"Username" = "Username";
+"Password" = "Password";
+"Guest" = "Guest";
+"Login" = "Login";
+"Need to register? Join now" = "Need to register? Join now";
+"Rating" = "Rating";
+"Statistics" = "Statistics";
+
+/* Network Settings */
+"Server" = "Server";
+"Account" = "Account";
+"Auto Connect" = "Auto Connect";
+
+/* Network errors and warnings */
+"Not connected to network" = "Not connected to network";
+"Username is empty" = "Username is empty";
+"Password is empty" = "Password is empty";
+"Username is wrong" = "Username is wrong";
+"Password is wrong" = "Password is wrong";
+
+/* Other (misc.) */
+"Select a Table to join" = "Select a Table to join";
+"Tables" = "Tables";
+"Messages" = "Messages";
+"Table #%@" = "Table #%@";
+"Replay" = "Replay";
+"[AI Disabled]" = "[AI Disabled]";
+
+/* ------------------ END OF FILE ------------------------------------------- */

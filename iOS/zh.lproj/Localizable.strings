@@ -1,0 +1,92 @@
+/* 
+   Localizable.strings (Chinese version)
+   HOXChess
+
+   Copyright 2010 PlayXiangqi. All rights reserved.
+   
+   Language: Chinese (Simplified)
+   Translator: Nevo Hua
+ */
+
+/* Commonly shared keys to be used across the App. */ 
+"Yes" = "是";
+"No" = "否";
+"You" = "您";
+"Other" = "其他";
+"Required" = "必填";
+"Default" = "默认";
+
+/* HOME menu keys. */
+"Home" = "主菜单";
+"Practice" = "开始";
+"Play Online" = "在线游戏";
+"Settings" = "设置";
+
+/* Menu (navigation) keys */
+"Logout" = "注销";
+"Cancel" = "取消";
+"Resign" = "认输";
+"Draw" = "平局";
+"Close Table" = "退出棋桌";
+"Reset Table" = "棋桌重置";
+"Undo Move" = "悔棋";
+"Resume game?" = "是否继续上次游戏？";
+"New game?" = "是否开始新游戏?";
+
+/* The main Settings page */
+"Sound" = "声音";
+"Board" = "棋盘";
+"Piece" = "棋子";
+"AI Type" = "机器对战AI";
+"AI Level" = "级别AI";
+"Network" = "网络";
+"About" = "关于";
+
+/* Piece Types */
+"Chinese" = "中国";
+"Western" = "西方";
+
+/* AI Levels */
+"Easy" = "简单";
+"Normal" = "普通";
+"Hard" = "困难";
+"Master" = "职业";
+
+/* Game status messages. */
+"Game Over" = "游戏结束";
+"You won. Congratulations!" = "祝贺您，您赢了！";
+"Computer won. Don't give up. Please try again!" = "机器AI获胜。不要放弃，请再试一次！";
+"You lost. You may try again!" = "您输了，您可以再试一次！";
+"Sorry, we are in draw!" = "很抱歉,当前和局！";
+"Sorry, we made too many moves. Please restart again!" = "很抱歉，超过最多允许着法，请重新开始了！";
+
+/* Network-Login view */
+"Username" = "用户名";
+"Password" = "密码";
+"Guest" = "客人";
+"Login" = "注册";
+"Need to register? Join now" = "注册? 立即注册";
+"Rating" = "分数";
+"Statistics" = "统计";
+
+/* Network Settings */
+"Server" = "服务器";
+"Account" = "帐户";
+"Auto Connect" = "自动连接";
+
+/* Network errors and warnings */
+"Not connected to network" = "未连接到网络";
+"Username is empty" = "用户名是空的";
+"Password is empty" = "密码是空的";
+"Username is wrong" = "用户名是错误的";
+"Password is wrong" = "密码错误";
+
+/* Other (misc.) */
+"Select a Table to join" = "选择游戏棋桌加入";
+"Tables" = "游戏棋桌";
+"Messages" = "聊天消息";
+"Table #%@" = "棋桌 #%@";
+"Replay" = "重放";
+"[AI Disabled]" = "[AI关闭]";
+
+/* ------------------ END OF FILE ------------------------------------------- */

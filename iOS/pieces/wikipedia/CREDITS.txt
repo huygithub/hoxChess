@@ -1,0 +1,5 @@
+These *.svg images were downloaded from the following site:
+----------------------------------------------------------
++ http://en.wikipedia.org/wiki/Xiangqi
+
+... and edited using Inkscape 0.47 (www.inkscape.org)

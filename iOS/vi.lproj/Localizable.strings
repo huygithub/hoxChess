@@ -1,0 +1,92 @@
+/* 
+   Localizable.strings (English version)
+   HOXChess
+
+   Copyright 2010 PlayXiangqi. All rights reserved.
+   
+   Language: English
+   Translator: Huy Phan
+ */
+
+/* Commonly shared keys to be used across the App. */
+"Yes" = "Được";
+"No" = "Không";
+"You" = "Bạn";
+"Other" = "Người khác";
+"Required" = "Required";
+"Default" = "Mặc định";
+
+/* HOME menu keys. */
+"Home" = "Nhà";
+"Practice" = "Luyện tập";
+"Play Online" = "Chơi trực tuyến";
+"Settings" = "Cài đặt";
+
+/* Menu (navigation) keys */
+"Logout" = "Thoát";
+"Cancel" = "Hủy";
+"Resign" = "Thua";
+"Draw" = "Huề";
+"Close Table" = "Đóng bàn";
+"Reset Table" = "Lập bàn mới";
+"Undo Move" = "Đi lại";
+"Resume game?" = "Trở lại bàn trước?";
+"New game?" = "Bàn mới?";
+
+/* The main Settings page */
+"Sound" = "Âm thanh";
+"Board" = "Bàn cơ`";
+"Piece" = "Con cơ`";
+"AI Type" = "Loại Nhân Tạo";
+"AI Level" = "Cấp Nhân Tạo";
+"Network" = "Trực tuyến";
+"About" = "Giới thiệu";
+
+/* Piece Types */
+"Chinese" = "Trung Quốc";
+"Western" = "Tây";
+
+/* AI Levels */
+"Easy" = "Dể";
+"Normal" = "Thường";
+"Hard" = "Khó";
+"Master" = "Rất khó";
+
+/* Game status messages. */
+"Game Over" = "Bàn đã xong";
+"You won. Congratulations!" = "You won. Congratulations!";
+"Computer won. Don't give up. Please try again!" = "Computer won. Don't give up. Please try again!";
+"You lost. You may try again!" = "You lost. You may try again!";
+"Sorry, we are in draw!" = "Sorry, we are in draw!";
+"Sorry, we made too many moves. Please restart again!" = "Sorry, we made too many moves. Please restart again!";
+
+/* Network-Login view */
+"Username" = "Ký Danh";
+"Password" = "Mật Mã";
+"Guest" = "Thử";
+"Login" = "Nhập";
+"Need to register? Join now" = "Cần đăng ký? Tham gia ngay";
+"Rating" = "Số điểm";
+"Statistics" = "Thống kê";
+
+/* Network Settings */
+"Server" = "Máy chủ";
+"Account" = "Trương mục";
+"Auto Connect" = "Tự động nhập mạng";
+
+/* Network errors and warnings */
+"Not connected to network" = "Không nối vào mạng";
+"Username is empty" = "Ký Danh trống";
+"Password is empty" = "Mật Mã trống";
+"Username is wrong" = "Ký Danh sai";
+"Password is wrong" = "Mật Mã sai";
+
+/* Other (misc.) */
+"Select a Table to join" = "Chọn bàn để chơi";
+"Tables" = "Bàn";
+"Messages" = "Thông điệp";
+"Table #%@" = "Bàn #%@";
+"Replay" = "Xem lại";
+"[AI Disabled]" = "[Người khác]";
+
+/* ------------------ END OF FILE ------------------------------------------- */

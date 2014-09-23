@@ -1,0 +1,92 @@
+/* 
+   Localizable.strings (French version)
+   HOXChess
+
+   Copyright 2010 PlayXiangqi. All rights reserved.
+   
+   Language: French
+   Translator: Huy Phan
+ */
+
+/* Commonly shared keys to be used across the App. */
+"Yes" = "Oui";
+"No" = "Non";
+"You" = "Tu";
+"Other" = "Autre";
+"Required" = "Requise";
+"Default" = "Défaut";
+
+/* HOME menu keys. */
+"Home" = "Accueil";
+"Practice" = "Pratique";
+"Play Online" = "Jouer en ligne";
+"Settings" = "Réglages";
+
+/* Menu (navigation) keys */
+"Logout" = "Déconnexion";
+"Cancel" = "Annuler";
+"Resign" = "Abandonner";
+"Draw" = "Match nul";
+"Close Table" = "Fermer Tableau";
+"Reset Table" = "Réinitialiser la table";
+"Undo Move" = "Annuler Déplacer";
+"Resume game?" = "Reprendre jeu?";
+"New game?" = "Nouveau jeu?";
+
+/* The main Settings page */
+"Sound" = "Son";
+"Board" = "L'échiquier";
+"Piece" = "Pièce";
+"AI Type" = "Type AI";
+"AI Level" = "Niveau AI";
+"Network" = "Réseau";
+"About" = "Informations";
+
+/* Piece Types */
+"Chinese" = "Chinois";
+"Western" = "Western";
+
+/* AI Levels */
+"Easy" = "Simple";
+"Normal" = "Normal";
+"Hard" = "Dur";
+"Master" = "Maître";
+
+/* Game status messages. */
+"Game Over" = "Partie Terminée";
+"You won. Congratulations!" = "You won. Congratulations!";
+"Computer won. Don't give up. Please try again!" = "Computer won. Don't give up. Please try again!";
+"You lost. You may try again!" = "You lost. You may try again!";
+"Sorry, we are in draw!" = "Sorry, we are in draw!";
+"Sorry, we made too many moves. Please restart again!" = "Sorry, we made too many moves. Please restart again!";
+
+/* Network-Login view */
+"Username" = "Identifiant";
+"Password" = "Mot de Passe";
+"Guest" = "Invité";
+"Login" = "Connexion";
+"Need to register? Join now" = "Besoin de vous enregistrer? Rejoignez-nous";
+"Rating" = "Points";
+"Statistics" = "Registre";
+
+/* Network Settings */
+"Server" = "Serveur";
+"Account" = "Compte";
+"Auto Connect" = "Connexion Automatique";
+
+/* Network errors and warnings */
+"Not connected to network" = "Pas de connexion au réseau";
+"Username is empty" = "Identifiant est vide";
+"Password is empty" = "Mot-de-Passe est vide";
+"Username is wrong" = "Identifiant est erroné";
+"Password is wrong" = "Mot-de-Passe est erroné";
+
+/* Other (misc.) */
+"Select a Table to join" = "Sélectionnez une table";
+"Tables" = "Tableaux";
+"Messages" = "Messages";
+"Table #%@" = "Tableau #%@";
+"Replay" = "Replay";
+"[AI Disabled]" = "[AI Handicapées]";
+
+/* ------------------ END OF FILE ------------------------------------------- */

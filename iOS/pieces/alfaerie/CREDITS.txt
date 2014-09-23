@@ -1,0 +1,12 @@
+This set of Western pieces is taken from HoxChess project ,which is the desktop client for PlayXiangqi.com, under the project owner's autorization. The original copyright info is as belows, any modification or copywork should subject to the original copyright permission.
+
+
+These images were downloaded from the following site:
+------------------------------------------------------
++ http://www.chessvariants.com/graphics.dir/alfaerie/
+
+This beautiful Western Xiangqi set is called "Alfaerie Variant Chess Graphics"
+and was first suggested by Sebastian Pipping (at http://blog.hartwork.org/) 
+to be included into HOXChess.
+
+I converted the set from GIF format to PNG using GIMP.
