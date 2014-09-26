@@ -34,21 +34,27 @@ import android.widget.ImageView;
 
 public class BoardView extends ImageView {
 
-	private static final String TAG = "MainActivity";
-	
-	private static final int offset_ = 50; // in pixels
-	private int cellSize_;
-	private int pieceSize_ = 64;  // (in pixels) Note: It should be an even number.
-	
-	private String topColor_ = "Black"; // Normal view: Black at the top.
-	
-	private Paint linePaint_;
-	private Paint selectPaint_;
-	//private Canvas savedCanvas_; // Not working!!!
-	
-	private Piece[] _redPieces = new Piece[16];
-	private Piece[] _blackPieces = new Piece[16];
-	
+    private static final String TAG = "MainActivity";
+    
+    private static final int offset_ = 50; // in pixels
+    private int cellSize_;
+    private int pieceSize_ = 64;  // (in pixels) Note: It should be an even number.
+    
+    private String topColor_ = "Black"; // Normal view: Black at the top.
+    
+    private Paint linePaint_;
+    private Paint selectPaint_;
+    private Paint recentPaint_;
+    
+    private Piece[] _redPieces = new Piece[16];
+    private Piece[] _blackPieces = new Piece[16];
+    
+    private enum PieceDrawMode {
+        PIECE_DRAW_MODE_NORMAL,
+        PIECE_DRAW_MODE_SELECTED,  // The piece that is being selected as a "from" piece.
+        PIECE_DRAW_MODE_RECENT     // The piece that recently moved (or, the "to" piece).
+    }
+
     /**
      * Constants for the different Move Modes.
      * NOTE: Do not change the constants 'values below.
@@ -58,8 +64,11 @@ public class BoardView extends ImageView {
     // !!! Only this mode is supported !!! private final int moveMode_ = MOVE_MODE_CLICK_N_CLICK;
     
 	private Referee referee_ = new Referee();
-	private Piece dragPiece_ = null;
-	private Position dragStartPos_ = null;
+	private Piece selectedPiece_ = null;
+	private Position selectedPosition_ = null;
+	
+	private Piece recentPiece_ = null;
+	
 	
     // ----
 	boolean mDownTouch = false;
@@ -97,13 +106,16 @@ public class BoardView extends ImageView {
     private void init() {
         setBackgroundColor(Color.BLACK);
     	
-        linePaint_ = new Paint(/*Paint.ANTI_ALIAS_FLAG*/);
+        linePaint_ = new Paint();
         linePaint_.setColor(Color.LTGRAY);
         linePaint_.setStrokeWidth(1.0f);
         linePaint_.setTextSize(18.0f);
 
-        selectPaint_ = new Paint(/*Paint.ANTI_ALIAS_FLAG*/);
+        selectPaint_ = new Paint();
         selectPaint_.setColor(Color.CYAN);
+
+        recentPaint_ = new Paint();
+        recentPaint_.setColor(Color.CYAN);
         
         createPieces();
         
@@ -175,8 +187,6 @@ public class BoardView extends ImageView {
 
     	drawBoard(canvas, Color.BLACK, Color.WHITE);
     	drawAllPieces(canvas);
-    	
-    	//savedCanvas_ = canvas;
     }
 	
     private void adjustBoardParameters(int boardWidth) {
@@ -257,48 +267,48 @@ public class BoardView extends ImageView {
         Piece piece;
         for (int i = 0; i < 16; i++) {
             piece = _redPieces[i];
-            //piece.setCapture(false);
-            //piece.setPosition( piece.getInitialPosition() );
-            drawPiece(canvas, piece, false);
+            if (!piece.isCaptured()) { // still alive?
+                drawPiece(canvas, piece, PieceDrawMode.PIECE_DRAW_MODE_NORMAL);
+            }
             
             piece = _blackPieces[i];
-            //piece.setCapture(false);
-            //piece.setPosition( piece.getInitialPosition() );
-            drawPiece(canvas, piece, false);
-        }
-        
-        /* !!! TO TEST HIGHLIGHT !!!
-        for (int i = 0; i < 16; i++) {
-            piece = _redPieces[i];
-            Position initPos = piece.getInitialPosition();
-            if (initPos.row == 7 && initPos.column == 1) {
-                drawPiece(canvas, piece, true);
-                break;
+            if (!piece.isCaptured()) { // still alive?
+                drawPiece(canvas, piece, PieceDrawMode.PIECE_DRAW_MODE_NORMAL);
             }
         }
-        */
-        if (dragPiece_ != null) {
-            drawPiece(canvas, dragPiece_, true);
+        
+        if (selectedPiece_ != null) {
+            drawPiece(canvas, selectedPiece_, PieceDrawMode.PIECE_DRAW_MODE_SELECTED);
+        } else if (recentPiece_ != null) {
+            drawPiece(canvas, recentPiece_, PieceDrawMode.PIECE_DRAW_MODE_RECENT);
         }
     }
     
-    private void drawPiece(Canvas canvas, Piece piece, boolean selected) {
+    private void drawPiece(Canvas canvas, Piece piece, PieceDrawMode drawMode) {
         final int imageRadius = pieceSize_ / 2;
         Bitmap bitmap = piece.getBitmap();
         
         Position viewPos = getViewPosition(piece.getPosition());
-        //Log.d(TAG, "drawPiece(): viewPos = " + viewPos);
         
         final float left = offset_ - imageRadius + viewPos.column*cellSize_;
         final float top  = offset_ - imageRadius + viewPos.row*cellSize_;
         
-        if (selected) {
+        if (drawMode == PieceDrawMode.PIECE_DRAW_MODE_SELECTED) {
+            Log.d(TAG, "... select this piece.");
+            canvas.drawRect( // left, top, right, bottom, paint
+                    left - 3,
+                    top - 3,
+                    left + pieceSize_ + 3,
+                    top + pieceSize_ + 3,
+                    selectPaint_);
+        }
+        else if (drawMode == PieceDrawMode.PIECE_DRAW_MODE_RECENT) {
             Log.d(TAG, "... highlight this piece.");
             canvas.drawCircle(
                     left + imageRadius,
                     top + imageRadius,
                     imageRadius + 6,
-                    selectPaint_);
+                    recentPaint_);
         }
         
         canvas.drawBitmap(bitmap, null, 
@@ -378,34 +388,33 @@ public class BoardView extends ImageView {
         Position viewPos = getViewPosition(hitPosition);
         Log.d(TAG, "... Hit position = " + hitPosition + ", View-position = " + viewPos);
         
-        //PieceInfo pieceInfo = referee_.findPieceAtPosition(viewPos);
-        //if (pieceInfo == null) {
-        //    Log.i(TAG, "... No piece is found at " + viewPos + ". Do nothing.");
-        //    return;
-        //}
-        
         // CASE 1: No piece selected yet?
-        if (dragStartPos_ == null) {
+        if (selectedPosition_ == null) {
             Piece foundPiece = getPieceAtViewPosition(viewPos);
             if (foundPiece == null) {
                 Log.i(TAG, "... No piece is found at " + viewPos + ". Do nothing.");
                 return;
             }
             
-            dragStartPos_ = viewPos;
-            dragPiece_ = foundPiece;
+            selectedPosition_ = viewPos;
+            selectedPiece_ = foundPiece;
         }
         // CASE 2: A piece has been selected already.
-        else if ( ! Position.equals(dragStartPos_, viewPos) ) { // different location?
+        else if ( ! Position.equals(selectedPosition_, viewPos) ) { // different location?
             Referee.MoveResult moveResult =
-                    referee_.validateAndRecordMove(dragStartPos_, viewPos);
+                    referee_.validateAndRecordMove(selectedPosition_, viewPos);
             if (moveResult.valid) {
-                dragPiece_.setPosition(viewPos);
-                dragStartPos_ = null;
+                if (moveResult.captured) {
+                    capturePieceAtPostion(viewPos);
+                }
+                selectedPiece_.setPosition(viewPos);
+                selectedPosition_ = null;
+                recentPiece_ = selectedPiece_;
+                selectedPiece_ = null;
             } else { // Move is not valid?
                 Log.i(TAG, "... The move is not valid!");
-                dragStartPos_ = null;
-                dragPiece_ = null;  // Clear this "in-progress" move.
+                selectedPosition_ = null;
+                selectedPiece_ = null;  // Clear this "in-progress" move.
             }
         }
         
@@ -415,19 +424,33 @@ public class BoardView extends ImageView {
     }
     
     /**
+     * Captures a piece at a given location.
+     * @param position
+     */
+    private void capturePieceAtPostion(Position position) {
+        Piece foundPiece = getPieceAtViewPosition(position);
+        if (foundPiece == null) {
+            Log.w(TAG, "... No piece is (to be captured) found at " + position);
+            return;
+        }
+        Log.d(TAG, "Capture a piece at " + position);
+        foundPiece.setCapture(true);
+    }
+    
+    /**
      * Finds a piece at a given location.
      * 
      * @return the piece if found. Otherwise, return null.
      */
     private Piece getPieceAtViewPosition(Position position) {
         for (Piece piece : _redPieces) {
-            if (Position.equals(piece.getPosition(), position)) {
+            if (piece.isCaptured() == false && Position.equals(piece.getPosition(), position)) {
                 return piece;
             }
         }
         
         for (Piece piece : _blackPieces) {
-            if (Position.equals(piece.getPosition(), position)) {
+            if (piece.isCaptured() == false && Position.equals(piece.getPosition(), position)) {
                 return piece;
             }
         }
@@ -442,8 +465,7 @@ public class BoardView extends ImageView {
         super.performClick();
 
         // Handle the action for the custom click here
-        Log.d(TAG, "performClick(): Do nothing.");
-        
+        // ...
         return true;
     }
     
