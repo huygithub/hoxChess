@@ -18,6 +18,8 @@
  */
 package com.playxiangqi.hoxchess;
 
+import java.lang.ref.WeakReference;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -26,6 +28,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -69,6 +73,7 @@ public class BoardView extends ImageView {
 	
 	private Piece recentPiece_ = null;
 	
+	private AIEngine aiEngine_ = new AIEngine();
 	
     // ----
 	boolean mDownTouch = false;
@@ -118,6 +123,9 @@ public class BoardView extends ImageView {
         recentPaint_.setColor(Color.CYAN);
         
         createPieces();
+        
+        aiEngine_.setDifficultyLevel(7);
+        aiEngine_.initGame();
         
         final ViewTreeObserver vto = getViewTreeObserver();
         vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
@@ -222,8 +230,8 @@ public class BoardView extends ImageView {
         // The labels (a-h and 0-9).
         final boolean bDescending = "Red".equals(topColor_);
         final int imageRadius = (int) (pieceSize_/2);
-        drawHeaderRow(canvas, offset_ - imageRadius - 10, offset_, bDescending);
-        drawHeaderRow(canvas, offset_ + cellSize_*8 + imageRadius, offset_, bDescending);
+        drawHeaderRow(canvas, offset_ - imageRadius - 10, offset_, true /*bDescending*/);
+        drawHeaderRow(canvas, offset_ + cellSize_*8 + imageRadius, offset_, true /*bDescending*/);
         drawHeaderColumn(canvas, offset_, offset_, bDescending);
         drawHeaderColumn(canvas, offset_, offset_ + 10*cellSize_ + 20, bDescending);
         
@@ -342,7 +350,8 @@ public class BoardView extends ImageView {
 
         for (int i = 0; i < COLS; i++) {
             left = offsetLeft + (i * cellSize_) - 6;
-            canvas.drawText(String.valueOf((char) ('a' + start)) /*"a" + start*/, left, top, linePaint_);
+            //canvas.drawText(String.valueOf((char) ('a' + start)), left, top, linePaint_);
+            canvas.drawText(String.valueOf((char) ('0' + start)), left, top, linePaint_);
             if (bDescending) { start--; }
             else             { start++; }
         }
@@ -408,8 +417,10 @@ public class BoardView extends ImageView {
                     capturePieceAtPostion(viewPos);
                 }
                 selectedPiece_.setPosition(viewPos);
+                Position fromPos = selectedPosition_; // Save before resetting it.
                 selectedPosition_ = null;
                 recentPiece_ = selectedPiece_;
+                onLocalMoveMade(fromPos, viewPos);
                 selectedPiece_ = null;
             } else { // Move is not valid?
                 Log.i(TAG, "... The move is not valid!");
@@ -421,6 +432,49 @@ public class BoardView extends ImageView {
         // NOTE: We may want to find a better to update the board!
         //       The current method using invalidate() which will redraw the entire view.
         this.invalidate();
+    }
+    
+    private void onLocalMoveMade(Position fromPos, Position toPos) {
+        Log.d(TAG, " on Local move = " + fromPos + " => " + toPos);
+        
+        String infoString = aiEngine_.getInfo();
+        Log.d(TAG, " ... AI 's info = [" + infoString + "]");
+        
+        aiEngine_.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
+        
+        Log.d(TAG, "Ask AI (MaxQi) to generate a new move...");
+        new Thread(new Runnable() {
+            public void run() {
+                String aiMove = aiEngine_.generateMove();
+                Log.d(TAG, "... >>>(XQW) AI returned this move [" + aiMove + "].");
+                messageHandler_.sendMessage(
+                        messageHandler_.obtainMessage(MSG_AI_MOVE_READY, aiMove) );
+            }
+        }).start();
+    }
+    
+    private void onAIMoveMade(Position fromPos, Position toPos) {
+        Log.d(TAG, " on AI move = " + fromPos + " => " + toPos);
+        
+        Referee.MoveResult moveResult =
+                referee_.validateAndRecordMove(fromPos, toPos);
+        if ( ! moveResult.valid ) {
+            Log.e(TAG, " This AI move =" + fromPos + " => " + toPos + " is NOT valid. Do nothing.");
+            return;
+        }
+        
+        Piece fromPiece = getPieceAtViewPosition(fromPos);
+        if (fromPiece == null) {
+            Log.e(TAG, "... No 'from' piece is found at " + fromPos);
+            return;
+        }
+        
+        if (moveResult.captured) {
+            capturePieceAtPostion(toPos);
+        }
+        
+        fromPiece.setPosition(toPos);
+        recentPiece_ = fromPiece;
     }
     
     /**
@@ -521,4 +575,40 @@ public class BoardView extends ImageView {
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeResource(res, resId, options);
     }
+    
+    /**
+     * A message handler to handle UI related tasks.
+     */
+    private static final int MSG_AI_MOVE_READY = 1;
+    private Handler messageHandler_ = new MessageHandler(this);
+    static class MessageHandler extends Handler {
+        private final WeakReference<BoardView> boardView_;
+        
+        MessageHandler(BoardView boardView) {
+            boardView_ = new WeakReference<BoardView>(boardView);;
+        }
+        
+        @Override
+        public void handleMessage(Message msg){
+            switch (msg.what) {
+            case MSG_AI_MOVE_READY:
+                String aiMove = (String) msg.obj;
+                Log.d(TAG, "(MessageHandler) AI returned this move [" + aiMove + "].");
+                int row1 = aiMove.charAt(0) - '0';
+                int col1 = aiMove.charAt(1) - '0';
+                int row2 = aiMove.charAt(2) - '0';
+                int col2 = aiMove.charAt(3) - '0';
+                Log.i(TAG, "... >>> +++ AI 's move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
+                BoardView boardView = boardView_.get();
+                if (boardView != null) {
+                    boardView.onAIMoveMade(new Position(row1, col1), new Position(row2, col2));
+                    boardView.invalidate();
+                }
+                break;
+
+            default:
+                break;
+            }
+        }
+    };
 }
