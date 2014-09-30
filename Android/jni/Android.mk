@@ -15,19 +15,44 @@
 # 
 #  You should have received a copy of the GNU General Public License
 #  along with HOXChess.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 LOCAL_PATH := $(call my-dir)
 
+# -------------------------------------------------------
+#
+# The first library, which contains an AI engine.
+#
+# -------------------------------------------------------
 include $(CLEAR_VARS)
-
-#LOCAL_CFLAGS:= -g
 
 LOCAL_MODULE := AI_MaxQi
 LOCAL_SRC_FILES := \
     MaxQi.c \
 
+# for logging
+LOCAL_LDLIBS += -llog
+
+include $(BUILD_SHARED_LIBRARY)
+
+# -------------------------------------------------------
+#
+# The 2nd library, which contains the Referee.
+#
+# -------------------------------------------------------
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := Referee
+LOCAL_SRC_FILES := \
+    Referee.cpp \
+    hoxReferee.cpp \
+    hoxMove.cpp \
+    hoxDebug.cpp \
+    hoxLog.cpp \
 
 # for logging
 LOCAL_LDLIBS += -llog
 
 include $(BUILD_SHARED_LIBRARY)
+
+################### End of file #############################

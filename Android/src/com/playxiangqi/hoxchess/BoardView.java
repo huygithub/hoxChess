@@ -67,7 +67,7 @@ public class BoardView extends ImageView {
     //private static final int MOVE_MODE_DRAG_N_DROP = 1;
     // !!! Only this mode is supported !!! private final int moveMode_ = MOVE_MODE_CLICK_N_CLICK;
     
-	private Referee referee_ = new Referee();
+	//private Referee referee_ = new Referee(); // TODO: Obsolete! To be removed later!
 	private Piece selectedPiece_ = null;
 	private Position selectedPosition_ = null;
 	
@@ -124,6 +124,9 @@ public class BoardView extends ImageView {
         
         createPieces();
         
+        nativeCreateReferee();
+        
+        Log.d(TAG, " ... AI 's info = [" + aiEngine_.getInfo() + "]");
         aiEngine_.setDifficultyLevel(7);
         aiEngine_.initGame();
         
@@ -372,7 +375,9 @@ public class BoardView extends ImageView {
                 if (mDownTouch) {
                     mDownTouch = false;
                     //Log.d(TAG, "ACTION_UP: [X = " + event.getX() + ", Y = " + event.getY() + "].");
-                    handleTouchAtLocation(event.getX(), event.getY());
+                    if (isGameInProgress()) {
+                        handleTouchAtLocation(event.getX(), event.getY());
+                    }
                     
                     performClick(); // Call this method to handle the response, and
                                     // thereby enable accessibility services to
@@ -388,7 +393,7 @@ public class BoardView extends ImageView {
      * Handles a touch event at a given location.
      */
     private void handleTouchAtLocation(float eventX, float eventY) {
-        Log.v(TAG, "handleTouchAtLocation(X=" + eventX + ", Y=" + eventY + ")");
+        Log.v(TAG, "A touch occurred at location(X=" + eventX + ", Y=" + eventY + ")");
         
         // Convert the screen position (X px, Y px) => the piece position (row, column).
         Position hitPosition = new Position();
@@ -410,22 +415,24 @@ public class BoardView extends ImageView {
         }
         // CASE 2: A piece has been selected already.
         else if ( ! Position.equals(selectedPosition_, viewPos) ) { // different location?
-            Referee.MoveResult moveResult =
-                    referee_.validateAndRecordMove(selectedPosition_, viewPos);
-            if (moveResult.valid) {
-                if (moveResult.captured) {
-                    capturePieceAtPostion(viewPos);
-                }
+           final int status = nativeValidateMove(selectedPosition_.row, selectedPosition_.column,
+                                                 viewPos.row, viewPos.column);
+            Log.d(TAG, "... (native referee) move-validation returned status = " + status);
+            
+            if (status == hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
+                Log.i(TAG, "... The move is not valid!");
+                selectedPosition_ = null;
+                selectedPiece_ = null;  // Clear this "in-progress" move.
+            }
+            else {
+                tryCapturePieceAtPostion(viewPos);
+                
                 selectedPiece_.setPosition(viewPos);
                 Position fromPos = selectedPosition_; // Save before resetting it.
                 selectedPosition_ = null;
                 recentPiece_ = selectedPiece_;
-                onLocalMoveMade(fromPos, viewPos);
+                onLocalMoveMade(fromPos, viewPos, status);
                 selectedPiece_ = null;
-            } else { // Move is not valid?
-                Log.i(TAG, "... The move is not valid!");
-                selectedPosition_ = null;
-                selectedPiece_ = null;  // Clear this "in-progress" move.
             }
         }
         
@@ -434,34 +441,39 @@ public class BoardView extends ImageView {
         this.invalidate();
     }
     
-    private void onLocalMoveMade(Position fromPos, Position toPos) {
+    private void onLocalMoveMade(Position fromPos, Position toPos, int gameStatus) {
         Log.d(TAG, " on Local move = " + fromPos + " => " + toPos);
         
-        String infoString = aiEngine_.getInfo();
-        Log.d(TAG, " ... AI 's info = [" + infoString + "]");
+        didMoveOccur(gameStatus);
         
-        aiEngine_.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
-        
-        Log.d(TAG, "Ask AI (MaxQi) to generate a new move...");
-        new Thread(new Runnable() {
-            public void run() {
-                String aiMove = aiEngine_.generateMove();
-                Log.d(TAG, "... >>>(XQW) AI returned this move [" + aiMove + "].");
-                messageHandler_.sendMessage(
-                        messageHandler_.obtainMessage(MSG_AI_MOVE_READY, aiMove) );
-            }
-        }).start();
+        if (isGameInProgress()) {
+            aiEngine_.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
+            
+            Log.d(TAG, "Ask AI (MaxQi) to generate a new move...");
+            new Thread(new Runnable() {
+                public void run() {
+                    String aiMove = aiEngine_.generateMove();
+                    Log.d(TAG, "... AI returned this move [" + aiMove + "].");
+                    messageHandler_.sendMessage(
+                            messageHandler_.obtainMessage(MSG_AI_MOVE_READY, aiMove) );
+                }
+            }).start();
+        }
     }
     
     private void onAIMoveMade(Position fromPos, Position toPos) {
         Log.d(TAG, " on AI move = " + fromPos + " => " + toPos);
         
-        Referee.MoveResult moveResult =
-                referee_.validateAndRecordMove(fromPos, toPos);
-        if ( ! moveResult.valid ) {
+        final int status = nativeValidateMove(fromPos.row, fromPos.column,
+                                              toPos.row, toPos.column);
+        Log.d(TAG, "... (native referee) move-validation returned status = " + status);
+        
+        if (status == hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
             Log.e(TAG, " This AI move =" + fromPos + " => " + toPos + " is NOT valid. Do nothing.");
             return;
         }
+        
+        tryCapturePieceAtPostion(toPos);
         
         Piece fromPiece = getPieceAtViewPosition(fromPos);
         if (fromPiece == null) {
@@ -469,26 +481,26 @@ public class BoardView extends ImageView {
             return;
         }
         
-        if (moveResult.captured) {
-            capturePieceAtPostion(toPos);
-        }
-        
         fromPiece.setPosition(toPos);
         recentPiece_ = fromPiece;
+        
+        didMoveOccur(status);
     }
     
     /**
-     * Captures a piece at a given location.
-     * @param position
+     * Try to capture a piece at a given location.
+     * 
+     * @return true if a piece is found. Otherwise, return false.
      */
-    private void capturePieceAtPostion(Position position) {
+    private boolean tryCapturePieceAtPostion(Position position) {
         Piece foundPiece = getPieceAtViewPosition(position);
         if (foundPiece == null) {
-            Log.w(TAG, "... No piece is (to be captured) found at " + position);
-            return;
+            Log.d(TAG, "... No piece is (to be captured) found at " + position);
+            return false;
         }
         Log.d(TAG, "Capture a piece at " + position);
         foundPiece.setCapture(true);
+        return true;
     }
     
     /**
@@ -510,6 +522,24 @@ public class BoardView extends ImageView {
         }
         
         return null;
+    }
+    
+    private void didMoveOccur(int status) {
+        Log.d(TAG, "A move just occurred. game 's status = " + status);
+        
+        gameStatus_ = status;
+        
+        if (status == hoxGAME_STATUS_RED_WIN) {
+            Log.i(TAG, "The game is OVER. RED won.");
+        }
+        else if (status == hoxGAME_STATUS_BLACK_WIN) {
+            Log.i(TAG, "The game is OVER. BLACK won.");
+        }
+    }
+    
+    boolean isGameInProgress() {
+        return (   gameStatus_ == hoxGAME_STATUS_READY 
+                || gameStatus_ == hoxGAME_STATUS_IN_PROGRESS);
     }
     
     @Override
@@ -598,7 +628,7 @@ public class BoardView extends ImageView {
                 int col1 = aiMove.charAt(1) - '0';
                 int row2 = aiMove.charAt(2) - '0';
                 int col2 = aiMove.charAt(3) - '0';
-                Log.i(TAG, "... >>> +++ AI 's move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
+                Log.i(TAG, "... AI 's move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
                 BoardView boardView = boardView_.get();
                 if (boardView != null) {
                     boardView.onAIMoveMade(new Position(row1, col1), new Position(row2, col2));
@@ -611,4 +641,26 @@ public class BoardView extends ImageView {
             }
         }
     };
+    
+    // ****************************** Native code **********************************
+    public native int nativeCreateReferee();
+    public native int nativeGetNextColor();
+    public native int nativeValidateMove(int row1, int col1, int row2, int col2);
+    
+    // The native referee 's game-status.
+    // DO NOT CHANGE the constants' values.
+    private final static int hoxGAME_STATUS_UNKNOWN = -1;
+    private final static int hoxGAME_STATUS_OPEN = 0;        // Open but not enough Player.
+    private final static int hoxGAME_STATUS_READY = 1;       // Enough (2) players, waiting for 1st Move.
+    private final static int hoxGAME_STATUS_IN_PROGRESS = 2; // At least 1 Move has been made.
+    private final static int hoxGAME_STATUS_RED_WIN = 3;     // Game Over: Red won.
+    private final static int hoxGAME_STATUS_BLACK_WIN = 4;   // Game Over: Black won.
+    private final static int hoxGAME_STATUS_DRAWN = 5;       // Game Over: Drawn.
+    
+    private int gameStatus_ = hoxGAME_STATUS_READY;
+    
+    static {
+        System.loadLibrary("Referee");
+    }
+    // *****************************************************************************
 }

@@ -298,27 +298,24 @@ public class Referee {
     /**
      * Check whether a give Move is valid. If yes, record the Move. 
      *
-     * @return an Array of two elements:
-     *     result[0] - true if the Move is valid.
-     *     result[1] - true if the Move is a capture move.
+     * @return the move-result which has two elements:
+     *     (1) one to indicate whether the Move is valid.
+     *     (2) one to indicate whether the Move is a capture move.
      */
     public MoveResult validateAndRecordMove(Position oldPos, Position newPos) {
         PieceInfo piece = _pieceMap[oldPos.row][oldPos.column];
         if ( piece == null ) {
             Log.e(TAG, "Referee: Logic Error! Piece is null.");
-            //return new boolean[] {false, false};
             return new MoveResult(false, false);
         }
 
         /* Check for 'turn' */
         if ( ! _nextColor.equals(piece.color) ) {
-            //return new boolean[] {false, false};
             return new MoveResult(false, false);
         }
 
         /* Perform a basic validation. */
         if ( ! _performBasicValidationOfMove(piece, newPos) ) {
-            //return new boolean[] {false, false};
             return new MoveResult(false, false);
         }
 
@@ -336,7 +333,6 @@ public class Referee {
          */
         if ( _isKingBeingChecked( piece.color ) ) {
             _undoMove(piece, oldPos, capturedPiece);
-            //return new boolean[] {false, false};
             return new MoveResult(false, false);
         }
 
@@ -345,7 +341,6 @@ public class Referee {
         ++_nMoves;
 
         final boolean bCapturedMove = (capturedPiece != null);
-        //return new boolean[] {true, bCapturedMove}; // Finally, it is a valid Move.
         return new MoveResult(true, bCapturedMove);
     }
     
