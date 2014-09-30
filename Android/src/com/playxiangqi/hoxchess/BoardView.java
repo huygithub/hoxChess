@@ -49,6 +49,7 @@ public class BoardView extends ImageView {
     private Paint linePaint_;
     private Paint selectPaint_;
     private Paint recentPaint_;
+    private Paint noticePaint_;
     
     private Piece[] _redPieces = new Piece[16];
     private Piece[] _blackPieces = new Piece[16];
@@ -121,6 +122,10 @@ public class BoardView extends ImageView {
 
         recentPaint_ = new Paint();
         recentPaint_.setColor(Color.CYAN);
+
+        noticePaint_ = new Paint();
+        noticePaint_.setColor(Color.RED);
+        noticePaint_.setTextSize(40.0f);
         
         createPieces();
         
@@ -198,6 +203,10 @@ public class BoardView extends ImageView {
 
     	drawBoard(canvas, Color.BLACK, Color.WHITE);
     	drawAllPieces(canvas);
+    	
+    	if (!isGameInProgress()) {
+    	    onGameOver(canvas);
+    	}
     }
 	
     private void adjustBoardParameters(int boardWidth) {
@@ -535,6 +544,14 @@ public class BoardView extends ImageView {
         else if (status == hoxGAME_STATUS_BLACK_WIN) {
             Log.i(TAG, "The game is OVER. BLACK won.");
         }
+    }
+    
+    private void onGameOver(Canvas canvas) {
+        canvas.drawText(
+                "Game Over",
+                offset_ + cellSize_*2.5f,
+                offset_ + cellSize_*4.7f,
+                noticePaint_);
     }
     
     boolean isGameInProgress() {
