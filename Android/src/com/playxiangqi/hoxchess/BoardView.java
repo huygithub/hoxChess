@@ -570,6 +570,33 @@ public class BoardView extends ImageView {
         return true;
     }
     
+    public void onNewTableActionClicked() {
+        Log.d(TAG, "The 'New Table' action clicked...");
+        
+        nativeResetGame(); // ask the referee to reset the game.
+        aiEngine_.initGame();
+        
+        // Reset the pieces.
+        Piece piece;
+        for (int i = 0; i < 16; i++) {
+            piece = _redPieces[i];
+            piece.setCapture(false);
+            piece.setPosition(piece.getInitialPosition());
+            
+            piece = _blackPieces[i];
+            piece.setCapture(false);
+            piece.setPosition(piece.getInitialPosition());
+        }
+        
+        // Reset other internal variables
+        selectedPiece_ = null;
+        selectedPosition_ = null;
+        recentPiece_ = null;
+        gameStatus_ = hoxGAME_STATUS_READY;
+        
+        this.invalidate(); // Request to redraw the board.
+    }
+    
     /**
      * Reference: From Android 's "Getting Started"
      *    Title: Loading Large Bitmaps Efficiently
@@ -661,6 +688,7 @@ public class BoardView extends ImageView {
     
     // ****************************** Native code **********************************
     public native int nativeCreateReferee();
+    public native int nativeResetGame();
     public native int nativeGetNextColor();
     public native int nativeValidateMove(int row1, int col1, int row2, int col2);
     

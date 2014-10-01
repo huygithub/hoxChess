@@ -35,23 +35,27 @@ public class MainActivity extends ActionBarActivity {
 
     private static final String TAG = "MainActivity";
 
+    private Fragment placeholderFragment_;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        placeholderFragment_ = new PlaceholderFragment();
+        
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.container, placeholderFragment_)
                     .commit();
         }
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
+        getMenuInflater().inflate(R.menu.main_activity_actions, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -59,12 +63,22 @@ public class MainActivity extends ActionBarActivity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-        	Log.d(TAG, "Action 'Settings' clicked...");
-            return true;
+        switch (item.getItemId()) {
+            case R.id.action_search:
+                Log.d(TAG, "Action 'New' clicked...");
+                BoardView boardView = (BoardView) placeholderFragment_.getView().findViewById(R.id.board_view);
+                if (boardView == null) {
+                    Log.w(TAG, "The board view could not be found the placeholder fragment.");
+                    return false;
+                }
+                boardView.onNewTableActionClicked();
+                return true;
+            case R.id.action_settings:
+                Log.d(TAG, "Action 'Settings' clicked...");
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
     /**

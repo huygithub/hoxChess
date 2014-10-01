@@ -36,6 +36,14 @@ extern "C" {
     }
 
     JNIEXPORT jint JNICALL
+    Java_com_playxiangqi_hoxchess_BoardView_nativeResetGame(JNIEnv *env, jobject thiz)
+    {
+        LOGI("Reset the game \n");
+        referee_->resetGame();
+        return 0;
+    }
+
+    JNIEXPORT jint JNICALL
     Java_com_playxiangqi_hoxchess_BoardView_nativeGetNextColor(JNIEnv *env, jobject thiz)
     {
         LOGI("get the next color... \n");
