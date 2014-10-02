@@ -291,8 +291,16 @@ Java_com_playxiangqi_hoxchess_AIEngine_setDifficultyLevel( JNIEnv* env,
 		                                                   jobject thiz,
 		                                                   jint nAILevel )
 {
-    LOGI("setDifficultyLevel: nAILevel: [%d]. \n", nAILevel);
-    MaxDepth = nAILevel;
+    int actualLevel = 1;
+    switch (nAILevel)
+    {
+        case 1: actualLevel = 6; break;
+        case 2: actualLevel = 9; break;
+        case 0: /* falls through */
+        default: actualLevel = 2;
+    }
+    LOGI("setDifficultyLevel: nAILevel: [%d], actual [%d] \n", nAILevel, actualLevel);
+    MaxDepth = actualLevel;
     return AI_RC_OK;
 }
 

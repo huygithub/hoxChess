@@ -38,7 +38,7 @@ import android.widget.ImageView;
 
 public class BoardView extends ImageView {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "BoardView";
     
     private static final int offset_ = 50; // in pixels
     private int cellSize_;
@@ -110,6 +110,7 @@ public class BoardView extends ImageView {
     }
     
     private void init() {
+        Log.d(TAG, "init() ...");
         setBackgroundColor(Color.BLACK);
     	
         linePaint_ = new Paint();
@@ -132,7 +133,6 @@ public class BoardView extends ImageView {
         nativeCreateReferee();
         
         Log.d(TAG, " ... AI 's info = [" + aiEngine_.getInfo() + "]");
-        aiEngine_.setDifficultyLevel(7);
         aiEngine_.initGame();
         
         final ViewTreeObserver vto = getViewTreeObserver();
@@ -595,6 +595,11 @@ public class BoardView extends ImageView {
         gameStatus_ = hoxGAME_STATUS_READY;
         
         this.invalidate(); // Request to redraw the board.
+    }
+    
+    public void onAILevelChanged(int newLevel) {
+        Log.d(TAG, "On AI Level changed. newLevel = " + newLevel);
+        aiEngine_.setDifficultyLevel(newLevel);
     }
     
     /**
