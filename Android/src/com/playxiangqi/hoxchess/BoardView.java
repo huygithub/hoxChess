@@ -19,6 +19,10 @@
 package com.playxiangqi.hoxchess;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -75,6 +79,18 @@ public class BoardView extends ImageView {
 	private Piece recentPiece_ = null;
 	
 	private AIEngine aiEngine_ = new AIEngine();
+	
+    /**
+     * History index.
+     * NOTE: Do not change the constants 'values below.
+     */
+    private static final int HISTORY_INDEX_END = -2;
+    private static final int HISTORY_INDEX_BEGIN = -1;
+    
+	private List<Move> historyMoves_ = new ArrayList<Move>(); // All (past) Moves made so far.
+	private int historyIndex_ = HISTORY_INDEX_END; // Which Move the user is reviewing.
+	
+	private List<Piece> captureStack_ = new ArrayList<Piece>(); // A stack of captured pieces.
 	
     // ----
 	boolean mDownTouch = false;
@@ -203,10 +219,12 @@ public class BoardView extends ImageView {
 
     	drawBoard(canvas, Color.BLACK, Color.WHITE);
     	drawAllPieces(canvas);
-    	
-    	if (!isGameInProgress()) {
-    	    onGameOver(canvas);
-    	}
+    
+    	if (isBoardInReviewMode()) {
+    	    drawReplayStatus(canvas);
+    	} else if (!isGameInProgress()) {
+            onGameOver(canvas);
+        }
     }
 	
     private void adjustBoardParameters(int boardWidth) {
@@ -369,6 +387,15 @@ public class BoardView extends ImageView {
         }
     }
     
+    private void drawReplayStatus(Canvas canvas) {
+        canvas.drawText(
+                HoxApp.getApp().getString(R.string.replay_text,
+                        historyIndex_ + 1, historyMoves_.size()),
+                offset_ + cellSize_*2.5f,
+                offset_ + cellSize_*4.7f,
+                noticePaint_);
+    }
+    
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         super.onTouchEvent(event);
@@ -384,7 +411,7 @@ public class BoardView extends ImageView {
                 if (mDownTouch) {
                     mDownTouch = false;
                     //Log.d(TAG, "ACTION_UP: [X = " + event.getX() + ", Y = " + event.getY() + "].");
-                    if (isGameInProgress()) {
+                    if (isGameInProgress() && !isBoardInReviewMode()) {
                         handleTouchAtLocation(event.getX(), event.getY());
                     }
                     
@@ -434,13 +461,13 @@ public class BoardView extends ImageView {
                 selectedPiece_ = null;  // Clear this "in-progress" move.
             }
             else {
-                tryCapturePieceAtPostion(viewPos);
+                Piece capture = tryCapturePieceAtPostion(viewPos);
                 
                 selectedPiece_.setPosition(viewPos);
                 Position fromPos = selectedPosition_; // Save before resetting it.
                 selectedPosition_ = null;
                 recentPiece_ = selectedPiece_;
-                onLocalMoveMade(fromPos, viewPos, status);
+                onLocalMoveMade(fromPos, viewPos, capture, status);
                 selectedPiece_ = null;
             }
         }
@@ -450,10 +477,12 @@ public class BoardView extends ImageView {
         this.invalidate();
     }
     
-    private void onLocalMoveMade(Position fromPos, Position toPos, int gameStatus) {
+    private void onLocalMoveMade(Position fromPos, Position toPos, Piece capture, int gameStatus) {
         Log.d(TAG, " on Local move = " + fromPos + " => " + toPos);
         
-        didMoveOccur(gameStatus);
+        addMoveToHistory(fromPos, toPos, capture);
+        
+        didMoveOccur(fromPos, toPos, capture, gameStatus);
         
         if (isGameInProgress()) {
             aiEngine_.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
@@ -482,7 +511,14 @@ public class BoardView extends ImageView {
             return;
         }
         
-        tryCapturePieceAtPostion(toPos);
+        // Do not update the Pieces on Board if we are in the review mode.
+        if (isBoardInReviewMode()) {
+            addMoveToHistory(fromPos, toPos, null /* capture: we don't know yet */);
+            return;
+        }
+        
+        Piece capture = tryCapturePieceAtPostion(toPos);
+        addMoveToHistory(fromPos, toPos, capture);
         
         Piece fromPiece = getPieceAtViewPosition(fromPos);
         if (fromPiece == null) {
@@ -493,23 +529,23 @@ public class BoardView extends ImageView {
         fromPiece.setPosition(toPos);
         recentPiece_ = fromPiece;
         
-        didMoveOccur(status);
+        didMoveOccur(fromPos, toPos, capture, status);
     }
     
     /**
      * Try to capture a piece at a given location.
      * 
-     * @return true if a piece is found. Otherwise, return false.
+     * @return the captured piece if any. Otherwise, return null.
      */
-    private boolean tryCapturePieceAtPostion(Position position) {
+    private Piece tryCapturePieceAtPostion(Position position) {
         Piece foundPiece = getPieceAtViewPosition(position);
         if (foundPiece == null) {
             Log.d(TAG, "... No piece is (to be captured) found at " + position);
-            return false;
+            return null;
         }
         Log.d(TAG, "Capture a piece at " + position);
         foundPiece.setCapture(true);
-        return true;
+        return foundPiece;
     }
     
     /**
@@ -533,7 +569,7 @@ public class BoardView extends ImageView {
         return null;
     }
     
-    private void didMoveOccur(int status) {
+    private void didMoveOccur(Position fromPos, Position toPos, Piece capture, int status) {
         Log.d(TAG, "A move just occurred. game 's status = " + status);
         
         gameStatus_ = status;
@@ -544,6 +580,18 @@ public class BoardView extends ImageView {
         else if (status == hoxGAME_STATUS_BLACK_WIN) {
             Log.i(TAG, "The game is OVER. BLACK won.");
         }
+        
+        if (capture != null) {
+            captureStack_.add(capture);
+        }
+    }
+    
+    private void addMoveToHistory(Position fromPos, Position toPos, Piece capture) {
+        Piece.Move move = new Piece.Move();
+        move.fromPosition = fromPos.clone();
+        move.toPosition = toPos.clone();
+        move.isCaptured = (capture != null);
+        historyMoves_.add(move);
     }
     
     private void onGameOver(Canvas canvas) {
@@ -594,12 +642,124 @@ public class BoardView extends ImageView {
         recentPiece_ = null;
         gameStatus_ = hoxGAME_STATUS_READY;
         
+        historyMoves_.clear();
+        historyIndex_ = HISTORY_INDEX_END;
+        captureStack_.clear();
+        
         this.invalidate(); // Request to redraw the board.
     }
     
     public void onAILevelChanged(int newLevel) {
         Log.d(TAG, "On AI Level changed. newLevel = " + newLevel);
         aiEngine_.setDifficultyLevel(newLevel);
+    }
+    
+    private boolean isBoardInReviewMode() {
+        return (historyIndex_ != HISTORY_INDEX_END);
+    }
+
+    public void onReplay_BEGIN() {
+        Log.d(TAG, "on replay-BEGIN...");
+        while ( onReplay_PREV(false) ) { }
+        this.invalidate(); // Request to redraw the board.
+    }
+    
+    /**
+     * @return true if a replay move was made. false, otherwise.
+     */
+    public boolean onReplay_PREV(boolean redrawNow) {
+        Log.d(TAG, "on replay-PREVIOUS...");
+        
+        if (historyMoves_.size() == 0) {
+            return false;
+        }
+    
+        if (historyIndex_ == HISTORY_INDEX_END) { // at the END mark?
+            historyIndex_ = historyMoves_.size() - 1; // Get the latest move.
+        }
+        else if (historyIndex_ == HISTORY_INDEX_BEGIN) {
+            return false;
+        }
+   
+        Move move = historyMoves_.get(historyIndex_);
+        
+        Position toViewPos = getViewPosition(move.toPosition);
+        Piece piece = getPieceAtViewPosition(toViewPos);
+        piece.setPosition(move.fromPosition);
+        
+        // Put back the captured piece, if any.
+        if (move.isCaptured) {
+            // The capture must be at the top of the Move-Stack.
+            Log.d(TAG, "on replay-PREVIOUS... captureStack_.size() = " + captureStack_.size());
+            Piece capture = captureStack_.remove(captureStack_.size()-1);
+            capture.setCapture(false);
+        }
+        
+        // Highlight the Piece (if any) of the "next-PREV" Move.
+        --historyIndex_;
+        if (historyIndex_ >= 0) {
+            move = historyMoves_.get(historyIndex_);
+            toViewPos = getViewPosition(move.toPosition);
+            piece = getPieceAtViewPosition(toViewPos);
+            recentPiece_ = piece;
+        } else {
+            recentPiece_ = null;
+        }
+        
+        if (redrawNow) {
+            this.invalidate(); // Request to redraw the board.
+        }
+        return true;
+    }
+    
+    /**
+     * @return true if a replay move was made. false, otherwise.
+     */
+    public boolean onReplay_NEXT(boolean redrawNow) {
+        Log.d(TAG, "on replay-NEXT...");
+        
+        if (historyMoves_.size() == 0) {
+            return false;
+        }
+
+        if (historyIndex_ == HISTORY_INDEX_END) { // at the END mark?
+            return false;
+        }
+
+        ++historyIndex_;
+        
+        Move move = historyMoves_.get(historyIndex_);
+        
+        if (historyIndex_ == historyMoves_.size() - 1) {
+            historyIndex_ = HISTORY_INDEX_END;
+        }
+        
+        // Move the piece from ORIGINAL --> NEW position.
+        Position fromViewPos = getViewPosition(move.fromPosition);
+        Piece piece = getPieceAtViewPosition(fromViewPos);
+        Position toViewPos = getViewPosition(move.toPosition);
+        Piece capture = getPieceAtViewPosition(toViewPos);
+        if (capture != null) {
+            capture.setCapture(true);
+            captureStack_.add(capture);
+            
+            move.isCaptured = true; // NOTE: Update the flag
+                                    // (in case the move arrived while we are in replay mode).
+        }
+        
+        piece.setPosition(move.toPosition);
+        recentPiece_ = piece;
+        
+        if (redrawNow) {
+            this.invalidate(); // Request to redraw the board.
+        }
+        return true;
+    }
+    
+    public void onReplay_END() {
+        Log.d(TAG, "on replay-END...");
+        while ( onReplay_NEXT(false) ) { }
+        this.invalidate(); // Request to redraw the board.
     }
     
     /**
@@ -692,6 +852,7 @@ public class BoardView extends ImageView {
     };
     
     // ****************************** Native code **********************************
+    // TODO: Need to fix for invalid moves when "king-facing-king"!!!
     public native int nativeCreateReferee();
     public native int nativeResetGame();
     public native int nativeGetNextColor();

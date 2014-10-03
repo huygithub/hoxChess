@@ -93,4 +93,12 @@ public class Piece {
     
     public Bitmap getBitmap() { return _bitmap; }
     
+    /**
+     * Represents a piece 's move.
+     */
+    public static class Move {
+        public Position fromPosition;
+        public Position toPosition;
+        public boolean isCaptured = false;
+    }
 }

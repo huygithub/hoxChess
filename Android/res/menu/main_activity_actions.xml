@@ -5,7 +5,7 @@
     tools:context="com.playxiangqi.hoxchess.MainActivity" >
 
     <!-- New, should appear as action button -->
-    <item android:id="@+id/action_search"
+    <item android:id="@+id/action_new_table"
           android:icon="@drawable/ic_action_new"
           android:title="@string/action_new"
           app:showAsAction="ifRoom" />

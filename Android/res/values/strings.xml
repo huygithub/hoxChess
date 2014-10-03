@@ -17,4 +17,11 @@
     <string name="ai_label_medium">AI (Medium)</string>
     <string name="ai_label_difficult">AI (Difficult)</string>
     
+    <string name="replay_begin">Begin</string>
+    <string name="replay_prev">Prev</string>
+    <string name="replay_next">Next</string>
+    <string name="replay_end">End</string>
+    
+    <string name="replay_text">Replay %1$d / %2$d</string>
+    
 </resources>

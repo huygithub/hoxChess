@@ -38,6 +38,8 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
     private static final String TAG = "MainActivity";
 
     private Fragment placeholderFragment_;
+    private BoardView boardView_;
+    private TextView aiLabel_;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,14 +70,9 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
-            case R.id.action_search:
+            case R.id.action_new_table:
                 Log.d(TAG, "Action 'New Table' clicked...");
-                BoardView boardView = (BoardView) placeholderFragment_.getView().findViewById(R.id.board_view);
-                if (boardView == null) {
-                    Log.w(TAG, "The board view could not be found the placeholder fragment.");
-                    return false;
-                }
-                boardView.onNewTableActionClicked();
+                boardView_.onNewTableActionClicked();
                 return true;
             case R.id.action_settings:
                 Log.d(TAG, "Action 'Settings' clicked...");
@@ -87,29 +84,45 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         }
     }
 
+    private void onBoardViewCreated() {
+        boardView_ = (BoardView) placeholderFragment_.getView().findViewById(R.id.board_view);
+        if (boardView_ == null) {
+            Log.e(TAG, "onCreate: The board view could not be found the placeholder fragment.");
+        }
+        
+        aiLabel_ = (TextView) placeholderFragment_.getView().findViewById(R.id.ai_label);
+        if (aiLabel_ == null) {
+            Log.e(TAG, "The AI Label could not be found the placeholder fragment.");
+        }
+        
+        final int aiLevel = HoxApp.getApp().loadAILevelPreferences();
+        updateAILabel(aiLevel);
+        updateAILevelOfBoard(aiLevel);
+    }
+    
+    private boolean isBoardReady() {
+        return (boardView_ != null);
+    }
+    
+    /**
+     * Callback when the settings are changed.
+     * 
+     * @see SettingsObserver
+     */
     @Override
     public void onAILevelChanged(int newLevel) {
         Log.d(TAG, "on AI Level changed. newLevel = " +  newLevel);
-        updateAILevelOfBoard(newLevel);
-        updateAILabel(newLevel);
+        if (isBoardReady()) {
+            updateAILevelOfBoard(newLevel);
+            updateAILabel(newLevel);
+        }
     }
 
     private void updateAILevelOfBoard(int newLevel) {
-        Log.d(TAG, "update AI Level of Board. newLevel = " +  newLevel);
-        BoardView boardView = (BoardView) placeholderFragment_.getView().findViewById(R.id.board_view);
-        if (boardView == null) {
-            Log.w(TAG, "The board view could not be found the placeholder fragment.");
-            return;
-        }
-        boardView.onAILevelChanged(newLevel);
+        boardView_.onAILevelChanged(newLevel);
     }
     
     private void updateAILabel(int aiLevel) {
-        TextView aiLabel = (TextView) placeholderFragment_.getView().findViewById(R.id.ai_label);
-        if (aiLabel == null) {
-            Log.w(TAG, "The AI Label could not be found the placeholder fragment.");
-            return;
-        }
         String labelString;
         switch (aiLevel) {
             case 1: labelString = getString(R.string.ai_label_medium); break;
@@ -117,7 +130,23 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
             case 0: /* falls through */
             default: labelString = getString(R.string.ai_label_easy);
         }
-        aiLabel.setText(labelString);
+        aiLabel_.setText(labelString);
+    }
+    
+    public void onReplayBegin(View view) {
+        boardView_.onReplay_BEGIN();
+    }
+    
+    public void onReplayPrevious(View view) {
+        boardView_.onReplay_PREV(true);
+    }
+
+    public void onReplayNext(View view) {
+        boardView_.onReplay_NEXT(true);
+    }
+    
+    public void onReplayEnd(View view) {
+        boardView_.onReplay_END();
     }
     
     /**
@@ -143,9 +172,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
             super.onActivityCreated(savedInstanceState);
             Log.d(TAG, "onActivityCreated...");
             
-            int aiLevel = HoxApp.getApp().loadAILevelPreferences();
-            ((MainActivity) getActivity()).updateAILabel(aiLevel);
-            ((MainActivity) getActivity()).updateAILevelOfBoard(aiLevel);
+            ((MainActivity) getActivity()).onBoardViewCreated();
         }
     }
 }

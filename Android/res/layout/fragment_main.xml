@@ -19,7 +19,7 @@
         android:id="@+id/board_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-         android:layout_weight="1"
+        android:layout_weight="1"
         android:contentDescription="@string/board_alt" />
     
     <TextView
@@ -27,5 +27,45 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/you_label" />
+    
+    <LinearLayout
+	    android:orientation="horizontal"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center" >
+
+        <ImageButton
+              android:id="@+id/replay_begin"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:contentDescription="@string/replay_begin"
+              android:src="@drawable/ic_action_previous"
+              android:onClick="onReplayBegin" />
+        
+        <ImageButton
+              android:id="@+id/replay_previous"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:contentDescription="@string/replay_prev"
+              android:src="@drawable/ic_action_previous_item"
+              android:onClick="onReplayPrevious" />
+
+        <ImageButton
+              android:id="@+id/replay_next"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:contentDescription="@string/replay_next"
+              android:src="@drawable/ic_action_next_item"
+              android:onClick="onReplayNext" />
+        
+        <ImageButton
+              android:id="@+id/replay_end"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:contentDescription="@string/replay_end"
+              android:src="@drawable/ic_action_next"
+              android:onClick="onReplayEnd" />
+            
+    </LinearLayout>
     
 </LinearLayout>
