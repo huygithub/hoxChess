@@ -74,6 +74,10 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
                 Log.d(TAG, "Action 'New Table' clicked...");
                 boardView_.onNewTableActionClicked();
                 return true;
+            case R.id.action_play_online:
+                Log.d(TAG, "Action 'Play Online' clicked...");
+                boardView_.onPlayOnlineActionClicked();
+                return true;
             case R.id.action_settings:
                 Log.d(TAG, "Action 'Settings' clicked...");
                 Intent intent = new Intent(this, SettingsActivity.class);

@@ -9,10 +9,14 @@
           android:icon="@drawable/ic_action_new"
           android:title="@string/action_new"
           app:showAsAction="ifRoom" />
+
+    <item android:id="@+id/action_play_online"
+          android:icon="@drawable/ic_action_web_site"
+          android:title="@string/action_play_online"
+          app:showAsAction="ifRoom" />
     
-    <item
-        android:id="@+id/action_settings"
-        android:title="@string/action_settings"
-        app:showAsAction="never"/>
+    <item android:id="@+id/action_settings"
+          android:title="@string/action_settings"
+          app:showAsAction="never" />
 
 </menu>

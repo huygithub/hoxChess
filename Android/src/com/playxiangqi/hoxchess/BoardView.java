@@ -80,6 +80,9 @@ public class BoardView extends ImageView {
 	
 	private AIEngine aiEngine_ = new AIEngine();
 	
+	private NetworkPlayer networkPlayer_ = new NetworkPlayer();
+	private boolean isOnline_ = false; // FIXME: Just a hack to test disconnection.
+	
     /**
      * History index.
      * NOTE: Do not change the constants 'values below.
@@ -166,6 +169,11 @@ public class BoardView extends ImageView {
                 return true;
             }
         });
+        
+        if (!networkPlayer_.isAlive()) {
+            networkPlayer_.start();
+        }
+        
     }
     
     public int getPieceSize() { return pieceSize_; }
@@ -647,6 +655,17 @@ public class BoardView extends ImageView {
         captureStack_.clear();
         
         this.invalidate(); // Request to redraw the board.
+    }
+    
+    public void onPlayOnlineActionClicked() {
+        Log.d(TAG, "The 'Play Online' action clicked...");
+        if ( ! isOnline_ ) {
+            networkPlayer_.connectToServer();
+            isOnline_ = true;
+        } else {
+            networkPlayer_.disconnectFromServer();
+            isOnline_ = false;
+        }
     }
     
     public void onAILevelChanged(int newLevel) {
