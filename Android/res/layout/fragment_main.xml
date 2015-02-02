@@ -9,24 +9,54 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.playxiangqi.hoxchess.MainActivity$PlaceholderFragment" >
 
-    <TextView
-        android:id="@+id/ai_label"
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/ai_label" />
-
+        android:gravity="left" >
+    
+	    <TextView
+	        android:id="@+id/top_player_label"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/ai_label" />
+	    
+        <Button
+              android:id="@+id/top_button"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="@string/button_play_black"
+              android:textSize="12sp"
+              android:onClick="onTopButtonClick" />  
+    </LinearLayout>
+    
     <com.playxiangqi.hoxchess.BoardView
         android:id="@+id/board_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:contentDescription="@string/board_alt" />
-    
-    <TextView
-        android:id="@+id/you_label"
+
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/you_label" />
+        android:gravity="left" >
+    
+        <TextView
+            android:id="@+id/bottom_player_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/you_label" />
+        
+        <Button
+              android:id="@+id/bottom_button"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="@string/button_play_red"
+              android:textSize="12sp"
+              android:onClick="onBottomButtonClick" />   
+    </LinearLayout>
     
     <LinearLayout
 	    android:orientation="horizontal"

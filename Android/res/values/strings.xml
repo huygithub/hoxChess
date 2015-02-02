@@ -6,9 +6,12 @@
     <string name="you_label">You</string>
     <string name="action_settings">Settings</string>
     <string name="action_new">New Table</string>
+    <string name="action_close">Close Table</string>
     <string name="action_play_online">Play Online</string>
+    <string name="action_logout">Logout</string>
     <string name="board_alt">Board</string>
     <string name="title_activity_settings">Settings</string>
+    <string name="title_activity_tables">Tables</string>
     
     <string name="ai_level">AI Level:</string>
     <string name="level_easy">Easy</string>
@@ -24,5 +27,8 @@
     <string name="replay_end">End</string>
     
     <string name="replay_text">Replay %1$d / %2$d</string>
+    
+    <string name="button_play_black">Play BLACK</string>
+    <string name="button_play_red">Play RED</string>
     
 </resources>

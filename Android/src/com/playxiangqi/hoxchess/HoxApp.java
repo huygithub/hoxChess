@@ -18,11 +18,17 @@
  */
 package com.playxiangqi.hoxchess;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
+import com.playxiangqi.hoxchess.Enums.ColorEnum;
 
 import android.app.Application;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 public class HoxApp extends Application {
@@ -39,6 +45,15 @@ public class HoxApp extends Application {
     
     private int currentAILevel_ = -1; // Default = "invalid level"
     
+    private String pid_ = "_THE_PLAYER_ID_"; // FIXME: ... _THE_PLAYER_ID_
+    private String password_ = "_THE_PLAYER_PASSWORD_"; // FIXME: .... _THE_PLAYER_PASSWORD_
+    
+    private NetworkPlayer networkPlayer_;
+    private WeakReference<MainActivity> mainActivity_;
+    private TableInfo myTable_ = new TableInfo();
+    //private String tableId_;
+    private ColorEnum myColor_ = ColorEnum.COLOR_UNKNOWN;
+    
     public HoxApp() {
         // Do nothing.
     }
@@ -47,6 +62,11 @@ public class HoxApp extends Application {
     public void onCreate() {
         Log.i(TAG, "onCreate()...");
         thisApp_ = this;
+        
+        networkPlayer_ = new NetworkPlayer();
+        if (!networkPlayer_.isAlive()) {
+            networkPlayer_.start();
+        }
     }
 
     public static HoxApp getApp() {
@@ -101,6 +121,282 @@ public class HoxApp extends Application {
             currentAILevel_ = aiLevel;
             notifyObservers();
         }
+    }
+    
+    //---------------------------------------------------------
+    public void registerMainActivity(MainActivity activity) {
+        mainActivity_ = new WeakReference<MainActivity>(activity);
+    }
+    
+    // --------------------------------------------------------
+    /**
+     * A message handler to handle UI related tasks.
+     */
+    private static final int MSG_NETWORK_EVENT = 1;
+    private Handler messageHandler_ = new MessageHandler(/*this*/);
+    static class MessageHandler extends Handler {
+        
+        MessageHandler() {
+            // empty
+        }
+        
+        @Override
+        public void handleMessage(Message msg){
+            switch (msg.what) {
+            case MSG_NETWORK_EVENT:
+            {
+                String event = (String) msg.obj;
+                Log.d(TAG, "(MessageHandler) Network event arrived.");
+                HoxApp.getApp().onNetworkEvent(event);
+                break;
+            }
+                
+            default:
+                break;
+            }
+        }
+    };
+    
+    private void onNetworkEvent(String eventString) {
+        Log.d(TAG, "On Network event. ENTER.");
+        
+        HashMap<String, String> newEvent = new HashMap<String, String>();
+        
+        for (String token : eventString.split("&")) {
+            //Log.d(TAG, "... token = [" + token + "]");
+            final String[] pair = token.split("=");
+            newEvent.put(pair[0], pair[1]);
+            //Log.d(TAG, "... >>> pair[0]= [" + pair[0] + "], pair[1]=[" + pair[1] + "]");
+        }
+        
+        final String op = newEvent.get("op");
+        final int code = Integer.parseInt( newEvent.get("code") );
+        final String content = newEvent.get("content");
+        //final String tid = newEvent.get("tid");
+        
+        if ("LOGIN".equals(op)) {
+            handleNetworkEvent_LOGIN(code, content);
+        } else if (code != 0) {  // Error
+            Log.i(TAG, "... Received an ERROR event: [" + code + ": " + content + "]");
+        } else if ("LIST".equals(op)) {
+            handleNetworkEvent_LIST(content);
+        } else if ("I_TABLE".equals(op)) {
+            handleNetworkEvent_I_TABLE(content);
+        } else if ("I_MOVES".equals(op)) {
+            handleNetworkEvent_I_MOVES(content);
+        } else if ("MOVE".equals(op)) {
+            handleNetworkEvent_MOVE(content);
+        } else if ("LEAVE".equals(op)) {
+            handleNetworkEvent_LEAVE(content);
+        } else if ("E_JOIN".equals(op)) {
+            handleNetworkEvent_E_JOIN(content);
+        }
+    }
+    
+    private void handleNetworkEvent_LOGIN(int code, String content) {
+        Log.d(TAG, "Handle event (LOGIN): ENTER.");
+        
+        if (code != 0) {  // Error
+            Log.i(TAG, "Login failed. Error: [" + content + "]");
+            // [self _showLoginView:[self _getLocalizedLoginError:code defaultError:event]];
+            return;
+        }
+        
+        final String[] components = content.split(";");
+        final String pid = components[0];
+        final String rating = components[1];
+        Log.d(TAG, ">>> [" + pid + " " + rating + "] LOGIN.");
+        
+        if (pid_.equals(pid)) { // my LOGIN?
+            Log.i(TAG, ">>>>>> Got my LOGIN info [" + pid + " " + rating + "].");
+            networkPlayer_.sendRequest_LIST();
+        }
+    }
+    
+    private void handleNetworkEvent_LIST(String content) {
+        Log.d(TAG, "Handle event (LIST): ENTER.");
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.startActvityToListTables(content);
+        }
+    }
+
+    private void handleNetworkEvent_I_TABLE(String content) {
+        Log.d(TAG, "Handle event (I_TABLE): ENTER.");
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            TableInfo tableInfo = new TableInfo(content);
+            myTable_ = tableInfo;
+            Log.i(TAG, "... >>> Set my table Id: " + myTable_.tableId);
+            mainActivity.updateBoardWithNewTableInfo(tableInfo);
+        }
+    }
+
+    private void handleNetworkEvent_I_MOVES(String content) {
+        Log.d(TAG, "Handle event (I_MOVES): ENTER.");
+        final String[] components = content.split(";");
+        final String tableId = components[0];
+        final String movesStr = components[1];
+        
+        if (!myTable_.hasId(tableId)) { // not the table I am interested in?
+            Log.w(TAG, "Ignore the list of MOVES from table: " + tableId);
+            return;
+        }
+        
+        final String[] moves = movesStr.split("/");
+        
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.resetBoardWithNewMoves(moves);
+        }
+    }
+
+    private void handleNetworkEvent_MOVE(String content) {
+        Log.d(TAG, "Handle event (MOVE): ENTER.");
+        final String[] components = content.split(";");
+        final String tableId = components[0];
+        final String move = components[2];
+        
+        if (!myTable_.hasId(tableId)) { // not the table I am interested in?
+            Log.w(TAG, "Ignore a MOVE from table: " + tableId);
+            return;
+        }
+        
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.updateBoardWithNewMove(move);
+        }
+    }
+    
+    private void handleNetworkEvent_LEAVE(String content) {
+        Log.d(TAG, "Handle event (LEAVE): ENTER.");
+        final String[] components = content.split(";");
+        final String tableId = components[0];
+        final String pid = components[1];
+        
+        // Check if I just left the Table.
+        if (myTable_.hasId(tableId) && pid.equals(pid_)) {
+            Log.i(TAG, "I just left my table: " + tableId);
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.updateBoardAfterLeavingTable();
+            }
+            myTable_ = new TableInfo();
+        }
+    }
+    
+    private void handleNetworkEvent_E_JOIN(String content) {
+        Log.d(TAG, "Handle event (E_JOIN): ENTER.");
+        final String[] components = content.split(";");
+        final String tableId = components[0];
+        final String pid = components[1];
+        final String rating = components[2];
+        final String color = components[3];
+        
+        if (!myTable_.hasId(tableId)) { // not the table I am interested in?
+            Log.w(TAG, "Ignore the E_JOIN event.");
+            return;
+        }
+        
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity == null) {
+            Log.w(TAG, "The main activity is NULL. Ignore this E_JOIN event.");
+            return;
+        }
+        
+        final String playerInfo = TableInfo.formatPlayerInfo(pid, rating);
+        boolean myColorChanged = false;
+        Enums.ColorEnum myLastColor = myColor_;
+        
+        if ("Red".equals(color)) {
+            //mainActivity.updateBoardWithPlayerInfo(ColorEnum.COLOR_RED, playerInfo);
+            if (pid.equals(pid_)) {
+                myColor_ = ColorEnum.COLOR_RED;
+                myColorChanged = true;
+            }
+            mainActivity.onPlayerJoinedTable(ColorEnum.COLOR_RED, playerInfo, myColorChanged, myLastColor);
+            
+        } else if ("Black".equals(color)) {
+            //mainActivity.updateBoardWithPlayerInfo(ColorEnum.COLOR_BLACK, playerInfo);
+            if (pid.equals(pid_)) {
+                myColor_ = ColorEnum.COLOR_BLACK;
+                myColorChanged = true;
+            }
+            mainActivity.onPlayerJoinedTable(ColorEnum.COLOR_BLACK, playerInfo, myColorChanged, myLastColor);
+            
+        } else if ("None".equals(color)) {
+            if (pid.equals(pid_)) {
+                myColor_ = ColorEnum.COLOR_NONE;
+                myColorChanged = true;
+            }
+            mainActivity.onPlayerJoinedTable(ColorEnum.COLOR_NONE, playerInfo, myColorChanged, myLastColor);
+        }
+    }
+    
+    // --------------------------------------------------------
+    
+    public void createNetworkPlayer() {
+        if ( ! networkPlayer_.isOnline() ) {
+            networkPlayer_.setLoginInfo(pid_,  password_);
+            networkPlayer_.connectToServer();
+        } else {
+            networkPlayer_.sendRequest_LIST();
+        }
+    }
+
+    public boolean isOnline() {
+        return networkPlayer_.isOnline();
+    }
+
+    public TableInfo getMyTable() {
+        return myTable_;
+    }
+    
+    public String getCurrentTableId() {
+        return myTable_.tableId;
+    }
+    
+    public void logoutFromNetwork() {
+        if (networkPlayer_.isOnline() ) {
+            networkPlayer_.disconnectFromServer();
+        }
+        myTable_ = new TableInfo();
+    }
+    
+    public NetworkPlayer getNetworkPlayer() {
+        return networkPlayer_;
+    }
+    
+    public void handleTableSelection(String tableId) {
+        Log.i(TAG, "Select table: " + tableId + ".");
+        networkPlayer_.sendRequest_JOIN(tableId, "None");
+    }
+
+    public void handleRequestToCloseCurrentTable() {
+        Log.i(TAG, "Close the current table...");
+        if (!myTable_.isValid()) {
+            Log.w(TAG, "No current table. Ignore the request to Close the current Table");
+            return;
+        }
+        networkPlayer_.sendRequest_LEAVE(myTable_.tableId);
+        //tableId_ = null;
+    }
+    
+    public void handleTopButtonClick() {
+        Log.i(TAG, "Handle top-button click");
+        if (myTable_.isValid()) {
+            if (myColor_ == ColorEnum.COLOR_RED || myColor_ == ColorEnum.COLOR_BLACK) {
+                networkPlayer_.sendRequest_JOIN(myTable_.tableId, "None");
+            } else {
+                networkPlayer_.sendRequest_JOIN(myTable_.tableId, "Black");
+            }
+        }
+    }
+    
+    public void postNetworkEvent(String eventString) {
+        Log.d(TAG, "Post Network event = [" + eventString + "]");
+        messageHandler_.sendMessage(
+                messageHandler_.obtainMessage(MSG_NETWORK_EVENT, eventString) );
     }
     
 }

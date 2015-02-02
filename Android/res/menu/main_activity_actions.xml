@@ -19,4 +19,12 @@
           android:title="@string/action_settings"
           app:showAsAction="never" />
 
+    <item android:id="@+id/action_close_table"
+          android:title="@string/action_close"
+          app:showAsAction="never" />
+
+    <item android:id="@+id/action_logout"
+          android:title="@string/action_logout"
+          app:showAsAction="never" />
+    
 </menu>

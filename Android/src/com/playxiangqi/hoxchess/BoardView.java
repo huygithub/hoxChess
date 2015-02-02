@@ -20,11 +20,13 @@ package com.playxiangqi.hoxchess;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -80,7 +82,10 @@ public class BoardView extends ImageView {
 	
 	private AIEngine aiEngine_ = new AIEngine();
 	
-	private NetworkPlayer networkPlayer_ = new NetworkPlayer();
+	private String pid_ = "p1"; // FIXME: ... _THE_PLAYER_ID_
+	private String password_ = "123456"; // FIXME: .... _THE_PLAYER_PASSWORD_
+    
+	//private NetworkPlayer networkPlayer_ = new NetworkPlayer(this);
 	private boolean isOnline_ = false; // FIXME: Just a hack to test disconnection.
 	
     /**
@@ -170,9 +175,9 @@ public class BoardView extends ImageView {
             }
         });
         
-        if (!networkPlayer_.isAlive()) {
-            networkPlayer_.start();
-        }
+        //if (!networkPlayer_.isAlive()) {
+        //    networkPlayer_.start();
+        //}
         
     }
     
@@ -507,7 +512,7 @@ public class BoardView extends ImageView {
         }
     }
     
-    private void onAIMoveMade(Position fromPos, Position toPos) {
+    public void onAIMoveMade(Position fromPos, Position toPos) {
         Log.d(TAG, " on AI move = " + fromPos + " => " + toPos);
         
         final int status = nativeValidateMove(fromPos.row, fromPos.column,
@@ -538,6 +543,70 @@ public class BoardView extends ImageView {
         recentPiece_ = fromPiece;
         
         didMoveOccur(fromPos, toPos, capture, status);
+    }
+    
+    public void postNetworkEvent(String eventString) {
+        Log.d(TAG, "Post Network event = [" + eventString + "]");
+        
+        messageHandler_.sendMessage(
+                messageHandler_.obtainMessage(MSG_NETWORK_EVENT, eventString) );
+    }
+    
+    private void onNetworkEvent(String eventString) {
+        Log.d(TAG, "On Network event. ENTER.");
+        
+        HashMap<String, String> newEvent = new HashMap<String, String>();
+        
+        for (String token : eventString.split("&")) {
+            //Log.d(TAG, "... token = [" + token + "]");
+            final String[] pair = token.split("=");
+            newEvent.put(pair[0], pair[1]);
+            //Log.d(TAG, "... >>> pair[0]= [" + pair[0] + "], pair[1]=[" + pair[1] + "]");
+        }
+        
+        final String op = newEvent.get("op");
+        final int code = Integer.parseInt( newEvent.get("code") );
+        final String content = newEvent.get("content");
+        //final String tid = newEvent.get("tid");
+        
+        if ("LOGIN".equals(op)) {
+            handleNetworkEvent_LOGIN(code, content);
+        } else if (code != 0) {  // Error
+            Log.i(TAG, "... Received an ERROR event: [" + code + ": " + content + "]");
+        } else {
+            if ("LIST".equals(op)) {
+                handleNetworkEvent_LIST(content);
+            } else if ("I_PLAYERS".equals(op)) {
+                // nothing
+            }
+        }
+    }
+    
+    private void handleNetworkEvent_LOGIN(int code, String content) {
+        Log.d(TAG, "Handle event (LOGIN): ENTER.");
+        
+        if (code != 0) {  // Error
+            Log.i(TAG, "Login failed. Error: [" + content + "]");
+            //[self _showLoginView:[self _getLocalizedLoginError:code defaultError:event]];
+            return;
+        }
+        
+        final String[] components = content.split(";");
+        final String pid = components[0];
+        final String rating = components[1];
+        Log.d(TAG, ">>> [" + pid + " " + rating + "] LOGIN.");
+        
+        if (pid_.equals(pid)) { // my LOGIN?
+            Log.i(TAG, ">>>>>> Got my LOGIN info [" + pid + " " + rating + "].");
+            //networkPlayer_.sendRequest_LIST();
+        }
+    }
+
+    private void handleNetworkEvent_LIST(String content) {
+        Log.d(TAG, "Handle event (LIST): ENTER.");
+        Intent intent = new Intent(getContext(), TablesActivity.class);
+        intent.putExtra("content", content);
+        getContext().startActivity(intent);
     }
     
     /**
@@ -625,9 +694,14 @@ public class BoardView extends ImageView {
         // ...
         return true;
     }
-    
+
     public void onNewTableActionClicked() {
         Log.d(TAG, "The 'New Table' action clicked...");
+        resetBoard();
+    }
+    
+    public void resetBoard() {
+        Log.d(TAG, "Reset board to the initial state...");
         
         nativeResetGame(); // ask the referee to reset the game.
         aiEngine_.initGame();
@@ -655,17 +729,6 @@ public class BoardView extends ImageView {
         captureStack_.clear();
         
         this.invalidate(); // Request to redraw the board.
-    }
-    
-    public void onPlayOnlineActionClicked() {
-        Log.d(TAG, "The 'Play Online' action clicked...");
-        if ( ! isOnline_ ) {
-            networkPlayer_.connectToServer();
-            isOnline_ = true;
-        } else {
-            networkPlayer_.disconnectFromServer();
-            isOnline_ = false;
-        }
     }
     
     public void onAILevelChanged(int newLevel) {
@@ -838,18 +901,20 @@ public class BoardView extends ImageView {
      * A message handler to handle UI related tasks.
      */
     private static final int MSG_AI_MOVE_READY = 1;
+    private static final int MSG_NETWORK_EVENT = 2;
     private Handler messageHandler_ = new MessageHandler(this);
     static class MessageHandler extends Handler {
         private final WeakReference<BoardView> boardView_;
         
         MessageHandler(BoardView boardView) {
-            boardView_ = new WeakReference<BoardView>(boardView);;
+            boardView_ = new WeakReference<BoardView>(boardView);
         }
         
         @Override
         public void handleMessage(Message msg){
             switch (msg.what) {
             case MSG_AI_MOVE_READY:
+            {
                 String aiMove = (String) msg.obj;
                 Log.d(TAG, "(MessageHandler) AI returned this move [" + aiMove + "].");
                 int row1 = aiMove.charAt(0) - '0';
@@ -863,7 +928,19 @@ public class BoardView extends ImageView {
                     boardView.invalidate();
                 }
                 break;
-
+            }
+                
+            case MSG_NETWORK_EVENT:
+            {
+                String event = (String) msg.obj;
+                Log.d(TAG, "(MessageHandler) Network event arrived.");
+                BoardView boardView = boardView_.get();
+                if (boardView != null) {
+                    boardView.onNetworkEvent(event);
+                }
+                break;
+            }
+                
             default:
                 break;
             }

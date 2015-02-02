@@ -18,6 +18,8 @@
  */
 package com.playxiangqi.hoxchess;
 
+import com.playxiangqi.hoxchess.Enums.ColorEnum;
+
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
 import android.content.Intent;
@@ -28,6 +30,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 /**
@@ -37,15 +40,21 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
 
     private static final String TAG = "MainActivity";
 
+    private static final int JOIN_TABLE_REQUEST = 1;  // The request code
+    
     private Fragment placeholderFragment_;
     private BoardView boardView_;
-    private TextView aiLabel_;
+    private TextView topPlayerLabel_;
+    private TextView bottomPlayerLabel_;
+    private Button topPlayerButton_;
+    private Button bottomPlayerButton_;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+        Log.d(TAG, "onCreate: savedInstanceState = " + savedInstanceState + ".");
         placeholderFragment_ = new PlaceholderFragment();
         
         if (savedInstanceState == null) {
@@ -55,15 +64,35 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         }
         
         HoxApp.getApp().registerSettingsObserver(this);
+        HoxApp.getApp().registerMainActivity(this);
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
+        HoxApp.getApp().registerMainActivity(null);
+    }
+    
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d(TAG, "(ActionBar) onCreateOptionsMenu");
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_activity_actions, menu);
         return super.onCreateOptionsMenu(menu);
     }
-
+    
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        Log.d(TAG, "(ActionBar) onPrepareOptionsMenu");
+        super.onPrepareOptionsMenu(menu);
+        menu.findItem(R.id.action_logout).setVisible(
+                HoxApp.getApp().isOnline());
+        menu.findItem(R.id.action_close_table).setVisible(
+                HoxApp.getApp().getCurrentTableId() != null);
+        return true; // display the menu
+    }
+    
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -74,9 +103,17 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
                 Log.d(TAG, "Action 'New Table' clicked...");
                 boardView_.onNewTableActionClicked();
                 return true;
+            case R.id.action_close_table:
+                Log.d(TAG, "Action 'Close Table' clicked...");
+                HoxApp.getApp().handleRequestToCloseCurrentTable();
+                return true;
             case R.id.action_play_online:
                 Log.d(TAG, "Action 'Play Online' clicked...");
-                boardView_.onPlayOnlineActionClicked();
+                HoxApp.getApp().createNetworkPlayer();
+                return true;
+            case R.id.action_logout:
+                Log.d(TAG, "Action 'Logout' clicked...");
+                HoxApp.getApp().logoutFromNetwork();
                 return true;
             case R.id.action_settings:
                 Log.d(TAG, "Action 'Settings' clicked...");
@@ -88,15 +125,123 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         }
     }
 
+    public void startActvityToListTables(String content) {
+        Log.d(TAG, "Start activity (LIST): ENTER.");
+        Intent intent = new Intent(this, TablesActivity.class);
+        intent.putExtra("content", content);
+        startActivityForResult(intent, JOIN_TABLE_REQUEST);
+    }
+
+    public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
+        Log.d(TAG, "Update board with new Table info (LIST): ENTER.");
+        topPlayerLabel_.setText(tableInfo.getBlackInfo());
+        bottomPlayerLabel_.setText(tableInfo.getRedInfo());
+    }
+
+    public void resetBoardWithNewMoves(String[] moves) {
+        Log.d(TAG, "Reset board with new (MOVES): ENTER.");
+        boardView_.resetBoard();
+        for (String move : moves) {
+            Log.d(TAG, ".......... Move [" + move + "]");
+            int row1 = move.charAt(1) - '0';
+            int col1 = move.charAt(0) - '0';
+            int row2 = move.charAt(3) - '0';
+            int col2 = move.charAt(2) - '0';
+            Log.i(TAG, "... Network move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
+            boardView_.onAIMoveMade(new Position(row1, col1), new Position(row2, col2));
+        }
+        boardView_.invalidate();
+    }
+
+    public void updateBoardWithNewMove(String move) {
+        Log.d(TAG, "Update board with a new (MOVE): Move: [" + move + "]");
+        int row1 = move.charAt(1) - '0';
+        int col1 = move.charAt(0) - '0';
+        int row2 = move.charAt(3) - '0';
+        int col2 = move.charAt(2) - '0';
+        Log.i(TAG, "... Network move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
+        boardView_.onAIMoveMade(new Position(row1, col1), new Position(row2, col2));
+        boardView_.invalidate();
+    }
+    
+    public void updateBoardAfterLeavingTable() {
+        Log.d(TAG, "Update board after I left the current table...");
+        final int aiLevel = HoxApp.getApp().loadAILevelPreferences();
+        updateAILabel(aiLevel); // Update the top-player 's label.
+        bottomPlayerLabel_.setText(getString(R.string.you_label));
+        boardView_.resetBoard();
+    }
+    
+    public void updateBoardWithPlayerInfo(Enums.ColorEnum playerColor, String playerInfo) {
+        if (playerColor == ColorEnum.COLOR_BLACK) {
+            topPlayerLabel_.setText(playerInfo);
+        } else if (playerColor == ColorEnum.COLOR_RED) {
+            bottomPlayerLabel_.setText(playerInfo);
+        }
+    }
+
+    public void onPlayerJoinedTable(Enums.ColorEnum playerColor, String playerInfo,
+            boolean myColorChanged, Enums.ColorEnum myLastColor) {
+        
+        if (playerColor == ColorEnum.COLOR_BLACK) {
+            topPlayerLabel_.setText(playerInfo);
+            if (myColorChanged) {
+                topPlayerButton_.setText("X");
+            }
+        } else if (playerColor == ColorEnum.COLOR_RED) {
+            bottomPlayerLabel_.setText(playerInfo);
+            if (myColorChanged) {
+                bottomPlayerButton_.setText("X");
+            }
+        } else if (playerColor == ColorEnum.COLOR_NONE) {
+            if (myLastColor == ColorEnum.COLOR_BLACK) {
+                topPlayerLabel_.setText("*");
+            } else if (myLastColor == ColorEnum.COLOR_RED) {
+                bottomPlayerLabel_.setText("*");
+            }
+            
+            if (myColorChanged) {
+                if (myLastColor == ColorEnum.COLOR_BLACK) {
+                    topPlayerButton_.setText(getString(R.string.button_play_black));
+                } else if (myLastColor == ColorEnum.COLOR_RED) {
+                    bottomPlayerButton_.setText(getString(R.string.button_play_red));
+                }
+            }
+        }
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == JOIN_TABLE_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                final String tableId = data.getStringExtra("tid");
+                HoxApp.getApp().handleTableSelection(tableId);
+            }
+        }
+    }
+    
     private void onBoardViewCreated() {
         boardView_ = (BoardView) placeholderFragment_.getView().findViewById(R.id.board_view);
         if (boardView_ == null) {
             Log.e(TAG, "onCreate: The board view could not be found the placeholder fragment.");
         }
         
-        aiLabel_ = (TextView) placeholderFragment_.getView().findViewById(R.id.ai_label);
-        if (aiLabel_ == null) {
-            Log.e(TAG, "The AI Label could not be found the placeholder fragment.");
+        topPlayerLabel_ = (TextView) placeholderFragment_.getView().findViewById(R.id.top_player_label);
+        if (topPlayerLabel_ == null) {
+            Log.e(TAG, "The Top-Player Label could not be found the placeholder fragment.");
+        }
+        bottomPlayerLabel_ = (TextView) placeholderFragment_.getView().findViewById(R.id.bottom_player_label);
+        if (bottomPlayerLabel_ == null) {
+            Log.e(TAG, "The Bottom-Player Label could not be found the placeholder fragment.");
+        }
+
+        topPlayerButton_ = (Button) placeholderFragment_.getView().findViewById(R.id.top_button);
+        if (topPlayerButton_ == null) {
+            Log.e(TAG, "The Top-Player Button could not be found the placeholder fragment.");
+        }
+        bottomPlayerButton_ = (Button) placeholderFragment_.getView().findViewById(R.id.bottom_button);
+        if (bottomPlayerButton_ == null) {
+            Log.e(TAG, "The Bottom-Player Button could not be found the placeholder fragment.");
         }
         
         final int aiLevel = HoxApp.getApp().loadAILevelPreferences();
@@ -134,7 +279,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
             case 0: /* falls through */
             default: labelString = getString(R.string.ai_label_easy);
         }
-        aiLabel_.setText(labelString);
+        topPlayerLabel_.setText(labelString);
     }
     
     public void onReplayBegin(View view) {
@@ -151,6 +296,14 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
     
     public void onReplayEnd(View view) {
         boardView_.onReplay_END();
+    }
+    
+    public void onTopButtonClick(View view) {
+        HoxApp.getApp().handleTopButtonClick();
+    }
+
+    public void onBottomButtonClick(View view) {
+        //boardView_.onReplay_END();
     }
     
     /**
@@ -177,6 +330,18 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
             Log.d(TAG, "onActivityCreated...");
             
             ((MainActivity) getActivity()).onBoardViewCreated();
+        }
+        
+        @Override
+        public void onDestroy () {
+            super.onDestroy();
+            Log.e(TAG, "onDestroy...");
+        }
+        
+        @Override
+        public void onDetach () {
+            super.onDetach();
+            Log.e(TAG, "onDetach...");
         }
     }
 }

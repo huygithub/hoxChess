@@ -24,7 +24,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import android.annotation.SuppressLint;
@@ -50,10 +52,12 @@ class NetworkPlayer extends Thread {
     private Selector selector_;
     private SocketChannel socketChannel_;
     private boolean disconnectionRequested_ = false;
+    
+    private String pid_;
+    private String password_;
 
-    private String pid_ = "_THE_PLAYER_ID_"; // FIXME: ...
-    private String password_ = "_THE_PLAYER_PASSWORD_"; // FIXME: ....
-
+    private StringBuilder inData_ = new StringBuilder(10*1024);
+    
     // -------------------------------------------------------------------------------------
     private enum ConnectionState {
         CONNECTION_STATE_NONE,
@@ -71,6 +75,9 @@ class NetworkPlayer extends Thread {
     private static final int MSG_NETWORK_CONNECT_TO_SERVER = 1;
     private static final int MSG_NETWORK_DISCONNECT_FROM_SERVER = 2;
     private static final int MSG_NETWORK_CHECK_FOR_WORK = 3;
+    private static final int MSG_NETWORK_SEND_LIST = 4;
+    private static final int MSG_NETWORK_SEND_JOIN = 5;
+    private static final int MSG_NETWORK_SEND_LEAVE = 6;
     
     @SuppressLint("HandlerLeak") @Override
     public void run() {
@@ -82,20 +89,36 @@ class NetworkPlayer extends Thread {
                 try {
                     switch (msg.what) {
                         case MSG_NETWORK_CONNECT_TO_SERVER:
-                            Log.d(TAG, "(Handler) Got the request to 'Connect to server'...");
                             handleConnectToServer();
                             break;
                             
                         case MSG_NETWORK_DISCONNECT_FROM_SERVER:
-                            Log.d(TAG, "(Handler) Got the request to 'Disconnect from server'...");
                             handleDisconnectFromServer();
                             break;
-                            
     
                         case MSG_NETWORK_CHECK_FOR_WORK:
-                            Log.d(TAG, "(Handler) Got the request to 'Check for work'...");
                             handleCheckForWork();
                             break;
+
+                        case MSG_NETWORK_SEND_LIST:
+                            send_LIST();
+                            break;
+
+                        case MSG_NETWORK_SEND_JOIN:
+                        {
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> map = (Map<String, String>) msg.obj;
+                            send_JOIN(map);
+                            break;
+                        }
+
+                        case MSG_NETWORK_SEND_LEAVE:
+                        {
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> map = (Map<String, String>) msg.obj;
+                            send_LEAVE(map);
+                            break;
+                        }
                             
                         default:
                             break;
@@ -109,6 +132,21 @@ class NetworkPlayer extends Thread {
         Looper.loop();
     }
     
+    // -------------------------------------------------------------------------------------
+    NetworkPlayer() {
+       // empty
+    }
+    
+    public void setLoginInfo(String pid, String password) {
+        pid_ = pid;
+        password_ = password;
+    }
+    
+    public boolean isOnline() {
+        return (connectionState_ != ConnectionState.CONNECTION_STATE_NONE);
+    }
+    
+    // -------------------------------------------------------------------------------------
     public void connectToServer() {
         Log.d(TAG, "Connect to server...");
         handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_CONNECT_TO_SERVER));
@@ -117,6 +155,26 @@ class NetworkPlayer extends Thread {
     public void disconnectFromServer() {
         Log.d(TAG, "Disconnect from server...");
         handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_DISCONNECT_FROM_SERVER));
+    }
+    
+    public void sendRequest_LIST() {
+        Log.d(TAG, "Send 'LIST' request to server...");
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_LIST));
+    }
+
+    public void sendRequest_JOIN(String tableId, String joinColor) {
+        Log.d(TAG, "Send 'JOIN' request to server... TableId: " + tableId);
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("tid", tableId);
+        map.put("color", joinColor);
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_JOIN, map));
+    }
+
+    public void sendRequest_LEAVE(String tableId) {
+        Log.d(TAG, "Send 'LEAVE' request to server...");
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("tid", tableId);
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_LEAVE, map));
     }
     
     private void handleConnectToServer() throws IOException {
@@ -153,17 +211,12 @@ class NetworkPlayer extends Thread {
     }
     
     private void handleCheckForWork() throws IOException {
-        Log.i(TAG, "Handle 'Check for work'...");
+        //Log.d(TAG, "Handle 'Check for work'...");
             
-        for (int tries = 1; tries <= 1 /* HACK */; tries++) {
-            Log.d(TAG, "........ tries = " + tries);
-            try { sleep(1000); } catch (InterruptedException e) { }
-            
-            int readyChannels = selector_.select(1000); // 1-second interval
-            if (readyChannels == 0) {
-                continue;
-            }
-            
+        int readyChannels = selector_.select(1000); // 1-second interval
+        if (readyChannels == 0) {
+            // Do nothing
+        } else {
             Set<SelectionKey> selectedKeys = selector_.selectedKeys();
             Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 
@@ -176,9 +229,10 @@ class NetworkPlayer extends Thread {
                 } else if (key.isReadable()) {
                     Log.d(TAG, "a channel is ready for reading");
                     readIncomingData();
+                    processIncomingData();
 
                 } else if (key.isWritable()) {
-                    Log.d(TAG, "a channel is ready for writing");
+                    //Log.d(TAG, "a channel is ready for writing");
                     if (connectionState_ == ConnectionState.CONNECTION_STATE_CONNECTED) {
                         send_LOGIN();
                     } else if (connectionState_ == ConnectionState.CONNECTION_STATE_LOGIN
@@ -201,10 +255,10 @@ class NetworkPlayer extends Thread {
             }
             disconnectionRequested_ = false;
         } else {
-            handler_.sendMessageDelayed(handler_.obtainMessage(MSG_NETWORK_CHECK_FOR_WORK), 1000);
+            handler_.sendMessageDelayed(handler_.obtainMessage(MSG_NETWORK_CHECK_FOR_WORK), 2000);
         }
         
-        Log.i(TAG, "Handle 'Check for work'... DONE *****");
+        //Log.d(TAG, "Handle 'Check for work'... DONE *****");
     }
     
     private void handleDisconnectFromServer() {
@@ -237,6 +291,24 @@ class NetworkPlayer extends Thread {
         connectionState_ = ConnectionState.CONNECTION_STATE_CONNECTED;
         Log.i(TAG, "LOGOUT: End");
     }
+
+    private void send_LIST() throws IOException {
+        String request = "op=LIST&pid=" + pid_;
+        sendRequest(request);
+    }
+
+    private void send_JOIN(Map<String, String> map) throws IOException {
+        final String tableId = map.get("tid");
+        final String joinColor = map.get("color");
+        String request = "op=JOIN&pid=" + pid_ + "&tid=" + tableId + "&color=" + joinColor;
+        sendRequest(request);
+    }
+
+    private void send_LEAVE(Map<String, String> map) throws IOException {
+        final String tableId = map.get("tid");
+        String request = "op=LEAVE&pid=" + pid_ + "&tid=" + tableId;
+        sendRequest(request);
+    }
     
     /**
      * A helper to send a request to the server.
@@ -261,25 +333,52 @@ class NetworkPlayer extends Thread {
     }
     
     private void readIncomingData() throws IOException {
-        Log.i(TAG, "READ (data): Enter");
-        
-        StringBuffer inData = new StringBuffer(10*1024);
+        Log.i(TAG, "READ (data): Enter. inData_ 's length = " + inData_.length());
         
         ByteBuffer buf = ByteBuffer.allocate(1*1024);
-        int bytesRead = socketChannel_.read(buf); // read into buffer.
-        Log.d(TAG, "READ (data): .... bytesRead = " + bytesRead);
-        while (bytesRead > 0) {
-            buf.flip();  // make buffer ready for read
-
-            while (buf.hasRemaining()) {
-                inData.append((char) buf.get()); // read 1 byte at a time
+        
+        while (true) {
+            int bytesRead = socketChannel_.read(buf); // read into buffer.
+            Log.d(TAG, "READ (data): ... bytesRead = " + bytesRead);
+            if (bytesRead <= 0) {
+                break;
             }
-
+            
+            buf.flip();  // make buffer ready for read
+            while (buf.hasRemaining()) {
+                inData_.append((char) buf.get()); // read 1 byte at a time
+            }
             buf.clear(); // make buffer ready for writing
-            bytesRead = socketChannel_.read(buf);
-            Log.d(TAG, "READ (*data): .... bytesRead = " + bytesRead);
         }
         
-        Log.i(TAG, "READ (data): End. inData = " + inData.toString());
+        Log.i(TAG, "READ (data): End. inData_ 's length = " + inData_.length());
+    }
+    
+    private void processIncomingData() {
+        Log.i(TAG, "Process (data): Enter. inData_ 's length = " + inData_.length());
+        
+        final int length = inData_.length();
+        boolean bSawOne = false;  // just saw one '\n'?
+        char currentChar; // The current character being examined.
+        int startIndex = 0;
+        for (int index = startIndex; index < length; index++) {
+            currentChar = inData_.charAt(index);
+            
+            if (!bSawOne && currentChar == '\n') {
+                bSawOne = true;
+            } else if (bSawOne && currentChar == '\n') { // the end mark "\n\n" of an event?
+                final String anEvent = inData_.substring(startIndex, index-1);
+                //Log.i(TAG, "Process (data): ... got an event = [" + anEvent + "].");
+                startIndex = index + 1;
+                
+                HoxApp.getApp().postNetworkEvent(anEvent);
+                
+            } else if (bSawOne) {
+                bSawOne = false;
+            }
+        }
+        
+        inData_.delete(0, startIndex);
+        Log.i(TAG, "Process (data): End. inData_ 's length = " + inData_.length());
     }
 }

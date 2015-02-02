@@ -34,6 +34,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.playxiangqi.hoxchess.MainActivity" />
         </activity>
+        <activity
+            android:name=".TablesActivity"
+            android:label="@string/title_activity_tables"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.playxiangqi.hoxchess.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
