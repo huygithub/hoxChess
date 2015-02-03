@@ -120,6 +120,10 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
+            case R.id.action_reverse_view:
+                Log.d(TAG, "Action 'Reverse View' clicked...");
+                boardView_.reverseView();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }

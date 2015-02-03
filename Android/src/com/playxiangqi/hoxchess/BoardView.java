@@ -20,13 +20,11 @@ package com.playxiangqi.hoxchess;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -74,19 +72,12 @@ public class BoardView extends ImageView {
     //private static final int MOVE_MODE_DRAG_N_DROP = 1;
     // !!! Only this mode is supported !!! private final int moveMode_ = MOVE_MODE_CLICK_N_CLICK;
     
-	//private Referee referee_ = new Referee(); // TODO: Obsolete! To be removed later!
 	private Piece selectedPiece_ = null;
 	private Position selectedPosition_ = null;
 	
 	private Piece recentPiece_ = null;
 	
 	private AIEngine aiEngine_ = new AIEngine();
-	
-	private String pid_ = "p1"; // FIXME: ... _THE_PLAYER_ID_
-	private String password_ = "123456"; // FIXME: .... _THE_PLAYER_PASSWORD_
-    
-	//private NetworkPlayer networkPlayer_ = new NetworkPlayer(this);
-	private boolean isOnline_ = false; // FIXME: Just a hack to test disconnection.
 	
     /**
      * History index.
@@ -174,11 +165,6 @@ public class BoardView extends ImageView {
                 return true;
             }
         });
-        
-        //if (!networkPlayer_.isAlive()) {
-        //    networkPlayer_.start();
-        //}
-        
     }
     
     public int getPieceSize() { return pieceSize_; }
@@ -545,70 +531,6 @@ public class BoardView extends ImageView {
         didMoveOccur(fromPos, toPos, capture, status);
     }
     
-    public void postNetworkEvent(String eventString) {
-        Log.d(TAG, "Post Network event = [" + eventString + "]");
-        
-        messageHandler_.sendMessage(
-                messageHandler_.obtainMessage(MSG_NETWORK_EVENT, eventString) );
-    }
-    
-    private void onNetworkEvent(String eventString) {
-        Log.d(TAG, "On Network event. ENTER.");
-        
-        HashMap<String, String> newEvent = new HashMap<String, String>();
-        
-        for (String token : eventString.split("&")) {
-            //Log.d(TAG, "... token = [" + token + "]");
-            final String[] pair = token.split("=");
-            newEvent.put(pair[0], pair[1]);
-            //Log.d(TAG, "... >>> pair[0]= [" + pair[0] + "], pair[1]=[" + pair[1] + "]");
-        }
-        
-        final String op = newEvent.get("op");
-        final int code = Integer.parseInt( newEvent.get("code") );
-        final String content = newEvent.get("content");
-        //final String tid = newEvent.get("tid");
-        
-        if ("LOGIN".equals(op)) {
-            handleNetworkEvent_LOGIN(code, content);
-        } else if (code != 0) {  // Error
-            Log.i(TAG, "... Received an ERROR event: [" + code + ": " + content + "]");
-        } else {
-            if ("LIST".equals(op)) {
-                handleNetworkEvent_LIST(content);
-            } else if ("I_PLAYERS".equals(op)) {
-                // nothing
-            }
-        }
-    }
-    
-    private void handleNetworkEvent_LOGIN(int code, String content) {
-        Log.d(TAG, "Handle event (LOGIN): ENTER.");
-        
-        if (code != 0) {  // Error
-            Log.i(TAG, "Login failed. Error: [" + content + "]");
-            //[self _showLoginView:[self _getLocalizedLoginError:code defaultError:event]];
-            return;
-        }
-        
-        final String[] components = content.split(";");
-        final String pid = components[0];
-        final String rating = components[1];
-        Log.d(TAG, ">>> [" + pid + " " + rating + "] LOGIN.");
-        
-        if (pid_.equals(pid)) { // my LOGIN?
-            Log.i(TAG, ">>>>>> Got my LOGIN info [" + pid + " " + rating + "].");
-            //networkPlayer_.sendRequest_LIST();
-        }
-    }
-
-    private void handleNetworkEvent_LIST(String content) {
-        Log.d(TAG, "Handle event (LIST): ENTER.");
-        Intent intent = new Intent(getContext(), TablesActivity.class);
-        intent.putExtra("content", content);
-        getContext().startActivity(intent);
-    }
-    
     /**
      * Try to capture a piece at a given location.
      * 
@@ -699,6 +621,16 @@ public class BoardView extends ImageView {
         Log.d(TAG, "The 'New Table' action clicked...");
         resetBoard();
     }
+
+    public void reverseView() {
+        Log.d(TAG, "The 'Reverse View' action clicked...");
+        if ("Black".equals(topColor_)) { // normal view?
+            topColor_ = "Red";
+        } else {
+            topColor_ = "Black";
+        }
+        this.invalidate(); // Request to redraw the board.
+    }
     
     public void resetBoard() {
         Log.d(TAG, "Reset board to the initial state...");
@@ -765,8 +697,7 @@ public class BoardView extends ImageView {
    
         Move move = historyMoves_.get(historyIndex_);
         
-        Position toViewPos = getViewPosition(move.toPosition);
-        Piece piece = getPieceAtViewPosition(toViewPos);
+        Piece piece = getPieceAtViewPosition(move.toPosition);
         piece.setPosition(move.fromPosition);
         
         // Put back the captured piece, if any.
@@ -781,8 +712,7 @@ public class BoardView extends ImageView {
         --historyIndex_;
         if (historyIndex_ >= 0) {
             move = historyMoves_.get(historyIndex_);
-            toViewPos = getViewPosition(move.toPosition);
-            piece = getPieceAtViewPosition(toViewPos);
+            piece = getPieceAtViewPosition(move.toPosition);
             recentPiece_ = piece;
         } else {
             recentPiece_ = null;
@@ -817,10 +747,8 @@ public class BoardView extends ImageView {
         }
         
         // Move the piece from ORIGINAL --> NEW position.
-        Position fromViewPos = getViewPosition(move.fromPosition);
-        Piece piece = getPieceAtViewPosition(fromViewPos);
-        Position toViewPos = getViewPosition(move.toPosition);
-        Piece capture = getPieceAtViewPosition(toViewPos);
+        Piece piece = getPieceAtViewPosition(move.fromPosition);
+        Piece capture = getPieceAtViewPosition(move.toPosition);
         if (capture != null) {
             capture.setCapture(true);
             captureStack_.add(capture);
@@ -901,7 +829,6 @@ public class BoardView extends ImageView {
      * A message handler to handle UI related tasks.
      */
     private static final int MSG_AI_MOVE_READY = 1;
-    private static final int MSG_NETWORK_EVENT = 2;
     private Handler messageHandler_ = new MessageHandler(this);
     static class MessageHandler extends Handler {
         private final WeakReference<BoardView> boardView_;
@@ -926,17 +853,6 @@ public class BoardView extends ImageView {
                 if (boardView != null) {
                     boardView.onAIMoveMade(new Position(row1, col1), new Position(row2, col2));
                     boardView.invalidate();
-                }
-                break;
-            }
-                
-            case MSG_NETWORK_EVENT:
-            {
-                String event = (String) msg.obj;
-                Log.d(TAG, "(MessageHandler) Network event arrived.");
-                BoardView boardView = boardView_.get();
-                if (boardView != null) {
-                    boardView.onNetworkEvent(event);
                 }
                 break;
             }
