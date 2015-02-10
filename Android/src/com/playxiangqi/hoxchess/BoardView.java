@@ -22,6 +22,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.playxiangqi.hoxchess.Enums.TableType;
 import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.content.Context;
@@ -43,6 +44,8 @@ import android.widget.ImageView;
 public class BoardView extends ImageView {
 
     private static final String TAG = "BoardView";
+    
+    private TableType tableType_ = TableType.TABLE_TYPE_LOCAL;
     
     private static final int offset_ = 50; // in pixels
     private int cellSize_;
@@ -205,7 +208,7 @@ public class BoardView extends ImageView {
         }
     }
     
-    public Position getViewPosition(Position pos) {
+    private Position getViewPosition(Position pos) {
         return ( "Black".equals(topColor_) // normal view?
                 ? new Position( pos.row, pos.column )
                 : new Position( Math.abs(pos.row - 9), Math.abs(pos.column - 8) ) );
@@ -483,7 +486,12 @@ public class BoardView extends ImageView {
         
         didMoveOccur(fromPos, toPos, capture, gameStatus);
         
-        if (isGameInProgress()) {
+        if (!isGameInProgress()) {
+            Log.w(TAG, "The game has ended. Do nothing.");
+            return;
+        }
+        
+        if (tableType_ == TableType.TABLE_TYPE_LOCAL) {
             aiEngine_.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
             
             Log.d(TAG, "Ask AI (MaxQi) to generate a new move...");
@@ -495,6 +503,10 @@ public class BoardView extends ImageView {
                             messageHandler_.obtainMessage(MSG_AI_MOVE_READY, aiMove) );
                 }
             }).start();
+        
+        } else if (tableType_ == TableType.TABLE_TYPE_NETWORK) {
+            Log.d(TAG, "Send the move over the network...");
+            HoxApp.getApp().handleLocalMove(fromPos, toPos);
         }
     }
     
@@ -663,9 +675,25 @@ public class BoardView extends ImageView {
         this.invalidate(); // Request to redraw the board.
     }
     
+    public void onGameEnded(Enums.GameStatus gameStatus) {
+        switch (gameStatus) {
+            case GAME_STATUS_BLACK_WIN: gameStatus_ = hoxGAME_STATUS_BLACK_WIN; break;
+            case GAME_STATUS_RED_WIN: gameStatus_ = hoxGAME_STATUS_RED_WIN; break;
+            case GAME_STATUS_DRAWN: gameStatus_ = hoxGAME_STATUS_DRAWN; break;
+            default:
+                Log.w(TAG, "Unsupported game status = " + gameStatus);
+                // Do nothing.
+        }
+        this.invalidate(); // Request to redraw the board.
+    }
+    
     public void onAILevelChanged(int newLevel) {
         Log.d(TAG, "On AI Level changed. newLevel = " + newLevel);
         aiEngine_.setDifficultyLevel(newLevel);
+    }
+    
+    public void setTableType(TableType tableType) {
+        tableType_ = tableType;
     }
     
     private boolean isBoardInReviewMode() {

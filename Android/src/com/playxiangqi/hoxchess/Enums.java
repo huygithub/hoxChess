@@ -37,4 +37,24 @@ public class Enums {
             //       only for "Player". It is used to indicate the role of a player
             //       who is currently only observing the game, not playing.
     }
+    
+    public enum TableType {
+        
+        TABLE_TYPE_LOCAL,
+                // A local board in which the local player plays with AI or with another local player.
+                // or with another local player.
+
+        TABLE_TYPE_NETWORK  
+                // This is a network (only) table
+    }
+    
+    public enum GameStatus {
+        GAME_STATUS_UNKNOWN,
+
+        GAME_STATUS_IN_PROGRESS,
+        GAME_STATUS_RED_WIN,        // Game Over. Red wins
+        GAME_STATUS_BLACK_WIN,      // Game Over. Black wins
+        GAME_STATUS_DRAWN           // Game Over. Drawn.
+    }
+    
 }

@@ -24,7 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
+import com.playxiangqi.hoxchess.Enums.GameStatus;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.os.Handler;
@@ -190,6 +192,8 @@ public class HoxApp extends Application {
             handleNetworkEvent_LEAVE(content);
         } else if ("E_JOIN".equals(op)) {
             handleNetworkEvent_E_JOIN(content);
+        } else if ("E_END".equals(op)) {
+            handleNetworkEvent_E_END(content);
         }
     }
     
@@ -333,6 +337,35 @@ public class HoxApp extends Application {
         }
     }
     
+    private void handleNetworkEvent_E_END(String content) {
+        Log.d(TAG, "Handle event (E_END): ENTER.");
+        final String[] components = content.split(";");
+        final String tableId = components[0];
+        final String gameResult = components[1];
+        
+        if (!myTable_.hasId(tableId)) { // not the table I am interested in?
+            Log.w(TAG, "Ignore the E_END event.");
+            return;
+        }
+        
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity == null) {
+            Log.w(TAG, "The main activity is NULL. Ignore this E_END event.");
+            return;
+        }
+        
+        GameStatus gameStatus = GameStatus.GAME_STATUS_UNKNOWN;
+        
+        if ("black_win".equals(gameResult)) {
+            gameStatus = GameStatus.GAME_STATUS_BLACK_WIN;
+        } else if ("red_win".equals(gameResult)) {
+            gameStatus = GameStatus.GAME_STATUS_RED_WIN;
+        } if ("drawn".equals(gameResult)) {
+            gameStatus = GameStatus.GAME_STATUS_DRAWN;
+        }
+        mainActivity.onGameEnded(gameStatus);
+    }
+    
     // --------------------------------------------------------
     
     public void createNetworkPlayer() {
@@ -390,6 +423,17 @@ public class HoxApp extends Application {
             } else {
                 networkPlayer_.sendRequest_JOIN(myTable_.tableId, "Black");
             }
+        }
+    }
+
+    @SuppressLint("DefaultLocale")
+    public void handleLocalMove(Position fromPos, Position toPos) {
+        Log.i(TAG, "Handle local move");
+        if (myTable_.isValid()) {
+            final String move = String.format("%d%d%d%d",
+                    fromPos.column, fromPos.row, toPos.column, toPos.row);
+            Log.i(TAG, " .... move: [" + move + "]");
+            networkPlayer_.sendRequest_MOVE(myTable_.tableId, move);
         }
     }
     

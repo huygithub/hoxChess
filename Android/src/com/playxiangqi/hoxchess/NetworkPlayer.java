@@ -78,6 +78,7 @@ class NetworkPlayer extends Thread {
     private static final int MSG_NETWORK_SEND_LIST = 4;
     private static final int MSG_NETWORK_SEND_JOIN = 5;
     private static final int MSG_NETWORK_SEND_LEAVE = 6;
+    private static final int MSG_NETWORK_SEND_MOVE = 7;
     
     @SuppressLint("HandlerLeak") @Override
     public void run() {
@@ -119,7 +120,15 @@ class NetworkPlayer extends Thread {
                             send_LEAVE(map);
                             break;
                         }
-                            
+
+                        case MSG_NETWORK_SEND_MOVE:
+                        {
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> map = (Map<String, String>) msg.obj;
+                            send_MOVE(map);
+                            break;
+                        }
+                        
                         default:
                             break;
                     }
@@ -175,6 +184,14 @@ class NetworkPlayer extends Thread {
         Map<String, String> map = new HashMap<String, String>();
         map.put("tid", tableId);
         handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_LEAVE, map));
+    }
+
+    public void sendRequest_MOVE(String tableId, String move) {
+        Log.d(TAG, "Send 'MOVE' request to server...");
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("tid", tableId);
+        map.put("move", move);
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_MOVE, map));
     }
     
     private void handleConnectToServer() throws IOException {
@@ -307,6 +324,13 @@ class NetworkPlayer extends Thread {
     private void send_LEAVE(Map<String, String> map) throws IOException {
         final String tableId = map.get("tid");
         String request = "op=LEAVE&pid=" + pid_ + "&tid=" + tableId;
+        sendRequest(request);
+    }
+
+    private void send_MOVE(Map<String, String> map) throws IOException {
+        final String tableId = map.get("tid");
+        final String move = map.get("move");
+        String request = "op=MOVE&pid=" + pid_ + "&tid=" + tableId  + "&move=" + move;
         sendRequest(request);
     }
     

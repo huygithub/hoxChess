@@ -19,6 +19,7 @@
 package com.playxiangqi.hoxchess;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
+import com.playxiangqi.hoxchess.Enums.TableType;
 
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
@@ -137,7 +138,8 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
     }
 
     public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
-        Log.d(TAG, "Update board with new Table info (LIST): ENTER.");
+        Log.d(TAG, "Update board with new Table info (I_TABLE) from network: ENTER.");
+        boardView_.setTableType(TableType.TABLE_TYPE_NETWORK);
         topPlayerLabel_.setText(tableInfo.getBlackInfo());
         bottomPlayerLabel_.setText(tableInfo.getRedInfo());
     }
@@ -212,6 +214,10 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
                 }
             }
         }
+    }
+    
+    public void onGameEnded(Enums.GameStatus gameStatus) {
+        boardView_.onGameEnded(gameStatus);
     }
     
     @Override
