@@ -172,7 +172,7 @@ class NetworkPlayer extends Thread {
     }
 
     public void sendRequest_JOIN(String tableId, String joinColor) {
-        Log.d(TAG, "Send 'JOIN' request to server... TableId: " + tableId);
+        Log.d(TAG, "Send 'JOIN' to server... TableId: " + tableId + ", joinColor: " + joinColor);
         Map<String, String> map = new HashMap<String, String>();
         map.put("tid", tableId);
         map.put("color", joinColor);

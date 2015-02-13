@@ -50,6 +50,8 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
     private Button topPlayerButton_;
     private Button bottomPlayerButton_;
     
+    private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -123,13 +125,27 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
                 return true;
             case R.id.action_reverse_view:
                 Log.d(TAG, "Action 'Reverse View' clicked...");
-                boardView_.reverseView();
+                reverseView();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+    private void reverseView() {
+        isBlackOnTop_ = !isBlackOnTop_;
+        boardView_.reverseView();
+        
+        // Swap the player labels and buttons.
+        CharSequence savedText = topPlayerLabel_.getText();
+        topPlayerLabel_.setText(bottomPlayerLabel_.getText());
+        bottomPlayerLabel_.setText(savedText);
+        
+        savedText = topPlayerButton_.getText();
+        topPlayerButton_.setText(bottomPlayerButton_.getText());
+        bottomPlayerButton_.setText(savedText);
+    }
+    
     public void startActvityToListTables(String content) {
         Log.d(TAG, "Start activity (LIST): ENTER.");
         Intent intent = new Intent(this, TablesActivity.class);
@@ -139,6 +155,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
 
     public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
         Log.d(TAG, "Update board with new Table info (I_TABLE) from network: ENTER.");
+        boardView_.resetBoard();
         boardView_.setTableType(TableType.TABLE_TYPE_NETWORK);
         topPlayerLabel_.setText(tableInfo.getBlackInfo());
         bottomPlayerLabel_.setText(tableInfo.getRedInfo());
@@ -146,7 +163,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
 
     public void resetBoardWithNewMoves(String[] moves) {
         Log.d(TAG, "Reset board with new (MOVES): ENTER.");
-        boardView_.resetBoard();
+        //boardView_.resetBoard();
         for (String move : moves) {
             Log.d(TAG, ".......... Move [" + move + "]");
             int row1 = move.charAt(1) - '0';
@@ -177,6 +194,77 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         bottomPlayerLabel_.setText(getString(R.string.you_label));
         boardView_.resetBoard();
     }
+
+    private void setBlackInfo(String playerInfo) {
+        if (isBlackOnTop_) {
+            topPlayerLabel_.setText(playerInfo);
+        } else {
+            bottomPlayerLabel_.setText(playerInfo);
+        }
+    }
+
+    private void setRedInfo(String playerInfo) {
+        if (isBlackOnTop_) {
+            bottomPlayerLabel_.setText(playerInfo);
+        } else {
+            topPlayerLabel_.setText(playerInfo);
+        }
+    }
+    
+    private void setBlackPossibleMode_PLAY() {
+        if (isBlackOnTop_) {
+            topPlayerButton_.setText(getString(R.string.button_play_black));
+        } else {
+            bottomPlayerButton_.setText(getString(R.string.button_play_black));
+        }
+    }
+
+    private void setRedPossibleMode_PLAY() {
+        if (isBlackOnTop_) {
+            bottomPlayerButton_.setText(getString(R.string.button_play_red));
+        } else {
+            topPlayerButton_.setText(getString(R.string.button_play_red));
+        }
+    }
+    
+    private void setBlackPossibleMode_LEAVE() {
+        if (isBlackOnTop_) {
+            topPlayerButton_.setText("X");
+        } else {
+            bottomPlayerButton_.setText("X");
+        }
+    }
+    
+    private void setRedPossibleMode_LEAVE() {
+        if (isBlackOnTop_) {
+            bottomPlayerButton_.setText("X");
+        } else {
+            topPlayerButton_.setText("X");
+        }
+    }
+    
+    private void onMyColorChanged(Enums.ColorEnum myNewColor, Enums.ColorEnum myLastColor) {
+        switch (myNewColor) {
+            case COLOR_BLACK:
+                setBlackPossibleMode_LEAVE();
+                break;
+                
+            case COLOR_RED:
+                setRedPossibleMode_LEAVE();
+                break;
+                
+            case COLOR_NONE:
+                if (myLastColor == ColorEnum.COLOR_BLACK) {
+                    setBlackPossibleMode_PLAY();
+                } else if (myLastColor == ColorEnum.COLOR_RED) {
+                    setRedPossibleMode_PLAY();
+                }
+                break;
+                
+            default:
+                break;
+        }
+    }
     
     public void updateBoardWithPlayerInfo(Enums.ColorEnum playerColor, String playerInfo) {
         if (playerColor == ColorEnum.COLOR_BLACK) {
@@ -186,38 +274,68 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         }
     }
 
-    public void onPlayerJoinedTable(Enums.ColorEnum playerColor, String playerInfo,
+    public void onPlayerJoinedTable(String pid,
+            Enums.ColorEnum playerColor, Enums.ColorEnum playerPreviousColor,
+            String playerInfo,
             boolean myColorChanged, Enums.ColorEnum myLastColor) {
         
-        if (playerColor == ColorEnum.COLOR_BLACK) {
-            topPlayerLabel_.setText(playerInfo);
-            if (myColorChanged) {
-                topPlayerButton_.setText("X");
+        // Cleanup the old seat first.
+        if (playerPreviousColor == ColorEnum.COLOR_BLACK) {
+            setBlackInfo("*");
+        } else if (playerPreviousColor == ColorEnum.COLOR_RED) {
+            setRedInfo("*");
+        }
+        
+        // Assign the new seat.
+        switch (playerColor) {
+            case COLOR_BLACK:
+            {
+                setBlackInfo(playerInfo);
+                break;
             }
-        } else if (playerColor == ColorEnum.COLOR_RED) {
-            bottomPlayerLabel_.setText(playerInfo);
-            if (myColorChanged) {
-                bottomPlayerButton_.setText("X");
+            case COLOR_RED:
+            {
+                setRedInfo(playerInfo);
+                break;
             }
-        } else if (playerColor == ColorEnum.COLOR_NONE) {
-            if (myLastColor == ColorEnum.COLOR_BLACK) {
-                topPlayerLabel_.setText("*");
-            } else if (myLastColor == ColorEnum.COLOR_RED) {
-                bottomPlayerLabel_.setText("*");
+            case COLOR_NONE:
+            {
+                break;
             }
-            
-            if (myColorChanged) {
-                if (myLastColor == ColorEnum.COLOR_BLACK) {
-                    topPlayerButton_.setText(getString(R.string.button_play_black));
-                } else if (myLastColor == ColorEnum.COLOR_RED) {
-                    bottomPlayerButton_.setText(getString(R.string.button_play_red));
-                }
+            default:
+                break; // Do nothing
+        }
+        
+        // Handle the special case in which I changed my seat.
+        if (myColorChanged) {
+            onMyColorChanged(playerColor, myLastColor);
+        }
+    }
+    
+    public void onPlayerLeftTable(String pid, Enums.ColorEnum playerPreviousColor) {
+        final String myPid = HoxApp.getApp().getMyPid();
+        
+        if (pid.equals(myPid)) {
+            Log.i(TAG, "I just left my table.");
+            updateBoardAfterLeavingTable();
+        
+        } else { // Other player left my table?
+            if (playerPreviousColor == ColorEnum.COLOR_BLACK) {
+                setBlackInfo("*");
+                setBlackPossibleMode_PLAY();
+            } else if (playerPreviousColor == ColorEnum.COLOR_RED) {
+                setRedInfo("*");
+                setRedPossibleMode_PLAY();
             }
         }
     }
     
     public void onGameEnded(Enums.GameStatus gameStatus) {
         boardView_.onGameEnded(gameStatus);
+    }
+
+    public void onGameReset() {
+        boardView_.resetBoard();
     }
     
     @Override
@@ -309,11 +427,15 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
     }
     
     public void onTopButtonClick(View view) {
-        HoxApp.getApp().handleTopButtonClick();
+        Enums.ColorEnum clickedColor =
+                (isBlackOnTop_ ? ColorEnum.COLOR_BLACK : ColorEnum.COLOR_RED);
+        HoxApp.getApp().handlePlayerButtonClick(clickedColor);
     }
 
     public void onBottomButtonClick(View view) {
-        //boardView_.onReplay_END();
+        Enums.ColorEnum clickedColor =
+                (isBlackOnTop_ ? ColorEnum.COLOR_RED : ColorEnum.COLOR_BLACK);
+        HoxApp.getApp().handlePlayerButtonClick(clickedColor);
     }
     
     /**

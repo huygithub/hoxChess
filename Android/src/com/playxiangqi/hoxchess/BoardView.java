@@ -51,7 +51,7 @@ public class BoardView extends ImageView {
     private int cellSize_;
     private int pieceSize_ = 64;  // (in pixels) Note: It should be an even number.
     
-    private String topColor_ = "Black"; // Normal view: Black at the top.
+    private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
     
     private Paint linePaint_;
     private Paint selectPaint_;
@@ -209,7 +209,7 @@ public class BoardView extends ImageView {
     }
     
     private Position getViewPosition(Position pos) {
-        return ( "Black".equals(topColor_) // normal view?
+        return ( isBlackOnTop_ // normal view?
                 ? new Position( pos.row, pos.column )
                 : new Position( Math.abs(pos.row - 9), Math.abs(pos.column - 8) ) );
     }
@@ -260,7 +260,7 @@ public class BoardView extends ImageView {
         canvas.drawLine(offset_ + 5*cellSize_, offset_ + 7*cellSize_, offset_ + 5*cellSize_ - 2*cellSize_, offset_ + 7*cellSize_ + 2*cellSize_, linePaint_);
         
         // The labels (a-h and 0-9).
-        final boolean bDescending = "Red".equals(topColor_);
+        final boolean bDescending = (! isBlackOnTop_);
         final int imageRadius = (int) (pieceSize_/2);
         drawHeaderRow(canvas, offset_ - imageRadius - 10, offset_, true /*bDescending*/);
         drawHeaderRow(canvas, offset_ + cellSize_*8 + imageRadius, offset_, true /*bDescending*/);
@@ -636,11 +636,7 @@ public class BoardView extends ImageView {
 
     public void reverseView() {
         Log.d(TAG, "The 'Reverse View' action clicked...");
-        if ("Black".equals(topColor_)) { // normal view?
-            topColor_ = "Red";
-        } else {
-            topColor_ = "Black";
-        }
+        isBlackOnTop_ = !isBlackOnTop_;
         this.invalidate(); // Request to redraw the board.
     }
     

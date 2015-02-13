@@ -49,15 +49,15 @@ public class HoxApp extends Application {
     
     private String pid_ = "_THE_PLAYER_ID_"; // FIXME: ... _THE_PLAYER_ID_
     private String password_ = "_THE_PLAYER_PASSWORD_"; // FIXME: .... _THE_PLAYER_PASSWORD_
+    private String myRating_ = "0";
     
     private NetworkPlayer networkPlayer_;
     private WeakReference<MainActivity> mainActivity_;
     private TableInfo myTable_ = new TableInfo();
-    //private String tableId_;
     private ColorEnum myColor_ = ColorEnum.COLOR_UNKNOWN;
     
     public HoxApp() {
-        // Do nothing.
+        // Empty
     }
 
     @Override
@@ -194,6 +194,8 @@ public class HoxApp extends Application {
             handleNetworkEvent_E_JOIN(content);
         } else if ("E_END".equals(op)) {
             handleNetworkEvent_E_END(content);
+        } else if ("RESET".equals(op)) {
+            handleNetworkEvent_RESET(content);
         }
     }
     
@@ -213,6 +215,7 @@ public class HoxApp extends Application {
         
         if (pid_.equals(pid)) { // my LOGIN?
             Log.i(TAG, ">>>>>> Got my LOGIN info [" + pid + " " + rating + "].");
+            myRating_ = rating;
             networkPlayer_.sendRequest_LIST();
         }
     }
@@ -229,10 +232,10 @@ public class HoxApp extends Application {
         Log.d(TAG, "Handle event (I_TABLE): ENTER.");
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
-            TableInfo tableInfo = new TableInfo(content);
-            myTable_ = tableInfo;
+            myColor_ = ColorEnum.COLOR_NONE;
+            myTable_ = new TableInfo(content);
             Log.i(TAG, "... >>> Set my table Id: " + myTable_.tableId);
-            mainActivity.updateBoardWithNewTableInfo(tableInfo);
+            mainActivity.updateBoardWithNewTableInfo(myTable_);
         }
     }
 
@@ -278,15 +281,48 @@ public class HoxApp extends Application {
         final String tableId = components[0];
         final String pid = components[1];
         
+        if (!myTable_.hasId(tableId)) { // not the table I am interested in?
+            Log.w(TAG, "Ignore the LEAVE event.");
+            return;
+        }
+        
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity == null) {
+            Log.w(TAG, "The main activity is NULL. Ignore this LEAVE event.");
+            //return;
+        }
+        
+        
+        // Special case: The player left Red/Black seat.
+        Enums.ColorEnum playerPreviousColor = ColorEnum.COLOR_UNKNOWN;
+        if (pid.equals(myTable_.blackId)) {
+            playerPreviousColor = ColorEnum.COLOR_BLACK;
+        } else if (pid.equals(myTable_.redId)) {
+            playerPreviousColor = ColorEnum.COLOR_RED;
+        }
+        
         // Check if I just left the Table.
-        if (myTable_.hasId(tableId) && pid.equals(pid_)) {
+        if (pid.equals(pid_)) {
             Log.i(TAG, "I just left my table: " + tableId);
-            MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
                 mainActivity.updateBoardAfterLeavingTable();
             }
             myTable_ = new TableInfo();
+            myColor_ = ColorEnum.COLOR_UNKNOWN;
+        
+        } else { // Other player left my table?
+            myTable_.onPlayerLeft(pid);
+            if (mainActivity != null) {
+                mainActivity.onPlayerLeftTable(pid, playerPreviousColor);
+            }
         }
+    }
+    
+    private Enums.ColorEnum stringToPlayerColor(String color) {
+        if ("Red".equals(color)) return ColorEnum.COLOR_RED;
+        if ("Black".equals(color)) return ColorEnum.COLOR_BLACK;
+        if ("None".equals(color)) return ColorEnum.COLOR_NONE;
+        return ColorEnum.COLOR_UNKNOWN;
     }
     
     private void handleNetworkEvent_E_JOIN(String content) {
@@ -308,33 +344,41 @@ public class HoxApp extends Application {
             return;
         }
         
+        final Enums.ColorEnum playerColor = stringToPlayerColor(color);
+        
+        // Special case: The player left Red/Black seat.
+        Enums.ColorEnum playerPreviousColor = ColorEnum.COLOR_UNKNOWN;
+        if (pid.equals(myTable_.blackId)) {
+            playerPreviousColor = ColorEnum.COLOR_BLACK;
+        } else if (pid.equals(myTable_.redId)) {
+            playerPreviousColor = ColorEnum.COLOR_RED;
+        }
+        
+        myTable_.onPlayerJoined(pid, rating, playerColor);
+        
         final String playerInfo = TableInfo.formatPlayerInfo(pid, rating);
         boolean myColorChanged = false;
         Enums.ColorEnum myLastColor = myColor_;
         
         if ("Red".equals(color)) {
-            //mainActivity.updateBoardWithPlayerInfo(ColorEnum.COLOR_RED, playerInfo);
             if (pid.equals(pid_)) {
                 myColor_ = ColorEnum.COLOR_RED;
                 myColorChanged = true;
             }
-            mainActivity.onPlayerJoinedTable(ColorEnum.COLOR_RED, playerInfo, myColorChanged, myLastColor);
             
         } else if ("Black".equals(color)) {
-            //mainActivity.updateBoardWithPlayerInfo(ColorEnum.COLOR_BLACK, playerInfo);
             if (pid.equals(pid_)) {
                 myColor_ = ColorEnum.COLOR_BLACK;
                 myColorChanged = true;
             }
-            mainActivity.onPlayerJoinedTable(ColorEnum.COLOR_BLACK, playerInfo, myColorChanged, myLastColor);
             
         } else if ("None".equals(color)) {
             if (pid.equals(pid_)) {
                 myColor_ = ColorEnum.COLOR_NONE;
                 myColorChanged = true;
             }
-            mainActivity.onPlayerJoinedTable(ColorEnum.COLOR_NONE, playerInfo, myColorChanged, myLastColor);
         }
+        mainActivity.onPlayerJoinedTable(pid, playerColor, playerPreviousColor, playerInfo, myColorChanged, myLastColor);
     }
     
     private void handleNetworkEvent_E_END(String content) {
@@ -366,6 +410,25 @@ public class HoxApp extends Application {
         mainActivity.onGameEnded(gameStatus);
     }
     
+    private void handleNetworkEvent_RESET(String content) {
+        Log.d(TAG, "Handle event (RESET): ENTER.");
+        final String[] components = content.split(";");
+        final String tableId = components[0];
+        
+        if (!myTable_.hasId(tableId)) { // not the table I am interested in?
+            Log.w(TAG, "Ignore the E_END event.");
+            return;
+        }
+        
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity == null) {
+            Log.w(TAG, "The main activity is NULL. Ignore this E_END event.");
+            return;
+        }
+        
+        mainActivity.onGameReset();
+    }
+    
     // --------------------------------------------------------
     
     public void createNetworkPlayer() {
@@ -381,6 +444,14 @@ public class HoxApp extends Application {
         return networkPlayer_.isOnline();
     }
 
+    public String getMyPid() {
+        return pid_;
+    }
+
+    public String getMyRating() {
+        return myRating_;
+    }
+    
     public TableInfo getMyTable() {
         return myTable_;
     }
@@ -402,6 +473,16 @@ public class HoxApp extends Application {
     
     public void handleTableSelection(String tableId) {
         Log.i(TAG, "Select table: " + tableId + ".");
+        
+        if (myTable_.hasId(tableId)) {
+            Log.w(TAG, "Same table: " + tableId + ". Ignore the request.");
+            return;
+        }
+        
+        if (myTable_.isValid()) {
+            networkPlayer_.sendRequest_LEAVE(myTable_.tableId); // Leave the old table.
+        }
+        
         networkPlayer_.sendRequest_JOIN(tableId, "None");
     }
 
@@ -412,20 +493,73 @@ public class HoxApp extends Application {
             return;
         }
         networkPlayer_.sendRequest_LEAVE(myTable_.tableId);
-        //tableId_ = null;
     }
     
-    public void handleTopButtonClick() {
-        Log.i(TAG, "Handle top-button click");
-        if (myTable_.isValid()) {
-            if (myColor_ == ColorEnum.COLOR_RED || myColor_ == ColorEnum.COLOR_BLACK) {
-                networkPlayer_.sendRequest_JOIN(myTable_.tableId, "None");
-            } else {
-                networkPlayer_.sendRequest_JOIN(myTable_.tableId, "Black");
-            }
+    public void handlePlayerButtonClick(Enums.ColorEnum clickedColor) {
+        Log.i(TAG, "Handle player-button click. clickedColor = " + clickedColor);
+        
+        if (!myTable_.isValid()) return;
+        
+        Enums.ColorEnum requestedColor = ColorEnum.COLOR_UNKNOWN;
+     
+        switch (myColor_) {
+            case COLOR_RED:
+                if (clickedColor == myColor_) {
+                    requestedColor = ColorEnum.COLOR_NONE;
+                } else if (myTable_.blackId.length() == 0) {
+                    requestedColor = ColorEnum.COLOR_BLACK;
+                }
+                break;
+              
+            case COLOR_BLACK:
+                if (clickedColor == myColor_) {
+                    requestedColor = ColorEnum.COLOR_NONE;
+                } else if (myTable_.redId.length() == 0) {
+                    requestedColor = ColorEnum.COLOR_RED;
+                }
+                break;
+                
+            case COLOR_NONE: /* falls through */
+            case COLOR_UNKNOWN: // FIXME: We should already set to "NONE" when we join the table.
+                if (clickedColor == ColorEnum.COLOR_BLACK && myTable_.blackId.length() == 0) {
+                    requestedColor = ColorEnum.COLOR_BLACK;
+                } else if (clickedColor == ColorEnum.COLOR_RED && myTable_.redId.length() == 0) {
+                    requestedColor = ColorEnum.COLOR_RED;
+                }
+                break;
+                
+            default:
+                break;
         }
+        
+        String joinColor = null;
+        if (requestedColor == ColorEnum.COLOR_NONE) joinColor = "None";
+        else if (requestedColor == ColorEnum.COLOR_RED) joinColor = "Red";
+        else if (requestedColor == ColorEnum.COLOR_BLACK) joinColor = "Black";
+        else {
+            return;
+        }
+        
+        if (myColor_ == requestedColor) {
+            return; // No need to do anything.
+        }
+        
+        /* NOTE:
+         *  It appears that the Flashed-based client cannot handle the case in which the player
+         *  directly changes seat from Red => Black (or Black => Red).
+         *  So, we will break it down into 2 separate requests. For example,
+         *      (1) Red => None
+         *      (2) None => Black
+         */
+        if (       (myColor_ == ColorEnum.COLOR_RED || myColor_ == ColorEnum.COLOR_BLACK)
+                && (requestedColor == ColorEnum.COLOR_RED || requestedColor == ColorEnum.COLOR_BLACK) ) {
+            
+            networkPlayer_.sendRequest_JOIN(myTable_.tableId, "None");
+        }
+        
+        networkPlayer_.sendRequest_JOIN(myTable_.tableId, joinColor);
     }
-
+    
     @SuppressLint("DefaultLocale")
     public void handleLocalMove(Position fromPos, Position toPos) {
         Log.i(TAG, "Handle local move");

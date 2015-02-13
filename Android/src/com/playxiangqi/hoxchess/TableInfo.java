@@ -62,6 +62,45 @@ public class TableInfo {
         return (tableId != null && tableId.equals(tid));
     }
     
+    public void onPlayerJoined(String pid, String rating, Enums.ColorEnum playerColor) {
+        switch (playerColor) {
+            case COLOR_BLACK:
+                blackId = pid;
+                blackRating = rating;
+                break;
+ 
+            case COLOR_RED:
+                redId = pid;
+                redRating = rating;
+                break;
+                
+            case COLOR_NONE:
+            {
+                if (pid.equals(blackId)) {
+                    blackId = "";
+                    blackRating = "0";
+                } else if (pid.equals(redId)) {
+                    redId = "";
+                    redRating = "0";
+                }
+                break;
+            }
+                
+            default:
+                break;
+        }
+    }
+    
+    public void onPlayerLeft(String pid) {
+        if (pid.equals(blackId)) {
+            blackId = "";
+            blackRating = "0";
+        } else if (pid.equals(redId)) {
+            redId = "";
+            redRating = "0";
+        }
+    }
+    
     static public String formatPlayerInfo(String pid, String rating) {
         return (pid.length() == 0
                 ? "*" : String.format("%s(%s)", pid, rating));
@@ -69,23 +108,14 @@ public class TableInfo {
     
     public String getRedInfo() {
         return formatPlayerInfo(redId, redRating);
-        //return (redId.length() == 0
-        //        ? "*" : String.format("%s(%s)", redId, redRating));
     }
     
     public String getBlackInfo() {
         return formatPlayerInfo(blackId, blackRating);
-        //return (blackId.length() == 0
-        //        ? "*" : String.format("%s(%s)", blackId, blackRating));
     }
     
     @Override
     public String toString() {
-        final String redInfo = (redId.length() == 0
-                ? "*" : String.format("%s(%s)", redId, redRating));
-        final String blackInfo = (blackId.length() == 0
-                ? "*" : String.format("%s(%s)", blackId, blackRating));
-        
-        return String.format("%s | %s | %s | %s ", tableId, itimes, redInfo, blackInfo);
+        return String.format("%s | %s | %s | %s ", tableId, itimes, getRedInfo(), getBlackInfo());
     }
 }
