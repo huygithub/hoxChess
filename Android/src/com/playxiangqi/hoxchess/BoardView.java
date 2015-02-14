@@ -231,7 +231,9 @@ public class BoardView extends ImageView {
 	
     private void adjustBoardParameters(int boardWidth) {
         cellSize_ = (boardWidth - 2 * offset_)/8;
-        Log.d(TAG, "adjustBoardParameters(): cellSize_ = " + cellSize_);
+        pieceSize_ = (int) (cellSize_ * 0.8f);
+        if ((pieceSize_ % 2) == 1) { --pieceSize_; } // Make it an event number.
+        Log.d(TAG, "adjustBoardParameters(): cellSize_ = " + cellSize_ + ", pieceSize_ = " + pieceSize_);
     }
     
     private void drawBoard(Canvas canvas, int bgColor_UNUSED, int lineColor_UNUSED) {
