@@ -8,6 +8,8 @@
     <string name="action_reverse_view">Reverse View</string>
     <string name="action_new">New Table</string>
     <string name="action_close">Close Table</string>
+    <string name="action_draw">Offer Draw</string>
+    <string name="action_resign">Offer Resign</string>
     <string name="action_play_online">Play Online</string>
     <string name="action_logout">Logout</string>
     <string name="board_alt">Board</string>

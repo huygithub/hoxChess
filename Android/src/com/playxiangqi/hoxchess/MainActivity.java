@@ -110,6 +110,14 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
                 Log.d(TAG, "Action 'Close Table' clicked...");
                 HoxApp.getApp().handleRequestToCloseCurrentTable();
                 return true;
+            case R.id.action_offer_draw:
+                Log.d(TAG, "Action 'Offer Draw' clicked...");
+                HoxApp.getApp().handleRequestToOfferDraw();
+                return true;
+            case R.id.action_offer_resign:
+                Log.d(TAG, "Action 'Offer Resign' clicked...");
+                HoxApp.getApp().handleRequestToOfferResign();
+                return true;
             case R.id.action_play_online:
                 Log.d(TAG, "Action 'Play Online' clicked...");
                 HoxApp.getApp().createNetworkPlayer();

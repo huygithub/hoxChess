@@ -27,6 +27,14 @@
           android:title="@string/action_close"
           app:showAsAction="never" />
 
+    <item android:id="@+id/action_offer_draw"
+          android:title="@string/action_draw"
+          app:showAsAction="never" />
+
+    <item android:id="@+id/action_offer_resign"
+          android:title="@string/action_resign"
+          app:showAsAction="never" />
+    
     <item android:id="@+id/action_logout"
           android:title="@string/action_logout"
           app:showAsAction="never" />

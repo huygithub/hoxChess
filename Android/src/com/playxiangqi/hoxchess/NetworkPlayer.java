@@ -79,6 +79,8 @@ class NetworkPlayer extends Thread {
     private static final int MSG_NETWORK_SEND_JOIN = 5;
     private static final int MSG_NETWORK_SEND_LEAVE = 6;
     private static final int MSG_NETWORK_SEND_MOVE = 7;
+    private static final int MSG_NETWORK_SEND_DRAW = 8;
+    private static final int MSG_NETWORK_SEND_RESIGN = 9;
     
     @SuppressLint("HandlerLeak") @Override
     public void run() {
@@ -126,6 +128,22 @@ class NetworkPlayer extends Thread {
                             @SuppressWarnings("unchecked")
                             Map<String, String> map = (Map<String, String>) msg.obj;
                             send_MOVE(map);
+                            break;
+                        }
+                        
+                        case MSG_NETWORK_SEND_DRAW:
+                        {
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> map = (Map<String, String>) msg.obj;
+                            send_DRAW(map);
+                            break;
+                        }
+                        
+                        case MSG_NETWORK_SEND_RESIGN:
+                        {
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> map = (Map<String, String>) msg.obj;
+                            send_RESIGN(map);
                             break;
                         }
                         
@@ -186,6 +204,20 @@ class NetworkPlayer extends Thread {
         handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_LEAVE, map));
     }
 
+    public void sendRequest_DRAW(String tableId) {
+        Log.d(TAG, "Send 'DRAW' request to server...");
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("tid", tableId);
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_DRAW, map));
+    }
+
+    public void sendRequest_RESIGN(String tableId) {
+        Log.d(TAG, "Send 'RESIGN' request to server...");
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("tid", tableId);
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_RESIGN, map));
+    }
+    
     public void sendRequest_MOVE(String tableId, String move) {
         Log.d(TAG, "Send 'MOVE' request to server...");
         Map<String, String> map = new HashMap<String, String>();
@@ -331,6 +363,18 @@ class NetworkPlayer extends Thread {
         final String tableId = map.get("tid");
         final String move = map.get("move");
         String request = "op=MOVE&pid=" + pid_ + "&tid=" + tableId  + "&move=" + move;
+        sendRequest(request);
+    }
+    
+    private void send_DRAW(Map<String, String> map) throws IOException {
+        final String tableId = map.get("tid");
+        String request = "op=DRAW&pid=" + pid_ + "&tid=" + tableId;
+        sendRequest(request);
+    }
+
+    private void send_RESIGN(Map<String, String> map) throws IOException {
+        final String tableId = map.get("tid");
+        String request = "op=RESIGN&pid=" + pid_ + "&tid=" + tableId;
         sendRequest(request);
     }
     

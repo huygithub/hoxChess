@@ -32,6 +32,7 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 public class HoxApp extends Application {
 
@@ -196,6 +197,8 @@ public class HoxApp extends Application {
             handleNetworkEvent_E_END(content);
         } else if ("RESET".equals(op)) {
             handleNetworkEvent_RESET(content);
+        } else if ("DRAW".equals(op)) {
+            handleNetworkEvent_DRAW(content);
         }
     }
     
@@ -429,6 +432,27 @@ public class HoxApp extends Application {
         mainActivity.onGameReset();
     }
     
+    private void handleNetworkEvent_DRAW(String content) {
+        Log.d(TAG, "Handle event (DRAW): ENTER.");
+        final String[] components = content.split(";");
+        final String tableId = components[0];
+        final String pid = components[1];
+        
+        if (!myTable_.hasId(tableId)) { // not the table I am interested in?
+            Log.w(TAG, "Ignore the DRAW event.");
+            return;
+        }
+        
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity == null) {
+            Log.w(TAG, "The main activity is NULL. Ignore this E_END event.");
+            return;
+        }
+        
+        Toast.makeText(getApplicationContext(),
+                pid + " offered to DRAW the game", Toast.LENGTH_LONG).show();
+    }
+    
     // --------------------------------------------------------
     
     public void createNetworkPlayer() {
@@ -493,6 +517,24 @@ public class HoxApp extends Application {
             return;
         }
         networkPlayer_.sendRequest_LEAVE(myTable_.tableId);
+    }
+    
+    public void handleRequestToOfferDraw() {
+        Log.i(TAG, "Send request to 'Offer Draw'...");
+        if (!myTable_.isValid()) {
+            Log.w(TAG, "No current table. Ignore the request to 'Offer Draw' the current Table");
+            return;
+        }
+        networkPlayer_.sendRequest_DRAW(myTable_.tableId);
+    }
+    
+    public void handleRequestToOfferResign() {
+        Log.i(TAG, "Send request to 'Offer Resign'...");
+        if (!myTable_.isValid()) {
+            Log.w(TAG, "No current table. Ignore the request to 'Offer Resign' the current Table");
+            return;
+        }
+        networkPlayer_.sendRequest_RESIGN(myTable_.tableId);
     }
     
     public void handlePlayerButtonClick(Enums.ColorEnum clickedColor) {
