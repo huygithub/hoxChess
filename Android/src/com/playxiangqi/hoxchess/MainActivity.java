@@ -91,8 +91,27 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         super.onPrepareOptionsMenu(menu);
         menu.findItem(R.id.action_logout).setVisible(
                 HoxApp.getApp().isOnline());
-        menu.findItem(R.id.action_close_table).setVisible(
-                HoxApp.getApp().getCurrentTableId() != null);
+        
+        final boolean isInOnlineTable = HoxApp.getApp().getMyTable().isValid();
+        final ColorEnum myColor = HoxApp.getApp().getMyColor();
+        final boolean isGameOver = HoxApp.getApp().isGameOver();
+        final int moveCount = boardView_.getMoveCount();
+        
+        if (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED) {
+            if (moveCount >= 2) { // The game has actually started?
+                menu.findItem(R.id.action_offer_draw).setVisible(!isGameOver);
+                menu.findItem(R.id.action_offer_resign).setVisible(!isGameOver);
+                menu.findItem(R.id.action_close_table).setVisible(isGameOver);
+            } else {
+                menu.findItem(R.id.action_offer_draw).setVisible(false);
+                menu.findItem(R.id.action_offer_resign).setVisible(false);
+                menu.findItem(R.id.action_close_table).setVisible(true);
+            }
+        } else {
+            menu.findItem(R.id.action_offer_draw).setVisible(false);
+            menu.findItem(R.id.action_offer_resign).setVisible(false);
+            menu.findItem(R.id.action_close_table).setVisible(isInOnlineTable);
+        }
         return true; // display the menu
     }
     

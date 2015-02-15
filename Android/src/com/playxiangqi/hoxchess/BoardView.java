@@ -694,6 +694,10 @@ public class BoardView extends ImageView {
         tableType_ = tableType;
     }
     
+    public int getMoveCount() {
+        return historyMoves_.size();
+    }
+    
     private boolean isBoardInReviewMode() {
         return (historyIndex_ != HISTORY_INDEX_END);
     }

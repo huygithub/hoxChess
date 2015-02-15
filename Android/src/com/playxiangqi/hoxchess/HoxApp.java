@@ -57,6 +57,8 @@ public class HoxApp extends Application {
     private TableInfo myTable_ = new TableInfo();
     private ColorEnum myColor_ = ColorEnum.COLOR_UNKNOWN;
     
+    private boolean isGameOver_ = false;
+    
     public HoxApp() {
         // Empty
     }
@@ -236,6 +238,7 @@ public class HoxApp extends Application {
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
             myColor_ = ColorEnum.COLOR_NONE;
+            isGameOver_ = false;
             myTable_ = new TableInfo(content);
             Log.i(TAG, "... >>> Set my table Id: " + myTable_.tableId);
             mainActivity.updateBoardWithNewTableInfo(myTable_);
@@ -401,6 +404,8 @@ public class HoxApp extends Application {
             return;
         }
         
+        isGameOver_ = true;
+        
         GameStatus gameStatus = GameStatus.GAME_STATUS_UNKNOWN;
         
         if ("black_win".equals(gameResult)) {
@@ -429,6 +434,7 @@ public class HoxApp extends Application {
             return;
         }
         
+        isGameOver_ = false;
         mainActivity.onGameReset();
     }
     
@@ -474,6 +480,14 @@ public class HoxApp extends Application {
 
     public String getMyRating() {
         return myRating_;
+    }
+    
+    public ColorEnum getMyColor() {
+        return myColor_;
+    }
+
+    public boolean isGameOver() {
+        return isGameOver_;
     }
     
     public TableInfo getMyTable() {
@@ -561,16 +575,18 @@ public class HoxApp extends Application {
                 }
                 break;
                 
-            case COLOR_NONE: /* falls through */
-            case COLOR_UNKNOWN: // FIXME: We should already set to "NONE" when we join the table.
+            case COLOR_NONE:
                 if (clickedColor == ColorEnum.COLOR_BLACK && myTable_.blackId.length() == 0) {
                     requestedColor = ColorEnum.COLOR_BLACK;
                 } else if (clickedColor == ColorEnum.COLOR_RED && myTable_.redId.length() == 0) {
                     requestedColor = ColorEnum.COLOR_RED;
                 }
                 break;
-                
+            
+            case COLOR_UNKNOWN: /* falls through */
+                // Note: We should already set to "NONE" when we join the table.
             default:
+                Log.e(TAG, "Handle player-button click: Unsupported myColor = " + myColor_);
                 break;
         }
         
@@ -593,8 +609,8 @@ public class HoxApp extends Application {
          *      (1) Red => None
          *      (2) None => Black
          */
-        if (       (myColor_ == ColorEnum.COLOR_RED || myColor_ == ColorEnum.COLOR_BLACK)
-                && (requestedColor == ColorEnum.COLOR_RED || requestedColor == ColorEnum.COLOR_BLACK) ) {
+        if ( (myColor_ == ColorEnum.COLOR_RED || myColor_ == ColorEnum.COLOR_BLACK)
+          && (requestedColor == ColorEnum.COLOR_RED || requestedColor == ColorEnum.COLOR_BLACK) ) {
             
             networkPlayer_.sendRequest_JOIN(myTable_.tableId, "None");
         }
