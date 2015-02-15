@@ -123,7 +123,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         switch (item.getItemId()) {
             case R.id.action_new_table:
                 Log.d(TAG, "Action 'New Table' clicked...");
-                boardView_.onNewTableActionClicked();
+                HoxApp.getApp().handleRequestToOpenNewTable();
                 return true;
             case R.id.action_close_table:
                 Log.d(TAG, "Action 'Close Table' clicked...");
@@ -190,7 +190,6 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
 
     public void resetBoardWithNewMoves(String[] moves) {
         Log.d(TAG, "Reset board with new (MOVES): ENTER.");
-        //boardView_.resetBoard();
         for (String move : moves) {
             Log.d(TAG, ".......... Move [" + move + "]");
             int row1 = move.charAt(1) - '0';
@@ -203,6 +202,11 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         boardView_.invalidate();
     }
 
+    public void openNewPracticeTable() {
+        Log.d(TAG, "Open a new practice table");
+        boardView_.onNewTableActionClicked();
+    }
+    
     public void updateBoardWithNewMove(String move) {
         Log.d(TAG, "Update board with a new (MOVE): Move: [" + move + "]");
         int row1 = move.charAt(1) - '0';

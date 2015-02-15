@@ -81,6 +81,7 @@ class NetworkPlayer extends Thread {
     private static final int MSG_NETWORK_SEND_MOVE = 7;
     private static final int MSG_NETWORK_SEND_DRAW = 8;
     private static final int MSG_NETWORK_SEND_RESIGN = 9;
+    private static final int MSG_NETWORK_SEND_NEW = 10;
     
     @SuppressLint("HandlerLeak") @Override
     public void run() {
@@ -144,6 +145,14 @@ class NetworkPlayer extends Thread {
                             @SuppressWarnings("unchecked")
                             Map<String, String> map = (Map<String, String>) msg.obj;
                             send_RESIGN(map);
+                            break;
+                        }
+           
+                        case MSG_NETWORK_SEND_NEW:
+                        {
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> map = (Map<String, String>) msg.obj;
+                            send_NEW(map);
                             break;
                         }
                         
@@ -224,6 +233,13 @@ class NetworkPlayer extends Thread {
         map.put("tid", tableId);
         map.put("move", move);
         handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_MOVE, map));
+    }
+    
+    public void sendRequest_NEW(String itimes) {
+        Log.d(TAG, "Send 'NEW (table)' request to server. itimes = " + itimes);
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("itimes", itimes);
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_NEW, map));
     }
     
     private void handleConnectToServer() throws IOException {
@@ -375,6 +391,12 @@ class NetworkPlayer extends Thread {
     private void send_RESIGN(Map<String, String> map) throws IOException {
         final String tableId = map.get("tid");
         String request = "op=RESIGN&pid=" + pid_ + "&tid=" + tableId;
+        sendRequest(request);
+    }
+
+    private void send_NEW(Map<String, String> map) throws IOException {
+        final String itimes = map.get("itimes");
+        String request = "op=NEW&pid=" + pid_ + "&itimes=" + itimes;
         sendRequest(request);
     }
     

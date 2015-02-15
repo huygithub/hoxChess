@@ -38,11 +38,7 @@ public class TableInfo {
     }
     
     public TableInfo(String tableStr) {
-        final String[] components = tableStr.split(";");
-        //for (String entry : entries) {
-        //    Log.d(TAG, ">>> ..... entry [" + entry + "].");
-        //}
-        
+        final String[] components = tableStr.split(";");        
         tableId = components[0];
         rated = "0".equals(components[2]);
         itimes = components[3];

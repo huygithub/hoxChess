@@ -235,14 +235,26 @@ public class HoxApp extends Application {
 
     private void handleNetworkEvent_I_TABLE(String content) {
         Log.d(TAG, "Handle event (I_TABLE): ENTER.");
+        
         MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            myColor_ = ColorEnum.COLOR_NONE;
-            isGameOver_ = false;
-            myTable_ = new TableInfo(content);
-            Log.i(TAG, "... >>> Set my table Id: " + myTable_.tableId);
-            mainActivity.updateBoardWithNewTableInfo(myTable_);
+        if (mainActivity == null) {
+            Log.w(TAG, "The main activity is NULL. Ignore this I_TABLE event.");
+            return;
         }
+        
+        isGameOver_ = false;
+        myTable_ = new TableInfo(content);
+        
+        if (pid_.equals(myTable_.blackId)) {
+            myColor_ = ColorEnum.COLOR_BLACK;
+        } else if (pid_.equals(myTable_.redId)) {
+            myColor_ = ColorEnum.COLOR_RED;
+        } else {
+            myColor_ = ColorEnum.COLOR_NONE;
+        }
+        
+        Log.i(TAG, "... >>> Set my table Id: " + myTable_.tableId + ", myColor: " + myColor_);
+        mainActivity.updateBoardWithNewTableInfo(myTable_);
     }
 
     private void handleNetworkEvent_I_MOVES(String content) {
@@ -297,7 +309,6 @@ public class HoxApp extends Application {
             Log.w(TAG, "The main activity is NULL. Ignore this LEAVE event.");
             //return;
         }
-        
         
         // Special case: The player left Red/Black seat.
         Enums.ColorEnum playerPreviousColor = ColorEnum.COLOR_UNKNOWN;
@@ -531,6 +542,36 @@ public class HoxApp extends Application {
             return;
         }
         networkPlayer_.sendRequest_LEAVE(myTable_.tableId);
+    }
+    
+    public void handleRequestToOpenNewTable() {
+        Log.i(TAG, "Request to open a new table...");
+        
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity == null) {
+            Log.w(TAG, "The main activity is NULL. Ignore this 'open new table request'.");
+            return;
+        }
+        
+        // Case 1: I am not online at all.
+        if (!this.isOnline() && !myTable_.isValid()) {
+            mainActivity.openNewPracticeTable();
+        }
+        // Case 2: I am online and am not playing in any table.
+        else if (this.isOnline() && 
+              ( myColor_ == ColorEnum.COLOR_UNKNOWN ||
+                myColor_ == ColorEnum.COLOR_NONE ||
+               isGameOver_ )) {
+            
+            if (myTable_.isValid()) {
+                networkPlayer_.sendRequest_LEAVE(myTable_.tableId); // Leave the current table.
+            }
+            final String itimes = "900/180/20"; // The initial times.
+            networkPlayer_.sendRequest_NEW(itimes);
+        }
+        else {
+            Log.w(TAG, "Either offline or currently playing. Ignore this 'open new table request'.");
+        }
     }
     
     public void handleRequestToOfferDraw() {
