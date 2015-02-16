@@ -24,6 +24,14 @@
     <string name="ai_label_medium">AI (Medium)</string>
     <string name="ai_label_difficult">AI (Difficult)</string>
     
+    <string name="playxiangqi_account">PlayXiangqi Account:</string>
+    <string name="playxiangqi_username">Username</string>
+    <string name="playxiangqi_password">Password</string>
+    <string name="playxiangqi_website">Visit: <a href="http://www.playxiangqi.com/index.php?page=register">PlayXiangqi.com</a></string>
+    <string name="login_error_wrong_username">Username is wrong</string>
+    <string name="login_error_wrong_password">Password is wrong</string>
+    <string name="login_error_general_error">Failed to login</string>
+    
     <string name="replay_begin">Begin</string>
     <string name="replay_prev">Prev</string>
     <string name="replay_next">Next</string>

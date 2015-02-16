@@ -139,7 +139,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
                 return true;
             case R.id.action_play_online:
                 Log.d(TAG, "Action 'Play Online' clicked...");
-                HoxApp.getApp().createNetworkPlayer();
+                HoxApp.getApp().handlePlayOnlineClicked();
                 return true;
             case R.id.action_logout:
                 Log.d(TAG, "Action 'Logout' clicked...");

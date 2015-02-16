@@ -31,6 +31,7 @@ import android.app.Application;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -38,8 +39,10 @@ public class HoxApp extends Application {
 
     private static final String TAG = "HoxApp";
     
-    private static final String SHARED_PREFERENCES_AI_LEVEL = "AI_LEVEL";
+    private static final String SHARED_PREFERENCES_APP_SETTINGS = "APP_SETTINGS";
     private static final String KEY_SAVED_AI_LEVEL_INDEX = "SAVED_AI_LEVEL_INDEX";
+    private static final String KEY_SAVED_ACCOUNT_USERNAME = "SAVED_ACCOUNT_USERNAME";
+    private static final String KEY_SAVED_ACCOUNT_PASSWORD = "SAVED_ACCOUNT_PASSWORD";
     
     private static HoxApp thisApp_;
     
@@ -48,16 +51,25 @@ public class HoxApp extends Application {
     
     private int currentAILevel_ = -1; // Default = "invalid level"
     
-    private String pid_ = "_THE_PLAYER_ID_"; // FIXME: ... _THE_PLAYER_ID_
-    private String password_ = "_THE_PLAYER_PASSWORD_"; // FIXME: .... _THE_PLAYER_PASSWORD_
+    private String pid_ = ""; // My player 's ID.
+    private String password_ = ""; // My player 's password.
     private String myRating_ = "0";
     
     private NetworkPlayer networkPlayer_;
+    private boolean isLoginOK_ = false;
+    
     private WeakReference<MainActivity> mainActivity_;
     private TableInfo myTable_ = new TableInfo();
     private ColorEnum myColor_ = ColorEnum.COLOR_UNKNOWN;
     
     private boolean isGameOver_ = false;
+    
+    // ----------------
+    public class AccountInfo {
+        public String username;
+        public String password;
+    }
+    // ----------------
     
     public HoxApp() {
         // Empty
@@ -106,7 +118,7 @@ public class HoxApp extends Application {
     
     public int loadAILevelPreferences() {
         SharedPreferences sharedPreferences =
-                thisApp_.getSharedPreferences(SHARED_PREFERENCES_AI_LEVEL, MODE_PRIVATE);
+                thisApp_.getSharedPreferences(SHARED_PREFERENCES_APP_SETTINGS, MODE_PRIVATE);
         int aiLevel = sharedPreferences.getInt(KEY_SAVED_AI_LEVEL_INDEX, 0);
         Log.d(TAG, "Load existing AI level: " + aiLevel);
         
@@ -117,7 +129,7 @@ public class HoxApp extends Application {
     public void savePreferences(int aiLevel) {
         Log.d(TAG, "Save the new AI level: " + aiLevel);
         SharedPreferences sharedPreferences =
-                thisApp_.getSharedPreferences(SHARED_PREFERENCES_AI_LEVEL, MODE_PRIVATE);
+                thisApp_.getSharedPreferences(SHARED_PREFERENCES_APP_SETTINGS, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt(KEY_SAVED_AI_LEVEL_INDEX, aiLevel);
         editor.commit();
@@ -125,6 +137,39 @@ public class HoxApp extends Application {
         if (aiLevel != currentAILevel_) {
             currentAILevel_ = aiLevel;
             notifyObservers();
+        }
+    }
+
+    public AccountInfo loadPreferences_Account() {
+        SharedPreferences sharedPreferences =
+                thisApp_.getSharedPreferences(SHARED_PREFERENCES_APP_SETTINGS, MODE_PRIVATE);
+        
+        AccountInfo accountInfo = new AccountInfo();
+        
+        accountInfo.username = sharedPreferences.getString(KEY_SAVED_ACCOUNT_USERNAME, "");
+        accountInfo.password = sharedPreferences.getString(KEY_SAVED_ACCOUNT_PASSWORD, "");
+        Log.d(TAG, "Load existing account. username: [" + accountInfo.username + "]");
+        
+        return accountInfo;
+    }
+    
+    public void savePreferences_Account(String username, String password) {
+        Log.d(TAG, "Save the new account settings.");
+        SharedPreferences sharedPreferences =
+                thisApp_.getSharedPreferences(SHARED_PREFERENCES_APP_SETTINGS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(KEY_SAVED_ACCOUNT_USERNAME, username);
+        editor.putString(KEY_SAVED_ACCOUNT_PASSWORD, password);
+        editor.commit();
+        
+        if (!TextUtils.equals(pid_, username) || !TextUtils.equals(password_, password)) {
+            if (this.isOnline() && isLoginOK_) {
+                Log.i(TAG, "... (online & LoginOK) Skip using the new username: " + username + ".");
+            } else {
+                Log.i(TAG, "... (offline) Save new username: " + username + ".");
+                pid_ = username;
+                password_ = password;
+            }
         }
     }
     
@@ -171,13 +216,11 @@ public class HoxApp extends Application {
             //Log.d(TAG, "... token = [" + token + "]");
             final String[] pair = token.split("=");
             newEvent.put(pair[0], pair[1]);
-            //Log.d(TAG, "... >>> pair[0]= [" + pair[0] + "], pair[1]=[" + pair[1] + "]");
         }
         
         final String op = newEvent.get("op");
         final int code = Integer.parseInt( newEvent.get("code") );
         final String content = newEvent.get("content");
-        //final String tid = newEvent.get("tid");
         
         if ("LOGIN".equals(op)) {
             handleNetworkEvent_LOGIN(code, content);
@@ -204,12 +247,27 @@ public class HoxApp extends Application {
         }
     }
     
+    private String getLocalizedLoginError(int code) {
+        switch (code)
+        {
+            case 6: return getString(R.string.login_error_wrong_password);
+            case 7: return getString(R.string.login_error_wrong_username);
+        }
+        return getString(R.string.login_error_general_error);
+    }
+    
     private void handleNetworkEvent_LOGIN(int code, String content) {
         Log.d(TAG, "Handle event (LOGIN): ENTER.");
         
-        if (code != 0) {  // Error
-            Log.i(TAG, "Login failed. Error: [" + content + "]");
-            // [self _showLoginView:[self _getLocalizedLoginError:code defaultError:event]];
+        isLoginOK_ = (code == 0);
+        
+        if (!isLoginOK_) {  // Error
+            Log.i(TAG, "Login failed. Code: [" + code + "], Error: [" + content + "]");
+            Toast.makeText(getApplicationContext(),
+                    getLocalizedLoginError(code), Toast.LENGTH_LONG).show();
+            
+            networkPlayer_.disconnectFromServer();
+            
             return;
         }
         
@@ -472,8 +530,12 @@ public class HoxApp extends Application {
     
     // --------------------------------------------------------
     
-    public void createNetworkPlayer() {
-        if ( ! networkPlayer_.isOnline() ) {
+    public void handlePlayOnlineClicked() {
+        if ( !networkPlayer_.isOnline() || !isLoginOK_ ) {
+            final AccountInfo accountInfo = loadPreferences_Account();
+            pid_ = accountInfo.username;
+            password_ = accountInfo.password;
+            
             networkPlayer_.setLoginInfo(pid_,  password_);
             networkPlayer_.connectToServer();
         } else {
@@ -514,6 +576,7 @@ public class HoxApp extends Application {
             networkPlayer_.disconnectFromServer();
         }
         myTable_ = new TableInfo();
+        isLoginOK_ = false;
     }
     
     public NetworkPlayer getNetworkPlayer() {
