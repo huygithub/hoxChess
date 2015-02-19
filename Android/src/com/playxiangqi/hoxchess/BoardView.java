@@ -22,6 +22,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.TableType;
 import com.playxiangqi.hoxchess.Piece.Move;
 
@@ -80,6 +81,7 @@ public class BoardView extends ImageView {
 	
 	private Piece recentPiece_ = null;
 	
+	// TODO: We should move this AI engine out of this board view, perhaps to HoxApp.
 	private AIEngine aiEngine_ = new AIEngine();
 	
     /**
@@ -493,6 +495,8 @@ public class BoardView extends ImageView {
             return;
         }
         
+        HoxApp.getApp().handleLocalMove(fromPos, toPos);
+        
         if (tableType_ == TableType.TABLE_TYPE_LOCAL) {
             aiEngine_.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
             
@@ -508,7 +512,7 @@ public class BoardView extends ImageView {
         
         } else if (tableType_ == TableType.TABLE_TYPE_NETWORK) {
             Log.d(TAG, "Send the move over the network...");
-            HoxApp.getApp().handleLocalMove(fromPos, toPos);
+            //HoxApp.getApp().handleLocalMove(fromPos, toPos);
         }
     }
     
@@ -542,6 +546,7 @@ public class BoardView extends ImageView {
         fromPiece.setPosition(toPos);
         recentPiece_ = fromPiece;
         
+        HoxApp.getApp().handleAIMove(fromPos, toPos);
         didMoveOccur(fromPos, toPos, capture, status);
     }
     
@@ -692,6 +697,18 @@ public class BoardView extends ImageView {
     
     public void setTableType(TableType tableType) {
         tableType_ = tableType;
+    }
+    
+    public ColorEnum getNextColor() {
+        //
+        // jni/hoxEnums.h 
+        //    hoxCOLOR_RED = 0
+        //    hoxCOLOR_BLACK = 1
+        
+        final int nextColor = nativeGetNextColor();
+        if (nextColor == 0) return ColorEnum.COLOR_RED;
+        if (nextColor == 1) return ColorEnum.COLOR_BLACK;
+        return ColorEnum.COLOR_UNKNOWN;
     }
     
     public int getMoveCount() {

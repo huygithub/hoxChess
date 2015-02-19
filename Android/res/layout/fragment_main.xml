@@ -9,26 +9,47 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.playxiangqi.hoxchess.MainActivity$PlaceholderFragment" >
 
-    <LinearLayout
+    <RelativeLayout
         android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="left" >
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
     
 	    <TextView
 	        android:id="@+id/top_player_label"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
+	        android:layout_alignParentLeft="true"
+	        android:layout_centerInParent="true"
 	        android:text="@string/ai_label" />
 	    
         <Button
               android:id="@+id/top_button"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
+              android:layout_toRightOf="@id/top_player_label"
               android:text="@string/button_play_black"
               android:textSize="12sp"
+              android:minHeight="0dp"
               android:onClick="onTopButtonClick" />  
-    </LinearLayout>
+
+        <TextView
+            android:id="@+id/top_move_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerInParent="true"            
+            android:text="@string/label_move_time_zero" />
+        
+        <TextView
+            android:id="@+id/top_game_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/top_move_time"
+            android:layout_centerInParent="true"
+            android:layout_marginRight="8dp"          
+            android:text="@string/label_game_time_zero" />
+        
+    </RelativeLayout>
     
     <com.playxiangqi.hoxchess.BoardView
         android:id="@+id/board_view"
@@ -37,9 +58,9 @@
         android:layout_weight="1"
         android:contentDescription="@string/board_alt" />
 
-    <LinearLayout
+    <RelativeLayout
         android:orientation="horizontal"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="left" >
     
@@ -47,16 +68,38 @@
             android:id="@+id/bottom_player_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerInParent="true"
             android:text="@string/you_label" />
         
         <Button
               android:id="@+id/bottom_button"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
+              android:layout_toRightOf="@id/bottom_player_label"
               android:text="@string/button_play_red"
               android:textSize="12sp"
-              android:onClick="onBottomButtonClick" />   
-    </LinearLayout>
+              android:minHeight="0dp"
+              android:onClick="onBottomButtonClick" />
+        
+        <TextView
+            android:id="@+id/bottom_move_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerInParent="true"            
+            android:text="@string/label_move_time_zero" />
+        
+        <TextView
+            android:id="@+id/bottom_game_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/bottom_move_time"
+            android:layout_centerInParent="true"
+            android:layout_marginRight="8dp"          
+            android:text="@string/label_game_time_zero" />
+        
+    </RelativeLayout>
     
     <LinearLayout
 	    android:orientation="horizontal"

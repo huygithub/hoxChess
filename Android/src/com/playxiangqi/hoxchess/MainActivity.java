@@ -184,8 +184,8 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         Log.d(TAG, "Update board with new Table info (I_TABLE) from network: ENTER.");
         boardView_.resetBoard();
         boardView_.setTableType(TableType.TABLE_TYPE_NETWORK);
-        topPlayerLabel_.setText(tableInfo.getBlackInfo());
-        bottomPlayerLabel_.setText(tableInfo.getRedInfo());
+        setBlackInfo(tableInfo.getBlackInfo());
+        setRedInfo(tableInfo.getRedInfo());
     }
 
     public void resetBoardWithNewMoves(String[] moves) {
@@ -200,6 +200,11 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
             boardView_.onAIMoveMade(new Position(row1, col1), new Position(row2, col2));
         }
         boardView_.invalidate();
+        
+        final ColorEnum nextColor = boardView_.getNextColor();
+        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
+        timeTracker.setInitialColor(nextColor);
+        timeTracker.start();
     }
 
     public void openNewPracticeTable() {
@@ -218,7 +223,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         boardView_.invalidate();
     }
     
-    public void updateBoardAfterLeavingTable() {
+    public void updateBoardAfterILeftTable() {
         Log.d(TAG, "Update board after I left the current table...");
         final int aiLevel = HoxApp.getApp().loadAILevelPreferences();
         updateAILabel(aiLevel); // Update the top-player 's label.
@@ -343,21 +348,14 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         }
     }
     
-    public void onPlayerLeftTable(String pid, Enums.ColorEnum playerPreviousColor) {
-        final String myPid = HoxApp.getApp().getMyPid();
-        
-        if (pid.equals(myPid)) {
-            Log.i(TAG, "I just left my table.");
-            updateBoardAfterLeavingTable();
-        
-        } else { // Other player left my table?
-            if (playerPreviousColor == ColorEnum.COLOR_BLACK) {
-                setBlackInfo("*");
-                setBlackPossibleMode_PLAY();
-            } else if (playerPreviousColor == ColorEnum.COLOR_RED) {
-                setRedInfo("*");
-                setRedPossibleMode_PLAY();
-            }
+    public void onOtherPlayerLeftTable(Enums.ColorEnum playerPreviousColor) {
+        Log.d(TAG, "Update board after other player (not I) left the current table...");
+        if (playerPreviousColor == ColorEnum.COLOR_BLACK) {
+            setBlackInfo("*");
+            setBlackPossibleMode_PLAY();
+        } else if (playerPreviousColor == ColorEnum.COLOR_RED) {
+            setRedInfo("*");
+            setRedPossibleMode_PLAY();
         }
     }
     
@@ -402,6 +400,20 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         if (bottomPlayerButton_ == null) {
             Log.e(TAG, "The Bottom-Player Button could not be found the placeholder fragment.");
         }
+        
+        // Game timers.
+        TextView topGameTimeView = (TextView) placeholderFragment_.getView().findViewById(R.id.top_game_time);
+        TextView topMoveTimeView = (TextView) placeholderFragment_.getView().findViewById(R.id.top_move_time);
+        TextView bottomGameTimeView = (TextView) placeholderFragment_.getView().findViewById(R.id.bottom_game_time);
+        TextView bottomMoveTimeView = (TextView) placeholderFragment_.getView().findViewById(R.id.bottom_move_time);
+    
+        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
+        timeTracker.setUITextViews(
+                topGameTimeView, topMoveTimeView, bottomGameTimeView, bottomMoveTimeView);
+        timeTracker.reset();
+        timeTracker.start();
+        
+        // --------------
         
         final int aiLevel = HoxApp.getApp().loadAILevelPreferences();
         updateAILabel(aiLevel);

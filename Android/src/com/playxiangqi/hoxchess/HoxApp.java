@@ -64,6 +64,8 @@ public class HoxApp extends Application {
     
     private boolean isGameOver_ = false;
     
+    private TableTimeTracker timeTracker_ = new TableTimeTracker();
+    
     // ----------------
     public class AccountInfo {
         public String username;
@@ -312,6 +314,13 @@ public class HoxApp extends Application {
         }
         
         Log.i(TAG, "... >>> Set my table Id: " + myTable_.tableId + ", myColor: " + myColor_);
+        
+        timeTracker_.stop();
+        timeTracker_.setInitialTime( new TimeInfo(myTable_.itimes) );
+        timeTracker_.setBlackTime( new TimeInfo(myTable_.blackTimes) );
+        timeTracker_.setRedTime( new TimeInfo(myTable_.redTimes) );
+        timeTracker_.syncUI();
+        
         mainActivity.updateBoardWithNewTableInfo(myTable_);
     }
 
@@ -345,6 +354,9 @@ public class HoxApp extends Application {
             return;
         }
         
+        timeTracker_.nextColor();
+        timeTracker_.start();
+        
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
             mainActivity.updateBoardWithNewMove(move);
@@ -364,7 +376,7 @@ public class HoxApp extends Application {
         
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity == null) {
-            Log.w(TAG, "The main activity is NULL. Ignore this LEAVE event.");
+            Log.i(TAG, "The main activity is NULL. Still, we continue!");
             //return;
         }
         
@@ -380,15 +392,16 @@ public class HoxApp extends Application {
         if (pid.equals(pid_)) {
             Log.i(TAG, "I just left my table: " + tableId);
             if (mainActivity != null) {
-                mainActivity.updateBoardAfterLeavingTable();
+                mainActivity.updateBoardAfterILeftTable();
             }
             myTable_ = new TableInfo();
             myColor_ = ColorEnum.COLOR_UNKNOWN;
+            timeTracker_.stop();
         
         } else { // Other player left my table?
             myTable_.onPlayerLeft(pid);
             if (mainActivity != null) {
-                mainActivity.onPlayerLeftTable(pid, playerPreviousColor);
+                mainActivity.onOtherPlayerLeftTable(playerPreviousColor);
             }
         }
     }
@@ -474,6 +487,7 @@ public class HoxApp extends Application {
         }
         
         isGameOver_ = true;
+        timeTracker_.stop();
         
         GameStatus gameStatus = GameStatus.GAME_STATUS_UNKNOWN;
         
@@ -505,6 +519,8 @@ public class HoxApp extends Application {
         
         isGameOver_ = false;
         mainActivity.onGameReset();
+        timeTracker_.stop();
+        timeTracker_.reset();
     }
     
     private void handleNetworkEvent_DRAW(String content) {
@@ -569,6 +585,10 @@ public class HoxApp extends Application {
     
     public String getCurrentTableId() {
         return myTable_.tableId;
+    }
+    
+    public TableTimeTracker getTimeTracker() {
+        return timeTracker_;
     }
     
     public void logoutFromNetwork() {
@@ -731,6 +751,16 @@ public class HoxApp extends Application {
             Log.i(TAG, " .... move: [" + move + "]");
             networkPlayer_.sendRequest_MOVE(myTable_.tableId, move);
         }
+        timeTracker_.nextColor();
+    }
+    
+    public void handleAIMove(Position fromPos, Position toPos) {
+        Log.i(TAG, "Handle AI move");
+        if (myTable_.isValid()) {
+            Log.i(TAG, "We are in a network table already. Ignore this AI move.");
+            return;
+        }
+        timeTracker_.nextColor();
     }
     
     public void postNetworkEvent(String eventString) {
