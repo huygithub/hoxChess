@@ -55,6 +55,8 @@ public class HoxApp extends Application {
     private String password_ = ""; // My player 's password.
     private String myRating_ = "0";
     
+    private Referee referee_;
+    
     private NetworkPlayer networkPlayer_;
     private boolean isLoginOK_ = false;
     
@@ -82,6 +84,8 @@ public class HoxApp extends Application {
     public void onCreate() {
         Log.i(TAG, "onCreate()...");
         thisApp_ = this;
+        
+        referee_ = new Referee();
         
         networkPlayer_ = new NetworkPlayer();
         if (!networkPlayer_.isAlive()) {
@@ -595,6 +599,10 @@ public class HoxApp extends Application {
     
     public TableTimeTracker getTimeTracker() {
         return timeTracker_;
+    }
+    
+    public Referee getReferee() {
+        return referee_;
     }
     
     public void logoutFromNetwork() {

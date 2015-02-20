@@ -23,6 +23,7 @@ import java.util.TimerTask;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 
+import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -145,6 +146,7 @@ public class TableTimeTracker {
         redMoveTimeView_ = view;
     }
     
+    @SuppressLint("DefaultLocale")
     private static String formatTime(int timeInSeconds) {
         final int minutes = timeInSeconds / 60;
         final int seconds = timeInSeconds % 60;

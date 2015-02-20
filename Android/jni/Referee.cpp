@@ -28,7 +28,7 @@ static hoxReferee *referee_ = NULL;
 extern "C" {
 
     JNIEXPORT jint JNICALL
-    Java_com_playxiangqi_hoxchess_BoardView_nativeCreateReferee(JNIEnv *env, jobject thiz)
+    Java_com_playxiangqi_hoxchess_Referee_nativeCreateReferee(JNIEnv *env, jobject thiz)
     {
         LOGI("Create a new referee \n");
         referee_ = new hoxReferee();
@@ -36,7 +36,7 @@ extern "C" {
     }
 
     JNIEXPORT jint JNICALL
-    Java_com_playxiangqi_hoxchess_BoardView_nativeResetGame(JNIEnv *env, jobject thiz)
+    Java_com_playxiangqi_hoxchess_Referee_nativeResetGame(JNIEnv *env, jobject thiz)
     {
         LOGI("Reset the game \n");
         referee_->resetGame();
@@ -44,7 +44,7 @@ extern "C" {
     }
 
     JNIEXPORT jint JNICALL
-    Java_com_playxiangqi_hoxchess_BoardView_nativeGetNextColor(JNIEnv *env, jobject thiz)
+    Java_com_playxiangqi_hoxchess_Referee_nativeGetNextColor(JNIEnv *env, jobject thiz)
     {
         LOGI("get the next color... \n");
         hoxColor nextColor = referee_->getNextColor();
@@ -55,9 +55,9 @@ extern "C" {
      * @return hoxGAME_STATUS_UNKNOWN if the move is NOT valid.
      */
     JNIEXPORT jint JNICALL
-    Java_com_playxiangqi_hoxchess_BoardView_nativeValidateMove( JNIEnv *env, jobject thiz,
-                                                                jint row1, jint col1,
-                                                                jint row2, jint col2 )
+    Java_com_playxiangqi_hoxchess_Referee_nativeValidateMove( JNIEnv *env, jobject thiz,
+                                                              jint row1, jint col1,
+                                                              jint row2, jint col2 )
     {
         LOGI("validateMove(): [RAW]: (%d, %d) => (%d, %d) \n", row1, col1, row2, col2);
 

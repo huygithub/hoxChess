@@ -204,7 +204,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         }
         boardView_.invalidate();
         
-        final ColorEnum nextColor = boardView_.getNextColor();
+        final ColorEnum nextColor = HoxApp.getApp().getReferee().getNextColor();
         TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
         timeTracker.setInitialColor(nextColor);
         timeTracker.start();

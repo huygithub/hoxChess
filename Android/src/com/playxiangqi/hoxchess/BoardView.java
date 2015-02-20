@@ -22,7 +22,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.TableType;
 import com.playxiangqi.hoxchess.Piece.Move;
 
@@ -54,6 +53,8 @@ public class BoardView extends ImageView {
     
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
     
+    private int gameStatus_ = Referee.hoxGAME_STATUS_READY;
+    
     private Paint linePaint_;
     private Paint selectPaint_;
     private Paint recentPaint_;
@@ -76,14 +77,16 @@ public class BoardView extends ImageView {
     //private static final int MOVE_MODE_DRAG_N_DROP = 1;
     // !!! Only this mode is supported !!! private final int moveMode_ = MOVE_MODE_CLICK_N_CLICK;
     
-	private Piece selectedPiece_ = null;
-	private Position selectedPosition_ = null;
-	
-	private Piece recentPiece_ = null;
-	
-	// TODO: We should move this AI engine out of this board view, perhaps to HoxApp.
-	private AIEngine aiEngine_ = new AIEngine();
-	
+    private Piece selectedPiece_ = null;
+    private Position selectedPosition_ = null;
+    
+    private Piece recentPiece_ = null;
+    
+    // TODO: We should move this AI engine out of this board view, perhaps to HoxApp.
+    private AIEngine aiEngine_ = new AIEngine();
+    
+    private final Referee referee_ = HoxApp.getApp().getReferee();
+    
     /**
      * History index.
      * NOTE: Do not change the constants 'values below.
@@ -91,15 +94,15 @@ public class BoardView extends ImageView {
     private static final int HISTORY_INDEX_END = -2;
     private static final int HISTORY_INDEX_BEGIN = -1;
     
-	private List<Move> historyMoves_ = new ArrayList<Move>(); // All (past) Moves made so far.
-	private int historyIndex_ = HISTORY_INDEX_END; // Which Move the user is reviewing.
-	
-	private List<Piece> captureStack_ = new ArrayList<Piece>(); // A stack of captured pieces.
-	
+    private List<Move> historyMoves_ = new ArrayList<Move>(); // All (past) Moves made so far.
+    private int historyIndex_ = HISTORY_INDEX_END; // Which Move the user is reviewing.
+    
+    private List<Piece> captureStack_ = new ArrayList<Piece>(); // A stack of captured pieces.
+    
     // ----
-	boolean mDownTouch = false;
-	
-	/**
+    boolean mDownTouch = false;
+    
+    /**
      * @param context
      */
     public BoardView(Context context) {
@@ -149,8 +152,6 @@ public class BoardView extends ImageView {
         noticePaint_.setTextSize(40.0f);
         
         createPieces();
-        
-        nativeCreateReferee();
         
         Log.d(TAG, " ... AI 's info = [" + aiEngine_.getInfo() + "]");
         aiEngine_.initGame();
@@ -457,11 +458,11 @@ public class BoardView extends ImageView {
         }
         // CASE 2: A piece has been selected already.
         else if ( ! Position.equals(selectedPosition_, viewPos) ) { // different location?
-           final int status = nativeValidateMove(selectedPosition_.row, selectedPosition_.column,
-                                                 viewPos.row, viewPos.column);
+           final int status = referee_.validateMove(selectedPosition_.row, selectedPosition_.column,
+                                                    viewPos.row, viewPos.column);
             Log.d(TAG, "... (native referee) move-validation returned status = " + status);
             
-            if (status == hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
+            if (status == Referee.hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
                 Log.i(TAG, "... The move is not valid!");
                 selectedPosition_ = null;
                 selectedPiece_ = null;  // Clear this "in-progress" move.
@@ -524,11 +525,11 @@ public class BoardView extends ImageView {
     private void onAIMoveMade(Position fromPos, Position toPos) {
         Log.d(TAG, " on AI move = " + fromPos + " => " + toPos);
         
-        final int status = nativeValidateMove(fromPos.row, fromPos.column,
-                                              toPos.row, toPos.column);
+        final int status = referee_.validateMove(fromPos.row, fromPos.column,
+                                                 toPos.row, toPos.column);
         Log.d(TAG, "... (native referee) move-validation returned status = " + status);
         
-        if (status == hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
+        if (status == Referee.hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
             Log.e(TAG, " This AI move =" + fromPos + " => " + toPos + " is NOT valid. Do nothing.");
             return;
         }
@@ -600,10 +601,10 @@ public class BoardView extends ImageView {
         
         gameStatus_ = status;
         
-        if (status == hoxGAME_STATUS_RED_WIN) {
+        if (status == Referee.hoxGAME_STATUS_RED_WIN) {
             Log.i(TAG, "The game is OVER. RED won.");
         }
-        else if (status == hoxGAME_STATUS_BLACK_WIN) {
+        else if (status == Referee.hoxGAME_STATUS_BLACK_WIN) {
             Log.i(TAG, "The game is OVER. BLACK won.");
         }
         
@@ -629,8 +630,8 @@ public class BoardView extends ImageView {
     }
     
     boolean isGameInProgress() {
-        return (   gameStatus_ == hoxGAME_STATUS_READY 
-                || gameStatus_ == hoxGAME_STATUS_IN_PROGRESS);
+        return (   gameStatus_ == Referee.hoxGAME_STATUS_READY 
+                || gameStatus_ == Referee.hoxGAME_STATUS_IN_PROGRESS);
     }
     
     @Override
@@ -658,7 +659,7 @@ public class BoardView extends ImageView {
     public void resetBoard() {
         Log.d(TAG, "Reset board to the initial state...");
         
-        nativeResetGame(); // ask the referee to reset the game.
+        referee_.resetGame();
         aiEngine_.initGame();
         
         // Reset the pieces.
@@ -677,7 +678,7 @@ public class BoardView extends ImageView {
         selectedPiece_ = null;
         selectedPosition_ = null;
         recentPiece_ = null;
-        gameStatus_ = hoxGAME_STATUS_READY;
+        gameStatus_ = Referee.hoxGAME_STATUS_READY;
         
         historyMoves_.clear();
         historyIndex_ = HISTORY_INDEX_END;
@@ -688,9 +689,9 @@ public class BoardView extends ImageView {
     
     public void onGameEnded(Enums.GameStatus gameStatus) {
         switch (gameStatus) {
-            case GAME_STATUS_BLACK_WIN: gameStatus_ = hoxGAME_STATUS_BLACK_WIN; break;
-            case GAME_STATUS_RED_WIN: gameStatus_ = hoxGAME_STATUS_RED_WIN; break;
-            case GAME_STATUS_DRAWN: gameStatus_ = hoxGAME_STATUS_DRAWN; break;
+            case GAME_STATUS_BLACK_WIN: gameStatus_ = Referee.hoxGAME_STATUS_BLACK_WIN; break;
+            case GAME_STATUS_RED_WIN: gameStatus_ = Referee.hoxGAME_STATUS_RED_WIN; break;
+            case GAME_STATUS_DRAWN: gameStatus_ = Referee.hoxGAME_STATUS_DRAWN; break;
             default:
                 Log.w(TAG, "Unsupported game status = " + gameStatus);
                 // Do nothing.
@@ -705,18 +706,6 @@ public class BoardView extends ImageView {
     
     public void setTableType(TableType tableType) {
         tableType_ = tableType;
-    }
-    
-    public ColorEnum getNextColor() {
-        //
-        // jni/hoxEnums.h 
-        //    hoxCOLOR_RED = 0
-        //    hoxCOLOR_BLACK = 1
-        
-        final int nextColor = nativeGetNextColor();
-        if (nextColor == 0) return ColorEnum.COLOR_RED;
-        if (nextColor == 1) return ColorEnum.COLOR_BLACK;
-        return ColorEnum.COLOR_UNKNOWN;
     }
     
     public int getMoveCount() {
@@ -918,27 +907,4 @@ public class BoardView extends ImageView {
         }
     };
     
-    // ****************************** Native code **********************************
-    // TODO: Need to fix for invalid moves when "king-facing-king"!!!
-    public native int nativeCreateReferee();
-    public native int nativeResetGame();
-    public native int nativeGetNextColor();
-    public native int nativeValidateMove(int row1, int col1, int row2, int col2);
-    
-    // The native referee 's game-status.
-    // DO NOT CHANGE the constants' values.
-    private final static int hoxGAME_STATUS_UNKNOWN = -1;
-    private final static int hoxGAME_STATUS_OPEN = 0;        // Open but not enough Player.
-    private final static int hoxGAME_STATUS_READY = 1;       // Enough (2) players, waiting for 1st Move.
-    private final static int hoxGAME_STATUS_IN_PROGRESS = 2; // At least 1 Move has been made.
-    private final static int hoxGAME_STATUS_RED_WIN = 3;     // Game Over: Red won.
-    private final static int hoxGAME_STATUS_BLACK_WIN = 4;   // Game Over: Black won.
-    private final static int hoxGAME_STATUS_DRAWN = 5;       // Game Over: Drawn.
-    
-    private int gameStatus_ = hoxGAME_STATUS_READY;
-    
-    static {
-        System.loadLibrary("Referee");
-    }
-    // *****************************************************************************
 }
