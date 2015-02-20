@@ -62,6 +62,7 @@ public class HoxApp extends Application {
     private TableInfo myTable_ = new TableInfo();
     private ColorEnum myColor_ = ColorEnum.COLOR_UNKNOWN;
     
+    private int moveCount_ = 0; // The number of moves made so far in the current table.
     private boolean isGameOver_ = false;
     
     private TableTimeTracker timeTracker_ = new TableTimeTracker();
@@ -316,6 +317,7 @@ public class HoxApp extends Application {
         Log.i(TAG, "... >>> Set my table Id: " + myTable_.tableId + ", myColor: " + myColor_);
         
         timeTracker_.stop();
+        timeTracker_.setInitialColor(ColorEnum.COLOR_RED);
         timeTracker_.setInitialTime( new TimeInfo(myTable_.itimes) );
         timeTracker_.setBlackTime( new TimeInfo(myTable_.blackTimes) );
         timeTracker_.setRedTime( new TimeInfo(myTable_.redTimes) );
@@ -575,6 +577,10 @@ public class HoxApp extends Application {
         return myColor_;
     }
 
+    public int getMoveCount() {
+        return moveCount_;
+    }
+    
     public boolean isGameOver() {
         return isGameOver_;
     }
@@ -744,23 +750,31 @@ public class HoxApp extends Application {
     
     @SuppressLint("DefaultLocale")
     public void handleLocalMove(Position fromPos, Position toPos) {
-        Log.i(TAG, "Handle local move");
+        Log.i(TAG, "Handle local move: moveCount_ = " + moveCount_);
+        
+        ++moveCount_;
+        timeTracker_.nextColor();
+        
+        if (moveCount_ == 2) {
+            timeTracker_.start();
+        }
+        
         if (myTable_.isValid()) {
             final String move = String.format("%d%d%d%d",
                     fromPos.column, fromPos.row, toPos.column, toPos.row);
             Log.i(TAG, " .... move: [" + move + "]");
             networkPlayer_.sendRequest_MOVE(myTable_.tableId, move);
         }
-        timeTracker_.nextColor();
     }
     
     public void handleAIMove(Position fromPos, Position toPos) {
-        Log.i(TAG, "Handle AI move");
-        if (myTable_.isValid()) {
-            Log.i(TAG, "We are in a network table already. Ignore this AI move.");
-            return;
-        }
+        Log.i(TAG, "Handle AI move: moveCount_ = " + moveCount_);
+        ++moveCount_;
         timeTracker_.nextColor();
+        
+        if (moveCount_ == 2) {
+            timeTracker_.start();
+        }
     }
     
     public void postNetworkEvent(String eventString) {

@@ -77,6 +77,8 @@ public class TableTimeTracker {
     }
     
     public void reset() {
+        nextColor_ = ColorEnum.COLOR_RED;
+        
         blackTime_.initWith(initialTime_);
         redTime_.initWith(initialTime_);
         
@@ -112,6 +114,7 @@ public class TableTimeTracker {
     
     public void start() {
         if (!isRunning) {
+            Log.i(TAG, "Start counting down...");
             isRunning = true;
         }
     }
@@ -132,7 +135,17 @@ public class TableTimeTracker {
         redTime_.initWith(timeInfo);
     }
 
-    private String formatTime(int timeInSeconds) {
+    public void reverseView() {
+        TextView view = blackGameTimeView_;
+        blackGameTimeView_ = redGameTimeView_;
+        redGameTimeView_ = view;
+        
+        view = blackMoveTimeView_;
+        blackMoveTimeView_ = redMoveTimeView_;
+        redMoveTimeView_ = view;
+    }
+    
+    private static String formatTime(int timeInSeconds) {
         final int minutes = timeInSeconds / 60;
         final int seconds = timeInSeconds % 60;
         return String.format("%d:%02d", minutes, seconds);

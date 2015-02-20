@@ -171,6 +171,9 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         savedText = topPlayerButton_.getText();
         topPlayerButton_.setText(bottomPlayerButton_.getText());
         bottomPlayerButton_.setText(savedText);
+        
+        // Timer.
+        HoxApp.getApp().getTimeTracker().reverseView();
     }
     
     public void startActvityToListTables(String content) {
@@ -197,7 +200,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
             int row2 = move.charAt(3) - '0';
             int col2 = move.charAt(2) - '0';
             Log.i(TAG, "... Network move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
-            boardView_.onAIMoveMade(new Position(row1, col1), new Position(row2, col2));
+            boardView_.onNetworkMoveMade(new Position(row1, col1), new Position(row2, col2));
         }
         boardView_.invalidate();
         
@@ -219,7 +222,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         int row2 = move.charAt(3) - '0';
         int col2 = move.charAt(2) - '0';
         Log.i(TAG, "... Network move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
-        boardView_.onAIMoveMade(new Position(row1, col1), new Position(row2, col2));
+        boardView_.onNetworkMoveMade(new Position(row1, col1), new Position(row2, col2));
         boardView_.invalidate();
     }
     
@@ -411,7 +414,6 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         timeTracker.setUITextViews(
                 topGameTimeView, topMoveTimeView, bottomGameTimeView, bottomMoveTimeView);
         timeTracker.reset();
-        timeTracker.start();
         
         // --------------
         

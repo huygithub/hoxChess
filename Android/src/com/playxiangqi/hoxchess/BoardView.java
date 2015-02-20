@@ -490,15 +490,15 @@ public class BoardView extends ImageView {
         
         didMoveOccur(fromPos, toPos, capture, gameStatus);
         
-        if (!isGameInProgress()) {
-            Log.w(TAG, "The game has ended. Do nothing.");
-            return;
-        }
-        
         HoxApp.getApp().handleLocalMove(fromPos, toPos);
         
         if (tableType_ == TableType.TABLE_TYPE_LOCAL) {
             aiEngine_.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
+            
+            if (!isGameInProgress()) {
+                Log.w(TAG, "The game has ended. Do nothing.");
+                return;
+            }
             
             Log.d(TAG, "Ask AI (MaxQi) to generate a new move...");
             new Thread(new Runnable() {
@@ -515,8 +515,13 @@ public class BoardView extends ImageView {
             //HoxApp.getApp().handleLocalMove(fromPos, toPos);
         }
     }
+
+    public void onNetworkMoveMade(Position fromPos, Position toPos) {
+        Log.d(TAG, " on Network move = " + fromPos + " => " + toPos);
+        onAIMoveMade(fromPos, toPos);
+    }
     
-    public void onAIMoveMade(Position fromPos, Position toPos) {
+    private void onAIMoveMade(Position fromPos, Position toPos) {
         Log.d(TAG, " on AI move = " + fromPos + " => " + toPos);
         
         final int status = nativeValidateMove(fromPos.row, fromPos.column,
@@ -546,8 +551,11 @@ public class BoardView extends ImageView {
         fromPiece.setPosition(toPos);
         recentPiece_ = fromPiece;
         
-        HoxApp.getApp().handleAIMove(fromPos, toPos);
         didMoveOccur(fromPos, toPos, capture, status);
+        
+        if (tableType_ == TableType.TABLE_TYPE_LOCAL) {
+            HoxApp.getApp().handleAIMove(fromPos, toPos);
+        }
     }
     
     /**
