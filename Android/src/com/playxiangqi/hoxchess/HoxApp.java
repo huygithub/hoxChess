@@ -19,9 +19,7 @@
 package com.playxiangqi.hoxchess;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.GameStatus;
@@ -46,9 +44,6 @@ public class HoxApp extends Application {
     
     private static HoxApp thisApp_;
     
-    private List<SettingsObserver> observers_ = new ArrayList<>();
-    private final Object observerMutex_ = new Object();
-    
     private int currentAILevel_ = -1; // Default = "invalid level"
     
     private String pid_ = ""; // My player 's ID.
@@ -56,6 +51,8 @@ public class HoxApp extends Application {
     private String myRating_ = "0";
     
     private Referee referee_;
+    
+    private AIEngine aiEngine_ = new AIEngine();
     
     private NetworkPlayer networkPlayer_;
     private boolean isLoginOK_ = false;
@@ -66,6 +63,7 @@ public class HoxApp extends Application {
     
     private int moveCount_ = 0; // The number of moves made so far in the current table.
     private boolean isGameOver_ = false;
+    private GameStatus gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
     
     private TableTimeTracker timeTracker_ = new TableTimeTracker();
     
@@ -87,6 +85,10 @@ public class HoxApp extends Application {
         
         referee_ = new Referee();
         
+        aiEngine_.initGame();
+        currentAILevel_ = loadAILevelPreferences();
+        aiEngine_.setDifficultyLevel(currentAILevel_);
+        
         networkPlayer_ = new NetworkPlayer();
         if (!networkPlayer_.isAlive()) {
             networkPlayer_.start();
@@ -97,33 +99,11 @@ public class HoxApp extends Application {
         return thisApp_;
     }
     
-    public static interface SettingsObserver {
-        public void onAILevelChanged(int newLevel);
-    }
-
-    public void registerSettingsObserver(SettingsObserver newObserver) {
-        if (newObserver == null) {
-            throw new NullPointerException("Null Observer");
-        }
-        
-        if (!observers_.contains(newObserver)) {
-            observers_.add(newObserver);
-        }
+    public int getAILevel() {
+        return currentAILevel_;
     }
     
-    private void notifyObservers() {
-        List<SettingsObserver> observersLocal = null;
-        // Synchronization is used to make sure any observer registered
-        // after message is received is not notified
-        synchronized (observerMutex_) {
-            observersLocal = new ArrayList<>(this.observers_);
-        }
-        for (SettingsObserver obj : observersLocal) {
-            obj.onAILevelChanged(currentAILevel_);
-        }
-    }
-    
-    public int loadAILevelPreferences() {
+    private int loadAILevelPreferences() {
         SharedPreferences sharedPreferences =
                 thisApp_.getSharedPreferences(SHARED_PREFERENCES_APP_SETTINGS, MODE_PRIVATE);
         int aiLevel = sharedPreferences.getInt(KEY_SAVED_AI_LEVEL_INDEX, 0);
@@ -143,7 +123,7 @@ public class HoxApp extends Application {
         
         if (aiLevel != currentAILevel_) {
             currentAILevel_ = aiLevel;
-            notifyObservers();
+            aiEngine_.setDifficultyLevel(currentAILevel_);
         }
     }
 
@@ -189,8 +169,9 @@ public class HoxApp extends Application {
     /**
      * A message handler to handle UI related tasks.
      */
-    private static final int MSG_NETWORK_EVENT = 1;
-    private Handler messageHandler_ = new MessageHandler(/*this*/);
+    private static final int MSG_AI_MOVE_READY = 1;
+    private static final int MSG_NETWORK_EVENT = 2;
+    private Handler messageHandler_ = new MessageHandler();
     static class MessageHandler extends Handler {
         
         MessageHandler() {
@@ -200,19 +181,38 @@ public class HoxApp extends Application {
         @Override
         public void handleMessage(Message msg){
             switch (msg.what) {
+            case MSG_AI_MOVE_READY:
+            {
+                String aiMove = (String) msg.obj;
+                Log.d(TAG, "(MessageHandler) AI returned this move [" + aiMove + "].");
+                int row1 = aiMove.charAt(0) - '0';
+                int col1 = aiMove.charAt(1) - '0';
+                int row2 = aiMove.charAt(2) - '0';
+                int col2 = aiMove.charAt(3) - '0';
+                HoxApp.getApp().onAIMoveMade(new Position(row1, col1), new Position(row2, col2));
+                break;
+            }
             case MSG_NETWORK_EVENT:
             {
                 String event = (String) msg.obj;
                 Log.d(TAG, "(MessageHandler) Network event arrived.");
                 HoxApp.getApp().onNetworkEvent(event);
                 break;
-            }
-                
+            }  
             default:
                 break;
             }
         }
     };
+    
+    private void onAIMoveMade(Position fromPos, Position toPos) {
+        Log.d(TAG, "On AI move = " + fromPos + " => " + toPos);
+        
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.updateBoardWithNewAIMove(fromPos, toPos);
+        }
+    }
     
     private void onNetworkEvent(String eventString) {
         Log.d(TAG, "On Network event. ENTER.");
@@ -308,6 +308,7 @@ public class HoxApp extends Application {
         }
         
         isGameOver_ = false;
+        gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
         myTable_ = new TableInfo(content);
         
         if (pid_.equals(myTable_.blackId)) {
@@ -504,6 +505,7 @@ public class HoxApp extends Application {
         } if ("drawn".equals(gameResult)) {
             gameStatus = GameStatus.GAME_STATUS_DRAWN;
         }
+        gameStatus_ = gameStatus;
         mainActivity.onGameEnded(gameStatus);
     }
     
@@ -524,6 +526,7 @@ public class HoxApp extends Application {
         }
         
         isGameOver_ = false;
+        gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
         mainActivity.onGameReset();
         timeTracker_.stop();
         timeTracker_.reset();
@@ -589,6 +592,10 @@ public class HoxApp extends Application {
         return isGameOver_;
     }
     
+    public GameStatus getGameStatus() {
+        return gameStatus_;
+    }
+    
     public TableInfo getMyTable() {
         return myTable_;
     }
@@ -652,6 +659,7 @@ public class HoxApp extends Application {
         
         // Case 1: I am not online at all.
         if (!this.isOnline() && !myTable_.isValid()) {
+            aiEngine_.initGame();
             mainActivity.openNewPracticeTable();
         }
         // Case 2: I am online and am not playing in any table.
@@ -767,7 +775,26 @@ public class HoxApp extends Application {
             timeTracker_.start();
         }
         
-        if (myTable_.isValid()) {
+        if (!myTable_.isValid()) { // a local table (with AI)
+            aiEngine_.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
+            
+            if (!referee_.isGameInProgress()) {
+                Log.i(TAG, "The game has ended. Do nothing.");
+                return;
+            }
+            
+            Log.d(TAG, "Ask AI (MaxQi) to generate a new move...");
+            new Thread(new Runnable() {
+                public void run() {
+                    final String aiMove = aiEngine_.generateMove();
+                    Log.d(TAG, "... AI returned this move [" + aiMove + "].");
+                    messageHandler_.sendMessage(
+                            messageHandler_.obtainMessage(MSG_AI_MOVE_READY, aiMove) );
+                }
+            }).start();
+            
+        }
+        else { // a network table
             final String move = String.format("%d%d%d%d",
                     fromPos.column, fromPos.row, toPos.column, toPos.row);
             Log.i(TAG, " .... move: [" + move + "]");

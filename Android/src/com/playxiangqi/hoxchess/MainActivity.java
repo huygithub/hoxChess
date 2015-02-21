@@ -18,8 +18,12 @@
  */
 package com.playxiangqi.hoxchess;
 
+import java.util.List;
+
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
+import com.playxiangqi.hoxchess.Enums.GameStatus;
 import com.playxiangqi.hoxchess.Enums.TableType;
+import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
@@ -37,7 +41,7 @@ import android.widget.TextView;
 /**
  * The main (entry-point) activity.
  */
-public class MainActivity extends ActionBarActivity implements HoxApp.SettingsObserver {
+public class MainActivity extends ActionBarActivity {
 
     private static final String TAG = "MainActivity";
 
@@ -66,7 +70,6 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
                     .commit();
         }
         
-        HoxApp.getApp().registerSettingsObserver(this);
         HoxApp.getApp().registerMainActivity(this);
     }
 
@@ -183,6 +186,12 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         startActivityForResult(intent, JOIN_TABLE_REQUEST);
     }
 
+    public void updateBoardWithNewAIMove(Position fromPos, Position toPos) {
+        Log.d(TAG, "Update board with a new AI move = " + fromPos + " => " + toPos);
+        boardView_.onAIMoveMade(fromPos, toPos);
+        boardView_.invalidate();
+    }
+    
     public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
         Log.d(TAG, "Update board with new Table info (I_TABLE) from network: ENTER.");
         boardView_.resetBoard();
@@ -212,7 +221,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
 
     public void openNewPracticeTable() {
         Log.d(TAG, "Open a new practice table");
-        boardView_.onNewTableActionClicked();
+        boardView_.resetBoard();
     }
     
     public void updateBoardWithNewMove(String move) {
@@ -228,7 +237,7 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
     
     public void updateBoardAfterILeftTable() {
         Log.d(TAG, "Update board after I left the current table...");
-        final int aiLevel = HoxApp.getApp().loadAILevelPreferences();
+        final int aiLevel = HoxApp.getApp().getAILevel();
         updateAILabel(aiLevel); // Update the top-player 's label.
         bottomPlayerLabel_.setText(getString(R.string.you_label));
         boardView_.resetBoard();
@@ -381,6 +390,8 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
     }
     
     private void onBoardViewCreated() {
+        Log.d(TAG, "onBoardViewCreated...");
+        
         boardView_ = (BoardView) placeholderFragment_.getView().findViewById(R.id.board_view);
         if (boardView_ == null) {
             Log.e(TAG, "onCreate: The board view could not be found the placeholder fragment.");
@@ -417,31 +428,29 @@ public class MainActivity extends ActionBarActivity implements HoxApp.SettingsOb
         
         // --------------
         
-        final int aiLevel = HoxApp.getApp().loadAILevelPreferences();
+        final int aiLevel = HoxApp.getApp().getAILevel();
         updateAILabel(aiLevel);
-        updateAILevelOfBoard(aiLevel);
-    }
-    
-    private boolean isBoardReady() {
-        return (boardView_ != null);
-    }
-    
-    /**
-     * Callback when the settings are changed.
-     * 
-     * @see SettingsObserver
-     */
-    @Override
-    public void onAILevelChanged(int newLevel) {
-        Log.d(TAG, "on AI Level changed. newLevel = " +  newLevel);
-        if (isBoardReady()) {
-            updateAILevelOfBoard(newLevel);
-            updateAILabel(newLevel);
+        
+        // Restore the previous state of the board.
+        List<Move> historyMoves = HoxApp.getApp().getReferee().getHistoryMoves();
+        int moveCount = historyMoves.size();
+        int moveIndex = 0;
+        for (Move move : historyMoves) {
+            Log.d(TAG, "Update board with a new AI move = " + move.fromPosition + " => " + move.toPosition);
+            final boolean isLastMove = (moveIndex == (moveCount - 1));
+            boardView_.restoreMove(move.fromPosition, move.toPosition, isLastMove);
+            ++moveIndex;
         }
-    }
-
-    private void updateAILevelOfBoard(int newLevel) {
-        boardView_.onAILevelChanged(newLevel);
+        
+        final GameStatus gameStatus = HoxApp.getApp().getGameStatus();
+        Log.d(TAG, "... gameStatus = " + gameStatus);
+        if (    gameStatus == GameStatus.GAME_STATUS_BLACK_WIN ||
+                gameStatus == GameStatus.GAME_STATUS_RED_WIN ||
+                gameStatus == GameStatus.GAME_STATUS_DRAWN) {
+           boardView_.onGameEnded(gameStatus);
+        }
+        
+        boardView_.invalidate();
     }
     
     private void updateAILabel(int aiLevel) {

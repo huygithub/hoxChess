@@ -63,7 +63,7 @@ public class SettingsActivity extends ActionBarActivity {
     private void loadExistingSettings() {
         Log.d(TAG, "Load existing settings...");
         
-        int aiLevel = HoxApp.getApp().loadAILevelPreferences();
+        int aiLevel = HoxApp.getApp().getAILevel();
         RadioButton savedCheckedRadioButton =
                 (RadioButton) aiLevelRadioGroup_.getChildAt(aiLevel);
         savedCheckedRadioButton.setChecked(true);

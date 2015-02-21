@@ -18,7 +18,6 @@
  */
 package com.playxiangqi.hoxchess;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,8 +32,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.os.Handler;
-import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -80,11 +77,7 @@ public class BoardView extends ImageView {
     private Piece selectedPiece_ = null;
     private Position selectedPosition_ = null;
     
-    private Piece recentPiece_ = null;
-    
-    // TODO: We should move this AI engine out of this board view, perhaps to HoxApp.
-    private AIEngine aiEngine_ = new AIEngine();
-    
+    private Piece recentPiece_ = null;    
     private final Referee referee_ = HoxApp.getApp().getReferee();
     
     /**
@@ -152,9 +145,6 @@ public class BoardView extends ImageView {
         noticePaint_.setTextSize(40.0f);
         
         createPieces();
-        
-        Log.d(TAG, " ... AI 's info = [" + aiEngine_.getInfo() + "]");
-        aiEngine_.initGame();
         
         final ViewTreeObserver vto = getViewTreeObserver();
         vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
@@ -488,33 +478,8 @@ public class BoardView extends ImageView {
         Log.d(TAG, " on Local move = " + fromPos + " => " + toPos);
         
         addMoveToHistory(fromPos, toPos, capture);
-        
         didMoveOccur(fromPos, toPos, capture, gameStatus);
-        
         HoxApp.getApp().handleLocalMove(fromPos, toPos);
-        
-        if (tableType_ == TableType.TABLE_TYPE_LOCAL) {
-            aiEngine_.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
-            
-            if (!isGameInProgress()) {
-                Log.w(TAG, "The game has ended. Do nothing.");
-                return;
-            }
-            
-            Log.d(TAG, "Ask AI (MaxQi) to generate a new move...");
-            new Thread(new Runnable() {
-                public void run() {
-                    String aiMove = aiEngine_.generateMove();
-                    Log.d(TAG, "... AI returned this move [" + aiMove + "].");
-                    messageHandler_.sendMessage(
-                            messageHandler_.obtainMessage(MSG_AI_MOVE_READY, aiMove) );
-                }
-            }).start();
-        
-        } else if (tableType_ == TableType.TABLE_TYPE_NETWORK) {
-            Log.d(TAG, "Send the move over the network...");
-            //HoxApp.getApp().handleLocalMove(fromPos, toPos);
-        }
     }
 
     public void onNetworkMoveMade(Position fromPos, Position toPos) {
@@ -522,7 +487,7 @@ public class BoardView extends ImageView {
         onAIMoveMade(fromPos, toPos);
     }
     
-    private void onAIMoveMade(Position fromPos, Position toPos) {
+    public void onAIMoveMade(Position fromPos, Position toPos) {
         Log.d(TAG, " on AI move = " + fromPos + " => " + toPos);
         
         final int status = referee_.validateMove(fromPos.row, fromPos.column,
@@ -559,6 +524,31 @@ public class BoardView extends ImageView {
         }
     }
     
+    public void restoreMove(Position fromPos, Position toPos, boolean isLastMove) {
+        Log.d(TAG, "Restore move = " + fromPos + " => " + toPos + ". isLastMove:" + isLastMove);
+        
+        Piece capture = tryCapturePieceAtPostion(toPos);
+        addMoveToHistory(fromPos, toPos, capture);
+        
+        Piece fromPiece = getPieceAtViewPosition(fromPos);
+        if (fromPiece == null) {
+            Log.e(TAG, "... No 'from' piece is found at " + fromPos);
+            return;
+        }
+        
+        fromPiece.setPosition(toPos);
+        recentPiece_ = fromPiece;
+        
+        if (isLastMove) {
+            int status = referee_.getGameStatus(); // Get the last status.
+            gameStatus_ = status;
+        }
+        
+        if (capture != null) {
+            captureStack_.add(capture);
+        }
+    }
+    
     /**
      * Try to capture a piece at a given location.
      * 
@@ -567,7 +557,7 @@ public class BoardView extends ImageView {
     private Piece tryCapturePieceAtPostion(Position position) {
         Piece foundPiece = getPieceAtViewPosition(position);
         if (foundPiece == null) {
-            Log.d(TAG, "... No piece is (to be captured) found at " + position);
+            Log.v(TAG, "... No piece is (to be captured) found at " + position);
             return null;
         }
         Log.d(TAG, "Capture a piece at " + position);
@@ -645,11 +635,6 @@ public class BoardView extends ImageView {
         return true;
     }
 
-    public void onNewTableActionClicked() {
-        Log.d(TAG, "The 'New Table' action clicked...");
-        resetBoard();
-    }
-
     public void reverseView() {
         Log.d(TAG, "The 'Reverse View' action clicked...");
         isBlackOnTop_ = !isBlackOnTop_;
@@ -660,7 +645,6 @@ public class BoardView extends ImageView {
         Log.d(TAG, "Reset board to the initial state...");
         
         referee_.resetGame();
-        aiEngine_.initGame();
         
         // Reset the pieces.
         Piece piece;
@@ -697,11 +681,6 @@ public class BoardView extends ImageView {
                 // Do nothing.
         }
         this.invalidate(); // Request to redraw the board.
-    }
-    
-    public void onAILevelChanged(int newLevel) {
-        Log.d(TAG, "On AI Level changed. newLevel = " + newLevel);
-        aiEngine_.setDifficultyLevel(newLevel);
     }
     
     public void setTableType(TableType tableType) {
@@ -868,43 +847,5 @@ public class BoardView extends ImageView {
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeResource(res, resId, options);
     }
-    
-    /**
-     * A message handler to handle UI related tasks.
-     */
-    private static final int MSG_AI_MOVE_READY = 1;
-    private Handler messageHandler_ = new MessageHandler(this);
-    static class MessageHandler extends Handler {
-        private final WeakReference<BoardView> boardView_;
-        
-        MessageHandler(BoardView boardView) {
-            boardView_ = new WeakReference<BoardView>(boardView);
-        }
-        
-        @Override
-        public void handleMessage(Message msg){
-            switch (msg.what) {
-            case MSG_AI_MOVE_READY:
-            {
-                String aiMove = (String) msg.obj;
-                Log.d(TAG, "(MessageHandler) AI returned this move [" + aiMove + "].");
-                int row1 = aiMove.charAt(0) - '0';
-                int col1 = aiMove.charAt(1) - '0';
-                int row2 = aiMove.charAt(2) - '0';
-                int col2 = aiMove.charAt(3) - '0';
-                Log.i(TAG, "... AI 's move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
-                BoardView boardView = boardView_.get();
-                if (boardView != null) {
-                    boardView.onAIMoveMade(new Position(row1, col1), new Position(row2, col2));
-                    boardView.invalidate();
-                }
-                break;
-            }
-                
-            default:
-                break;
-            }
-        }
-    };
     
 }

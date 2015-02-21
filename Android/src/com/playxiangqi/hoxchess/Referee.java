@@ -19,7 +19,11 @@
 
 package com.playxiangqi.hoxchess;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
+import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.util.Log;
 
@@ -30,6 +34,9 @@ public class Referee {
 
     private static final String TAG = "Referee";
     
+    private int gameStatus_ = Referee.hoxGAME_STATUS_READY;
+    private List<Move> historyMoves_ = new ArrayList<Move>(); // All (past) Moves made so far.
+    
     public Referee() {
         Log.d(TAG, "Create a new referee...");
         nativeCreateReferee();
@@ -37,6 +44,8 @@ public class Referee {
     
     public void resetGame() {
         nativeResetGame();
+        gameStatus_ = Referee.hoxGAME_STATUS_READY;
+        historyMoves_.clear();
     }
     
     public ColorEnum getNextColor() {
@@ -48,7 +57,34 @@ public class Referee {
     }
     
     public int validateMove(int row1, int col1, int row2, int col2) {
-        return nativeValidateMove(row1, col1, row2, col2);
+        final int status = nativeValidateMove(row1, col1, row2, col2);
+        if (status == Referee.hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
+            Log.i(TAG, " This move [" + row1 + ", " + col1
+                    + "] => [" + row2 + ", " + col2 + "] is NOT valid.");
+            return status;
+        }
+        
+        Piece.Move move = new Piece.Move();
+        move.fromPosition = new Position(row1, col1);
+        move.toPosition = new Position(row2, col2);
+        move.isCaptured = false; // TODO: (capture != null);
+        historyMoves_.add(move);
+        
+        gameStatus_ = status;
+        return gameStatus_;
+    }
+    
+    public int getGameStatus() {
+        return gameStatus_;
+    }
+    
+    public List<Move> getHistoryMoves() {
+        return historyMoves_;
+    }
+    
+    public boolean isGameInProgress() {
+        return (   gameStatus_ == Referee.hoxGAME_STATUS_READY 
+                || gameStatus_ == Referee.hoxGAME_STATUS_IN_PROGRESS);
     }
     
     // ****************************** Native code **********************************
