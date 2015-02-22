@@ -553,9 +553,13 @@ public class HoxApp extends Application {
                 pid + " offered to DRAW the game", Toast.LENGTH_LONG).show();
     }
     
-    // --------------------------------------------------------
+    private void onGameEnded() {
+        Log.d(TAG, "On game-ended...");
+        timeTracker_.stop();
+    }
     
     public void handlePlayOnlineClicked() {
+        Log.d(TAG, "Action 'Play Online' clicked...");
         if ( !networkPlayer_.isOnline() || !isLoginOK_ ) {
             final AccountInfo accountInfo = loadPreferences_Account();
             pid_ = accountInfo.username;
@@ -613,6 +617,7 @@ public class HoxApp extends Application {
     }
     
     public void logoutFromNetwork() {
+        Log.d(TAG, "Logout from network...");
         if (networkPlayer_.isOnline() ) {
             networkPlayer_.disconnectFromServer();
         }
@@ -660,6 +665,9 @@ public class HoxApp extends Application {
         // Case 1: I am not online at all.
         if (!this.isOnline() && !myTable_.isValid()) {
             aiEngine_.initGame();
+            timeTracker_.stop();
+            timeTracker_.reset();
+            moveCount_ = 0;
             mainActivity.openNewPracticeTable();
         }
         // Case 2: I am online and am not playing in any table.
@@ -780,6 +788,7 @@ public class HoxApp extends Application {
             
             if (!referee_.isGameInProgress()) {
                 Log.i(TAG, "The game has ended. Do nothing.");
+                onGameEnded();
                 return;
             }
             
@@ -809,6 +818,12 @@ public class HoxApp extends Application {
         
         if (moveCount_ == 2) {
             timeTracker_.start();
+        }
+        
+        if (!referee_.isGameInProgress()) {
+            Log.i(TAG, "The game has ended. Do nothing.");
+            onGameEnded();
+            return;
         }
     }
     

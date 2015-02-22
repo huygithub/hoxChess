@@ -125,36 +125,27 @@ public class MainActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
             case R.id.action_new_table:
-                Log.d(TAG, "Action 'New Table' clicked...");
                 HoxApp.getApp().handleRequestToOpenNewTable();
                 return true;
             case R.id.action_close_table:
-                Log.d(TAG, "Action 'Close Table' clicked...");
                 HoxApp.getApp().handleRequestToCloseCurrentTable();
                 return true;
             case R.id.action_offer_draw:
-                Log.d(TAG, "Action 'Offer Draw' clicked...");
                 HoxApp.getApp().handleRequestToOfferDraw();
                 return true;
             case R.id.action_offer_resign:
-                Log.d(TAG, "Action 'Offer Resign' clicked...");
                 HoxApp.getApp().handleRequestToOfferResign();
                 return true;
             case R.id.action_play_online:
-                Log.d(TAG, "Action 'Play Online' clicked...");
                 HoxApp.getApp().handlePlayOnlineClicked();
                 return true;
             case R.id.action_logout:
-                Log.d(TAG, "Action 'Logout' clicked...");
                 HoxApp.getApp().logoutFromNetwork();
                 return true;
             case R.id.action_settings:
-                Log.d(TAG, "Action 'Settings' clicked...");
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
+                openSettingsView();
                 return true;
             case R.id.action_reverse_view:
-                Log.d(TAG, "Action 'Reverse View' clicked...");
                 reverseView();
                 return true;
             default:
@@ -162,7 +153,15 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
+    private void openSettingsView() {
+        Log.d(TAG, "Open 'Settings' view...");
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
+    }
+    
     private void reverseView() {
+        Log.d(TAG, "Reverse view...");
+        
         isBlackOnTop_ = !isBlackOnTop_;
         boardView_.reverseView();
         
