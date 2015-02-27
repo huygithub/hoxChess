@@ -165,17 +165,9 @@ public class MainActivity extends ActionBarActivity {
         isBlackOnTop_ = !isBlackOnTop_;
         boardView_.reverseView();
         
-        // Swap the player labels and buttons.
-        CharSequence savedText = topPlayerLabel_.getText();
-        topPlayerLabel_.setText(bottomPlayerLabel_.getText());
-        bottomPlayerLabel_.setText(savedText);
-        
-        savedText = topPlayerButton_.getText();
-        topPlayerButton_.setText(bottomPlayerButton_.getText());
-        bottomPlayerButton_.setText(savedText);
-        
-        // Timer.
+        // Time and Player trackers.
         HoxApp.getApp().getTimeTracker().reverseView();
+        HoxApp.getApp().getPlayerTracker().reverseView();
     }
     
     public void startActvityToListTables(String content) {
@@ -195,8 +187,6 @@ public class MainActivity extends ActionBarActivity {
         Log.d(TAG, "Update board with new Table info (I_TABLE) from network: ENTER.");
         boardView_.resetBoard();
         boardView_.setTableType(TableType.TABLE_TYPE_NETWORK);
-        setBlackInfo(tableInfo.getBlackInfo());
-        setRedInfo(tableInfo.getRedInfo());
     }
 
     public void resetBoardWithNewMoves(String[] moves) {
@@ -234,142 +224,6 @@ public class MainActivity extends ActionBarActivity {
         boardView_.invalidate();
     }
     
-    public void updateBoardAfterILeftTable() {
-        Log.d(TAG, "Update board after I left the current table...");
-        final int aiLevel = HoxApp.getApp().getAILevel();
-        updateAILabel(aiLevel); // Update the top-player 's label.
-        bottomPlayerLabel_.setText(getString(R.string.you_label));
-        boardView_.resetBoard();
-    }
-
-    private void setBlackInfo(String playerInfo) {
-        if (isBlackOnTop_) {
-            topPlayerLabel_.setText(playerInfo);
-        } else {
-            bottomPlayerLabel_.setText(playerInfo);
-        }
-    }
-
-    private void setRedInfo(String playerInfo) {
-        if (isBlackOnTop_) {
-            bottomPlayerLabel_.setText(playerInfo);
-        } else {
-            topPlayerLabel_.setText(playerInfo);
-        }
-    }
-    
-    private void setBlackPossibleMode_PLAY() {
-        if (isBlackOnTop_) {
-            topPlayerButton_.setText(getString(R.string.button_play_black));
-        } else {
-            bottomPlayerButton_.setText(getString(R.string.button_play_black));
-        }
-    }
-
-    private void setRedPossibleMode_PLAY() {
-        if (isBlackOnTop_) {
-            bottomPlayerButton_.setText(getString(R.string.button_play_red));
-        } else {
-            topPlayerButton_.setText(getString(R.string.button_play_red));
-        }
-    }
-    
-    private void setBlackPossibleMode_LEAVE() {
-        if (isBlackOnTop_) {
-            topPlayerButton_.setText("X");
-        } else {
-            bottomPlayerButton_.setText("X");
-        }
-    }
-    
-    private void setRedPossibleMode_LEAVE() {
-        if (isBlackOnTop_) {
-            bottomPlayerButton_.setText("X");
-        } else {
-            topPlayerButton_.setText("X");
-        }
-    }
-    
-    private void onMyColorChanged(Enums.ColorEnum myNewColor, Enums.ColorEnum myLastColor) {
-        switch (myNewColor) {
-            case COLOR_BLACK:
-                setBlackPossibleMode_LEAVE();
-                break;
-                
-            case COLOR_RED:
-                setRedPossibleMode_LEAVE();
-                break;
-                
-            case COLOR_NONE:
-                if (myLastColor == ColorEnum.COLOR_BLACK) {
-                    setBlackPossibleMode_PLAY();
-                } else if (myLastColor == ColorEnum.COLOR_RED) {
-                    setRedPossibleMode_PLAY();
-                }
-                break;
-                
-            default:
-                break;
-        }
-    }
-    
-    public void updateBoardWithPlayerInfo(Enums.ColorEnum playerColor, String playerInfo) {
-        if (playerColor == ColorEnum.COLOR_BLACK) {
-            topPlayerLabel_.setText(playerInfo);
-        } else if (playerColor == ColorEnum.COLOR_RED) {
-            bottomPlayerLabel_.setText(playerInfo);
-        }
-    }
-
-    public void onPlayerJoinedTable(String pid,
-            Enums.ColorEnum playerColor, Enums.ColorEnum playerPreviousColor,
-            String playerInfo,
-            boolean myColorChanged, Enums.ColorEnum myLastColor) {
-        
-        // Cleanup the old seat first.
-        if (playerPreviousColor == ColorEnum.COLOR_BLACK) {
-            setBlackInfo("*");
-        } else if (playerPreviousColor == ColorEnum.COLOR_RED) {
-            setRedInfo("*");
-        }
-        
-        // Assign the new seat.
-        switch (playerColor) {
-            case COLOR_BLACK:
-            {
-                setBlackInfo(playerInfo);
-                break;
-            }
-            case COLOR_RED:
-            {
-                setRedInfo(playerInfo);
-                break;
-            }
-            case COLOR_NONE:
-            {
-                break;
-            }
-            default:
-                break; // Do nothing
-        }
-        
-        // Handle the special case in which I changed my seat.
-        if (myColorChanged) {
-            onMyColorChanged(playerColor, myLastColor);
-        }
-    }
-    
-    public void onOtherPlayerLeftTable(Enums.ColorEnum playerPreviousColor) {
-        Log.d(TAG, "Update board after other player (not I) left the current table...");
-        if (playerPreviousColor == ColorEnum.COLOR_BLACK) {
-            setBlackInfo("*");
-            setBlackPossibleMode_PLAY();
-        } else if (playerPreviousColor == ColorEnum.COLOR_RED) {
-            setRedInfo("*");
-            setRedPossibleMode_PLAY();
-        }
-    }
-    
     public void onGameEnded(Enums.GameStatus gameStatus) {
         boardView_.onGameEnded(gameStatus);
     }
@@ -392,27 +246,10 @@ public class MainActivity extends ActionBarActivity {
         Log.d(TAG, "onBoardViewCreated...");
         
         boardView_ = (BoardView) placeholderFragment_.getView().findViewById(R.id.board_view);
-        if (boardView_ == null) {
-            Log.e(TAG, "onCreate: The board view could not be found the placeholder fragment.");
-        }
-        
         topPlayerLabel_ = (TextView) placeholderFragment_.getView().findViewById(R.id.top_player_label);
-        if (topPlayerLabel_ == null) {
-            Log.e(TAG, "The Top-Player Label could not be found the placeholder fragment.");
-        }
         bottomPlayerLabel_ = (TextView) placeholderFragment_.getView().findViewById(R.id.bottom_player_label);
-        if (bottomPlayerLabel_ == null) {
-            Log.e(TAG, "The Bottom-Player Label could not be found the placeholder fragment.");
-        }
-
         topPlayerButton_ = (Button) placeholderFragment_.getView().findViewById(R.id.top_button);
-        if (topPlayerButton_ == null) {
-            Log.e(TAG, "The Top-Player Button could not be found the placeholder fragment.");
-        }
         bottomPlayerButton_ = (Button) placeholderFragment_.getView().findViewById(R.id.bottom_button);
-        if (bottomPlayerButton_ == null) {
-            Log.e(TAG, "The Bottom-Player Button could not be found the placeholder fragment.");
-        }
         
         // Game timers.
         TextView topGameTimeView = (TextView) placeholderFragment_.getView().findViewById(R.id.top_game_time);
@@ -425,10 +262,11 @@ public class MainActivity extends ActionBarActivity {
                 topGameTimeView, topMoveTimeView, bottomGameTimeView, bottomMoveTimeView);
         timeTracker.reset();
         
-        // --------------
-        
-        final int aiLevel = HoxApp.getApp().getAILevel();
-        updateAILabel(aiLevel);
+        // Player tracker.
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.setUIViews(
+                topPlayerLabel_, topPlayerButton_, bottomPlayerLabel_, bottomPlayerButton_);
+        playerTracker.syncUI();
         
         // Restore the previous state of the board.
         List<Move> historyMoves = HoxApp.getApp().getReferee().getHistoryMoves();
@@ -450,17 +288,6 @@ public class MainActivity extends ActionBarActivity {
         }
         
         boardView_.invalidate();
-    }
-    
-    private void updateAILabel(int aiLevel) {
-        String labelString;
-        switch (aiLevel) {
-            case 1: labelString = getString(R.string.ai_label_medium); break;
-            case 2: labelString = getString(R.string.ai_label_difficult); break;
-            case 0: /* falls through */
-            default: labelString = getString(R.string.ai_label_easy);
-        }
-        topPlayerLabel_.setText(labelString);
     }
     
     public void onReplayBegin(View view) {

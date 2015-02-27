@@ -210,7 +210,7 @@ public class BoardView extends ImageView {
     @Override
     protected void onDraw(Canvas canvas) {
     	super.onDraw(canvas);
-    	Log.d(TAG, "onDraw(): ENTER.");
+    	Log.d(TAG, "onDraw(): ENTER. isBlackOnTop = " + isBlackOnTop_);
 
     	drawBoard(canvas, Color.BLACK, Color.WHITE);
     	drawAllPieces(canvas);

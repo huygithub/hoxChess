@@ -53,7 +53,6 @@ public class Referee {
         if (nextColor == hoxCOLOR_RED) return ColorEnum.COLOR_RED;
         if (nextColor == hoxCOLOR_BLACK) return ColorEnum.COLOR_BLACK;
         return ColorEnum.COLOR_UNKNOWN;
-        
     }
     
     public int validateMove(int row1, int col1, int row2, int col2) {
@@ -80,6 +79,10 @@ public class Referee {
     
     public List<Move> getHistoryMoves() {
         return historyMoves_;
+    }
+    
+    public int getMoveCount() {
+        return historyMoves_.size();
     }
     
     public boolean isGameInProgress() {

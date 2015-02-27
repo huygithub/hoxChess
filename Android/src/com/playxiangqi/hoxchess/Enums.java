@@ -22,8 +22,8 @@ package com.playxiangqi.hoxchess;
  * A table
  */
 public class Enums {
+    
     public enum ColorEnum {
-        
         COLOR_UNKNOWN,
                 // This type indicates the absence of color or role.
                 // For example, it is used to indicate the player is not even
@@ -39,13 +39,15 @@ public class Enums {
     }
     
     public enum TableType {
-        
         TABLE_TYPE_LOCAL,
                 // A local board in which the local player plays with AI or with another local player.
                 // or with another local player.
 
-        TABLE_TYPE_NETWORK  
+        TABLE_TYPE_NETWORK,
                 // This is a network (only) table
+        
+        TABLE_TYPE_EMPTY
+                // This is an empty table
     }
     
     public enum GameStatus {

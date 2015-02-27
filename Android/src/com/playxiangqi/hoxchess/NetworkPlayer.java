@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.UnresolvedAddressException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -259,9 +260,14 @@ class NetworkPlayer extends Thread {
         
         /*SelectionKey selectionKey =*/ socketChannel_.register(selector_,
                 SelectionKey.OP_CONNECT | SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-        
-        socketChannel_.connect(new InetSocketAddress("games.playxiangqi.com", 80));
-        
+        try {
+            socketChannel_.connect(new InetSocketAddress("games.playxiangqi.com", 80));
+        } catch (UnresolvedAddressException ex) {
+            Log.e(TAG, "UnresolvedAddressException caught while connecting.");
+            connectionState_ = ConnectionState.CONNECTION_STATE_NONE;
+            HoxApp.getApp().postNetworkError("Failed to connect to the game server (UnresolvedAddressException)!");
+            return;
+        }
         Log.d(TAG, "... Continue with connecting....");
         
         while( (! socketChannel_.finishConnect()) || disconnectionRequested_ ) {

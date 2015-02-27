@@ -23,6 +23,7 @@ import java.util.HashMap;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.GameStatus;
+import com.playxiangqi.hoxchess.Enums.TableType;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
@@ -61,11 +62,11 @@ public class HoxApp extends Application {
     private TableInfo myTable_ = new TableInfo();
     private ColorEnum myColor_ = ColorEnum.COLOR_UNKNOWN;
     
-    private int moveCount_ = 0; // The number of moves made so far in the current table.
     private boolean isGameOver_ = false;
     private GameStatus gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
     
     private TableTimeTracker timeTracker_ = new TableTimeTracker();
+    private TablePlayerTracker playerTracker_ = new TablePlayerTracker();
     
     // ----------------
     public class AccountInfo {
@@ -171,6 +172,7 @@ public class HoxApp extends Application {
      */
     private static final int MSG_AI_MOVE_READY = 1;
     private static final int MSG_NETWORK_EVENT = 2;
+    private static final int MSG_NETWORK_ERROR = 3;
     private Handler messageHandler_ = new MessageHandler();
     static class MessageHandler extends Handler {
         
@@ -198,7 +200,15 @@ public class HoxApp extends Application {
                 Log.d(TAG, "(MessageHandler) Network event arrived.");
                 HoxApp.getApp().onNetworkEvent(event);
                 break;
-            }  
+            }
+            case MSG_NETWORK_ERROR:
+            {
+                String errorString = (String) msg.obj;
+                Log.i(TAG, "(MessageHandler) Network error arrived.");
+                Toast.makeText(HoxApp.thisApp_,
+                        errorString, Toast.LENGTH_LONG).show();
+                break;
+            }            
             default:
                 break;
             }
@@ -274,7 +284,6 @@ public class HoxApp extends Application {
                     getLocalizedLoginError(code), Toast.LENGTH_LONG).show();
             
             networkPlayer_.disconnectFromServer();
-            
             return;
         }
         
@@ -286,6 +295,10 @@ public class HoxApp extends Application {
         if (pid_.equals(pid)) { // my LOGIN?
             Log.i(TAG, ">>>>>> Got my LOGIN info [" + pid + " " + rating + "].");
             myRating_ = rating;
+            
+            playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
+            playerTracker_.syncUI();
+            
             networkPlayer_.sendRequest_LIST();
         }
     }
@@ -328,6 +341,11 @@ public class HoxApp extends Application {
         timeTracker_.setRedTime( new TimeInfo(myTable_.redTimes) );
         timeTracker_.syncUI();
         
+        playerTracker_.setTableType(TableType.TABLE_TYPE_NETWORK);
+        playerTracker_.setBlackInfo(myTable_.blackId, myTable_.blackRating);
+        playerTracker_.setRedInfo(myTable_.redId, myTable_.redRating);
+        playerTracker_.syncUI();
+        
         mainActivity.updateBoardWithNewTableInfo(myTable_);
     }
 
@@ -368,6 +386,10 @@ public class HoxApp extends Application {
         if (mainActivity != null) {
             mainActivity.updateBoardWithNewMove(move);
         }
+        
+        if (referee_.getMoveCount() > 1) { // The game has started?
+            playerTracker_.syncUI();
+        }
     }
     
     private void handleNetworkEvent_LEAVE(String content) {
@@ -381,36 +403,19 @@ public class HoxApp extends Application {
             return;
         }
         
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity == null) {
-            Log.i(TAG, "The main activity is NULL. Still, we continue!");
-            //return;
-        }
-        
-        // Special case: The player left Red/Black seat.
-        Enums.ColorEnum playerPreviousColor = ColorEnum.COLOR_UNKNOWN;
-        if (pid.equals(myTable_.blackId)) {
-            playerPreviousColor = ColorEnum.COLOR_BLACK;
-        } else if (pid.equals(myTable_.redId)) {
-            playerPreviousColor = ColorEnum.COLOR_RED;
-        }
-        
         // Check if I just left the Table.
         if (pid.equals(pid_)) {
             Log.i(TAG, "I just left my table: " + tableId);
-            if (mainActivity != null) {
-                mainActivity.updateBoardAfterILeftTable();
-            }
             myTable_ = new TableInfo();
             myColor_ = ColorEnum.COLOR_UNKNOWN;
             timeTracker_.stop();
         
         } else { // Other player left my table?
             myTable_.onPlayerLeft(pid);
-            if (mainActivity != null) {
-                mainActivity.onOtherPlayerLeftTable(playerPreviousColor);
-            }
         }
+        
+        playerTracker_.onPlayerLeave(pid);
+        playerTracker_.syncUI();
     }
     
     private Enums.ColorEnum stringToPlayerColor(String color) {
@@ -441,39 +446,26 @@ public class HoxApp extends Application {
         
         final Enums.ColorEnum playerColor = stringToPlayerColor(color);
         
-        // Special case: The player left Red/Black seat.
-        Enums.ColorEnum playerPreviousColor = ColorEnum.COLOR_UNKNOWN;
-        if (pid.equals(myTable_.blackId)) {
-            playerPreviousColor = ColorEnum.COLOR_BLACK;
-        } else if (pid.equals(myTable_.redId)) {
-            playerPreviousColor = ColorEnum.COLOR_RED;
-        }
-        
         myTable_.onPlayerJoined(pid, rating, playerColor);
-        
-        final String playerInfo = TableInfo.formatPlayerInfo(pid, rating);
-        boolean myColorChanged = false;
-        Enums.ColorEnum myLastColor = myColor_;
         
         if ("Red".equals(color)) {
             if (pid.equals(pid_)) {
                 myColor_ = ColorEnum.COLOR_RED;
-                myColorChanged = true;
             }
             
         } else if ("Black".equals(color)) {
             if (pid.equals(pid_)) {
                 myColor_ = ColorEnum.COLOR_BLACK;
-                myColorChanged = true;
             }
             
         } else if ("None".equals(color)) {
             if (pid.equals(pid_)) {
                 myColor_ = ColorEnum.COLOR_NONE;
-                myColorChanged = true;
             }
         }
-        mainActivity.onPlayerJoinedTable(pid, playerColor, playerPreviousColor, playerInfo, myColorChanged, myLastColor);
+        
+        playerTracker_.onPlayerJoin(pid, rating, playerColor);
+        playerTracker_.syncUI();
     }
     
     private void handleNetworkEvent_E_END(String content) {
@@ -495,6 +487,7 @@ public class HoxApp extends Application {
         
         isGameOver_ = true;
         timeTracker_.stop();
+        playerTracker_.syncUI();
         
         GameStatus gameStatus = GameStatus.GAME_STATUS_UNKNOWN;
         
@@ -587,10 +580,6 @@ public class HoxApp extends Application {
     public ColorEnum getMyColor() {
         return myColor_;
     }
-
-    public int getMoveCount() {
-        return moveCount_;
-    }
     
     public boolean isGameOver() {
         return isGameOver_;
@@ -610,6 +599,10 @@ public class HoxApp extends Application {
     
     public TableTimeTracker getTimeTracker() {
         return timeTracker_;
+    }
+
+    public TablePlayerTracker getPlayerTracker() {
+        return playerTracker_;
     }
     
     public Referee getReferee() {
@@ -667,7 +660,6 @@ public class HoxApp extends Application {
             aiEngine_.initGame();
             timeTracker_.stop();
             timeTracker_.reset();
-            moveCount_ = 0;
             mainActivity.openNewPracticeTable();
         }
         // Case 2: I am online and am not playing in any table.
@@ -774,13 +766,16 @@ public class HoxApp extends Application {
     
     @SuppressLint("DefaultLocale")
     public void handleLocalMove(Position fromPos, Position toPos) {
-        Log.i(TAG, "Handle local move: moveCount_ = " + moveCount_);
+        Log.i(TAG, "Handle local move: referee 's moveCount = " + referee_.getMoveCount());
         
-        ++moveCount_;
         timeTracker_.nextColor();
         
-        if (moveCount_ == 2) {
+        if (referee_.getMoveCount() == 2) {
             timeTracker_.start();
+        }
+        
+        if (referee_.getMoveCount() > 1) { // The game has started?
+            playerTracker_.syncUI();
         }
         
         if (!myTable_.isValid()) { // a local table (with AI)
@@ -812,11 +807,10 @@ public class HoxApp extends Application {
     }
     
     public void handleAIMove(Position fromPos, Position toPos) {
-        Log.i(TAG, "Handle AI move: moveCount_ = " + moveCount_);
-        ++moveCount_;
+        Log.i(TAG, "Handle AI move: referee 's moveCount = " + referee_.getMoveCount());
         timeTracker_.nextColor();
         
-        if (moveCount_ == 2) {
+        if (referee_.getMoveCount() == 2) {
             timeTracker_.start();
         }
         
@@ -831,6 +825,12 @@ public class HoxApp extends Application {
         Log.d(TAG, "Post Network event = [" + eventString + "]");
         messageHandler_.sendMessage(
                 messageHandler_.obtainMessage(MSG_NETWORK_EVENT, eventString) );
+    }
+
+    public void postNetworkError(String errorString) {
+        Log.d(TAG, "Post Network error = [" + errorString + "]");
+        messageHandler_.sendMessage(
+                messageHandler_.obtainMessage(MSG_NETWORK_ERROR, errorString) );
     }
     
 }
