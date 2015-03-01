@@ -34,6 +34,10 @@
     <item android:id="@+id/action_offer_resign"
           android:title="@string/action_resign"
           app:showAsAction="never" />
+
+    <item android:id="@+id/action_reset_table"
+          android:title="@string/action_reset"
+          app:showAsAction="never" />
     
     <item android:id="@+id/action_logout"
           android:title="@string/action_logout"

@@ -720,6 +720,15 @@ public class HoxApp extends Application {
         }
         networkPlayer_.sendRequest_RESIGN(myTable_.tableId);
     }
+
+    public void handleRequestToResetTable() {
+        Log.i(TAG, "Send request to 'Reset Table'...");
+        if (!myTable_.isValid()) {
+            Log.w(TAG, "No current table. Ignore the request to 'Reset Table' the current Table");
+            return;
+        }
+        networkPlayer_.sendRequest_RESET(myTable_.tableId);
+    }
     
     public void handlePlayerButtonClick(Enums.ColorEnum clickedColor) {
         Log.i(TAG, "Handle player-button click. clickedColor = " + clickedColor);

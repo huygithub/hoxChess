@@ -83,6 +83,7 @@ class NetworkPlayer extends Thread {
     private static final int MSG_NETWORK_SEND_DRAW = 8;
     private static final int MSG_NETWORK_SEND_RESIGN = 9;
     private static final int MSG_NETWORK_SEND_NEW = 10;
+    private static final int MSG_NETWORK_SEND_RESET = 11;
     
     @SuppressLint("HandlerLeak") @Override
     public void run() {
@@ -157,6 +158,14 @@ class NetworkPlayer extends Thread {
                             break;
                         }
                         
+                        case MSG_NETWORK_SEND_RESET:
+                        {
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> map = (Map<String, String>) msg.obj;
+                            send_RESET(map);
+                            break;
+                        }
+                        
                         default:
                             break;
                     }
@@ -226,6 +235,13 @@ class NetworkPlayer extends Thread {
         Map<String, String> map = new HashMap<String, String>();
         map.put("tid", tableId);
         handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_RESIGN, map));
+    }
+
+    public void sendRequest_RESET(String tableId) {
+        Log.d(TAG, "Send 'RESET' request to server...");
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("tid", tableId);
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_RESET, map));
     }
     
     public void sendRequest_MOVE(String tableId, String move) {
@@ -403,6 +419,12 @@ class NetworkPlayer extends Thread {
     private void send_NEW(Map<String, String> map) throws IOException {
         final String itimes = map.get("itimes");
         String request = "op=NEW&pid=" + pid_ + "&itimes=" + itimes;
+        sendRequest(request);
+    }
+    
+    private void send_RESET(Map<String, String> map) throws IOException {
+        final String tableId = map.get("tid");
+        String request = "op=RESET&pid=" + pid_ + "&tid=" + tableId;
         sendRequest(request);
     }
     

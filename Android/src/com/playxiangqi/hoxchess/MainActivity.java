@@ -110,10 +110,14 @@ public class MainActivity extends ActionBarActivity {
                 menu.findItem(R.id.action_offer_resign).setVisible(false);
                 menu.findItem(R.id.action_close_table).setVisible(true);
             }
+            menu.findItem(R.id.action_reset_table).setVisible(
+                    isGameOver || (moveCount < 2));
+            
         } else {
             menu.findItem(R.id.action_offer_draw).setVisible(false);
             menu.findItem(R.id.action_offer_resign).setVisible(false);
             menu.findItem(R.id.action_close_table).setVisible(isInOnlineTable);
+            menu.findItem(R.id.action_reset_table).setVisible(false);
         }
         return true; // display the menu
     }
@@ -135,6 +139,9 @@ public class MainActivity extends ActionBarActivity {
                 return true;
             case R.id.action_offer_resign:
                 HoxApp.getApp().handleRequestToOfferResign();
+                return true;
+            case R.id.action_reset_table:
+                HoxApp.getApp().handleRequestToResetTable();
                 return true;
             case R.id.action_play_online:
                 HoxApp.getApp().handlePlayOnlineClicked();
