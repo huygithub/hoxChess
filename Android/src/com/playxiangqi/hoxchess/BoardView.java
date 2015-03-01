@@ -407,8 +407,8 @@ public class BoardView extends ImageView {
             case MotionEvent.ACTION_UP:
                 if (mDownTouch) {
                     mDownTouch = false;
-                    //Log.d(TAG, "ACTION_UP: [X = " + event.getX() + ", Y = " + event.getY() + "].");
-                    if (isGameInProgress() && !isBoardInReviewMode()) {
+                    if (isGameInProgress() && !isBoardInReviewMode() 
+                            && HoxApp.getApp().isMyTurn()) {
                         handleTouchAtLocation(event.getX(), event.getY());
                     }
                     
@@ -448,8 +448,8 @@ public class BoardView extends ImageView {
         }
         // CASE 2: A piece has been selected already.
         else if ( ! Position.equals(selectedPosition_, viewPos) ) { // different location?
-           final int status = referee_.validateMove(selectedPosition_.row, selectedPosition_.column,
-                                                    viewPos.row, viewPos.column);
+            final int status = referee_.validateMove(selectedPosition_.row, selectedPosition_.column,
+                                                     viewPos.row, viewPos.column);
             Log.d(TAG, "... (native referee) move-validation returned status = " + status);
             
             if (status == Referee.hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
@@ -619,7 +619,7 @@ public class BoardView extends ImageView {
                 noticePaint_);
     }
     
-    boolean isGameInProgress() {
+    private boolean isGameInProgress() {
         return (   gameStatus_ == Referee.hoxGAME_STATUS_READY 
                 || gameStatus_ == Referee.hoxGAME_STATUS_IN_PROGRESS);
     }

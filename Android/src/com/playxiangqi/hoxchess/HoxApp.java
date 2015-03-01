@@ -60,13 +60,13 @@ public class HoxApp extends Application {
     
     private WeakReference<MainActivity> mainActivity_;
     private TableInfo myTable_ = new TableInfo();
-    private ColorEnum myColor_ = ColorEnum.COLOR_UNKNOWN;
+    private ColorEnum myColor_ = ColorEnum.COLOR_RED;
     
     private boolean isGameOver_ = false;
     private GameStatus gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
     
     private TableTimeTracker timeTracker_ = new TableTimeTracker();
-    private TablePlayerTracker playerTracker_ = new TablePlayerTracker();
+    private TablePlayerTracker playerTracker_ = new TablePlayerTracker(TableType.TABLE_TYPE_LOCAL);
     
     // ----------------
     public class AccountInfo {
@@ -293,9 +293,10 @@ public class HoxApp extends Application {
         Log.d(TAG, ">>> [" + pid + " " + rating + "] LOGIN.");
         
         if (pid_.equals(pid)) { // my LOGIN?
-            Log.i(TAG, ">>>>>> Got my LOGIN info [" + pid + " " + rating + "].");
+            Log.i(TAG, "Received my LOGIN info [" + pid + " " + rating + "].");
             myRating_ = rating;
             
+            myColor_ = ColorEnum.COLOR_UNKNOWN;
             playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
             playerTracker_.syncUI();
             
@@ -332,7 +333,7 @@ public class HoxApp extends Application {
             myColor_ = ColorEnum.COLOR_NONE;
         }
         
-        Log.i(TAG, "... >>> Set my table Id: " + myTable_.tableId + ", myColor: " + myColor_);
+        Log.i(TAG, "Set my table Id: " + myTable_.tableId + ", myColor: " + myColor_);
         
         timeTracker_.stop();
         timeTracker_.setInitialColor(ColorEnum.COLOR_RED);
@@ -409,6 +410,10 @@ public class HoxApp extends Application {
             myTable_ = new TableInfo();
             myColor_ = ColorEnum.COLOR_UNKNOWN;
             timeTracker_.stop();
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.clearTable();
+            }
         
         } else { // Other player left my table?
             myTable_.onPlayerLeft(pid);
@@ -609,6 +614,22 @@ public class HoxApp extends Application {
         return referee_;
     }
     
+    public boolean isMyTurn() {
+        switch (playerTracker_.getTableType()) {
+            case TABLE_TYPE_LOCAL:
+                return (myColor_ == referee_.getNextColor());
+                
+            case TABLE_TYPE_NETWORK:
+                return ((myColor_ == ColorEnum.COLOR_RED || myColor_ == ColorEnum.COLOR_BLACK) &&
+                        playerTracker_.hasEnoughPlayers() &&
+                        myColor_ == referee_.getNextColor());
+                
+            case TABLE_TYPE_EMPTY: // falls through
+            default:
+                return false;
+        }
+    }
+    
     public void logoutFromNetwork() {
         Log.d(TAG, "Logout from network...");
         if (networkPlayer_.isOnline() ) {
@@ -657,6 +678,9 @@ public class HoxApp extends Application {
         
         // Case 1: I am not online at all.
         if (!this.isOnline() && !myTable_.isValid()) {
+            playerTracker_.setTableType(TableType.TABLE_TYPE_LOCAL); // A new practice table.
+            playerTracker_.syncUI();
+            myColor_ = ColorEnum.COLOR_RED;
             aiEngine_.initGame();
             timeTracker_.stop();
             timeTracker_.reset();

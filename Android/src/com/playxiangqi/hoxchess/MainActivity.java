@@ -184,7 +184,7 @@ public class MainActivity extends ActionBarActivity {
     }
     
     public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
-        Log.d(TAG, "Update board with new Table info (I_TABLE) from network: ENTER.");
+        Log.d(TAG, "Update board with new network Table info (I_TABLE)...");
         boardView_.resetBoard();
         boardView_.setTableType(TableType.TABLE_TYPE_NETWORK);
     }
@@ -211,6 +211,7 @@ public class MainActivity extends ActionBarActivity {
     public void openNewPracticeTable() {
         Log.d(TAG, "Open a new practice table");
         boardView_.resetBoard();
+        boardView_.setTableType(TableType.TABLE_TYPE_LOCAL);
     }
     
     public void updateBoardWithNewMove(String move) {
@@ -222,6 +223,11 @@ public class MainActivity extends ActionBarActivity {
         Log.i(TAG, "... Network move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
         boardView_.onNetworkMoveMade(new Position(row1, col1), new Position(row2, col2));
         boardView_.invalidate();
+    }
+    
+    public void clearTable() {
+        Log.d(TAG, "Clear the table. Make it an empty one.");
+        boardView_.resetBoard();
     }
     
     public void onGameEnded(Enums.GameStatus gameStatus) {

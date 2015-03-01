@@ -40,7 +40,7 @@ public class TablePlayerTracker {
     }
     // ------------------
     
-    private TableType tableType_ = TableType.TABLE_TYPE_LOCAL;
+    private TableType tableType_;
     private ColorEnum myColor_ = ColorEnum.COLOR_RED;
     
     private TextView blackLabel_;
@@ -55,8 +55,8 @@ public class TablePlayerTracker {
     private SeatMode redSeatMode_ = SeatMode.SEAT_MODE_NONE;
     
     
-    public TablePlayerTracker() {
-        // empty
+    public TablePlayerTracker(TableType tableType) {
+        tableType_ = tableType;
     }
     
     public void setUIViews(
@@ -87,12 +87,20 @@ public class TablePlayerTracker {
         tableType_ = tableType;
     }
     
+    public TableType getTableType() {
+        return tableType_;
+    }
+    
     public void setBlackInfo(String pid, String rating) {
         blackPlayer_ = new PlayerInfo(pid, rating);
     }
 
     public void setRedInfo(String pid, String rating) {
         redPlayer_ = new PlayerInfo(pid, rating);
+    }
+    
+    public boolean hasEnoughPlayers() {
+        return blackPlayer_.isValid() && redPlayer_.isValid();
     }
     
     public void onPlayerLeave(String pid) {
