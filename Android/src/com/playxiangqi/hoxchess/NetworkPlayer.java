@@ -70,6 +70,11 @@ class NetworkPlayer extends Thread {
     }
     private ConnectionState connectionState_ = ConnectionState.CONNECTION_STATE_NONE;
     
+    // Network error codes.
+    public static final int NETWORK_CODE_CONNECTED = 1;
+    public static final int NETWORK_CODE_UNRESOLVED_ADDRESS = 2;
+    public static final int NETWORK_CODE_IO_EXCEPTION = 3;
+    
     // -------------------------------------------------------------------------------------
     private Handler handler_;
 
@@ -170,7 +175,10 @@ class NetworkPlayer extends Thread {
                             break;
                     }
                 } catch (IOException e) {
+                    Log.e(TAG, "An IOException exception while handling network messages.");
                     e.printStackTrace();
+                    connectionState_ = ConnectionState.CONNECTION_STATE_NONE;
+                    HoxApp.getApp().postNetworkCode(NETWORK_CODE_IO_EXCEPTION);
                     return;
                 }
             }
@@ -281,7 +289,7 @@ class NetworkPlayer extends Thread {
         } catch (UnresolvedAddressException ex) {
             Log.e(TAG, "UnresolvedAddressException caught while connecting.");
             connectionState_ = ConnectionState.CONNECTION_STATE_NONE;
-            HoxApp.getApp().postNetworkError("Failed to connect to the game server (UnresolvedAddressException)!");
+            HoxApp.getApp().postNetworkCode(NETWORK_CODE_UNRESOLVED_ADDRESS);
             return;
         }
         Log.d(TAG, "... Continue with connecting....");
@@ -291,6 +299,7 @@ class NetworkPlayer extends Thread {
         }
         connectionState_ = ConnectionState.CONNECTION_STATE_CONNECTED;
         Log.d(TAG, "... Connection established!");
+        HoxApp.getApp().postNetworkCode(NETWORK_CODE_CONNECTED);
         
         handler_.sendMessageDelayed(handler_.obtainMessage(MSG_NETWORK_CHECK_FOR_WORK), 1000);
         
@@ -458,7 +467,16 @@ class NetworkPlayer extends Thread {
         while (true) {
             int bytesRead = socketChannel_.read(buf); // read into buffer.
             Log.d(TAG, "READ (data): ... bytesRead = " + bytesRead);
-            if (bytesRead <= 0) {
+            if (bytesRead == -1) {
+                //
+                // TODO: It appears that we at least should handle the (-1) return value:
+                //  http://stackoverflow.com/questions/3484972/java-socketchannel-doesnt-detect-disconnection
+                //  http://stackoverflow.com/questions/14010194/detecting-socket-disconnection
+                //
+                Log.w(TAG, "READ (data): ... bytesRead returns -1, which is an orderly close.");
+                break;
+                
+            } else if (bytesRead <= 0) {
                 break;
             }
             

@@ -46,4 +46,6 @@
     <string name="label_game_time_zero">00:00</string>
     <string name="label_move_time_zero">0:00</string>
     
+    <string name="title_table">Table #%1$s</string>
+    
 </resources>

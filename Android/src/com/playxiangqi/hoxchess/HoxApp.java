@@ -172,7 +172,7 @@ public class HoxApp extends Application {
      */
     private static final int MSG_AI_MOVE_READY = 1;
     private static final int MSG_NETWORK_EVENT = 2;
-    private static final int MSG_NETWORK_ERROR = 3;
+    private static final int MSG_NETWORK_CODE = 3;
     private Handler messageHandler_ = new MessageHandler();
     static class MessageHandler extends Handler {
         
@@ -201,12 +201,10 @@ public class HoxApp extends Application {
                 HoxApp.getApp().onNetworkEvent(event);
                 break;
             }
-            case MSG_NETWORK_ERROR:
+            case MSG_NETWORK_CODE:
             {
-                String errorString = (String) msg.obj;
-                Log.i(TAG, "(MessageHandler) Network error arrived.");
-                Toast.makeText(HoxApp.thisApp_,
-                        errorString, Toast.LENGTH_LONG).show();
+                int networkCode = ((Integer) msg.obj).intValue();
+                HoxApp.getApp().onNetworkCode(networkCode);
                 break;
             }            
             default:
@@ -261,6 +259,38 @@ public class HoxApp extends Application {
             handleNetworkEvent_RESET(content);
         } else if ("DRAW".equals(op)) {
             handleNetworkEvent_DRAW(content);
+        }
+    }
+    
+    private void onNetworkCode(int networkCode) {
+        Log.d(TAG, "On Network code:" + networkCode + ". ENTER.");
+        
+        switch (networkCode) {
+            case NetworkPlayer.NETWORK_CODE_CONNECTED:
+                Toast.makeText(HoxApp.thisApp_,
+                        "Connection is establed",
+                        Toast.LENGTH_LONG).show();
+                break;
+            
+            case NetworkPlayer.NETWORK_CODE_UNRESOLVED_ADDRESS:
+                Toast.makeText(HoxApp.thisApp_,
+                        "Failed to connect to the game server (UnresolvedAddressException)!",
+                        Toast.LENGTH_LONG).show();
+                break;
+
+            case NetworkPlayer.NETWORK_CODE_IO_EXCEPTION:
+                Toast.makeText(HoxApp.thisApp_,
+                        "An IOException exception while handling network messages!",
+                        Toast.LENGTH_LONG).show();
+                break;
+                
+            default:
+                break;
+        }
+        
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.onNetworkCode(networkCode);
         }
     }
     
@@ -860,10 +890,10 @@ public class HoxApp extends Application {
                 messageHandler_.obtainMessage(MSG_NETWORK_EVENT, eventString) );
     }
 
-    public void postNetworkError(String errorString) {
-        Log.d(TAG, "Post Network error = [" + errorString + "]");
+    public void postNetworkCode(int networkCode) {
+        Log.d(TAG, "Post Network code = [" + networkCode + "]");
         messageHandler_.sendMessage(
-                messageHandler_.obtainMessage(MSG_NETWORK_ERROR, errorString) );
+                messageHandler_.obtainMessage(MSG_NETWORK_CODE, Integer.valueOf(networkCode)) );
     }
     
 }

@@ -25,6 +25,7 @@ import com.playxiangqi.hoxchess.Enums.GameStatus;
 import com.playxiangqi.hoxchess.Enums.TableType;
 import com.playxiangqi.hoxchess.Piece.Move;
 
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
 import android.content.Intent;
@@ -35,6 +36,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -59,7 +61,13 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Needs to be called before setting the content view
+        supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        
         setContentView(R.layout.activity_main);
+        
+        getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
         
         Log.d(TAG, "onCreate: savedInstanceState = " + savedInstanceState + ".");
         placeholderFragment_ = new PlaceholderFragment();
@@ -144,6 +152,7 @@ public class MainActivity extends ActionBarActivity {
                 HoxApp.getApp().handleRequestToResetTable();
                 return true;
             case R.id.action_play_online:
+                setSupportProgressBarIndeterminateVisibility(Boolean.TRUE);
                 HoxApp.getApp().handlePlayOnlineClicked();
                 return true;
             case R.id.action_logout:
@@ -179,6 +188,9 @@ public class MainActivity extends ActionBarActivity {
     
     public void startActvityToListTables(String content) {
         Log.d(TAG, "Start activity (LIST): ENTER.");
+        
+        setSupportProgressBarIndeterminateVisibility(Boolean.FALSE);
+        
         Intent intent = new Intent(this, TablesActivity.class);
         intent.putExtra("content", content);
         startActivityForResult(intent, JOIN_TABLE_REQUEST);
@@ -192,6 +204,10 @@ public class MainActivity extends ActionBarActivity {
     
     public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
         Log.d(TAG, "Update board with new network Table info (I_TABLE)...");
+        
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
+        getSupportActionBar().setTitle(getString(R.string.title_table, tableInfo.tableId));
+        
         boardView_.resetBoard();
         boardView_.setTableType(TableType.TABLE_TYPE_NETWORK);
     }
@@ -234,6 +250,7 @@ public class MainActivity extends ActionBarActivity {
     
     public void clearTable() {
         Log.d(TAG, "Clear the table. Make it an empty one.");
+        getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
         boardView_.resetBoard();
     }
     
@@ -243,6 +260,10 @@ public class MainActivity extends ActionBarActivity {
 
     public void onGameReset() {
         boardView_.resetBoard();
+    }
+    
+    public void onNetworkCode(int networkCode) {
+        setSupportProgressBarIndeterminateVisibility(Boolean.FALSE);
     }
     
     @Override
