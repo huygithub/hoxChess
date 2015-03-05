@@ -439,6 +439,7 @@ public class HoxApp extends Application {
             Log.i(TAG, "I just left my table: " + tableId);
             myTable_ = new TableInfo();
             myColor_ = ColorEnum.COLOR_UNKNOWN;
+            gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
             timeTracker_.stop();
             MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {

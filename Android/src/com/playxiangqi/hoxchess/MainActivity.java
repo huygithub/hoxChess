@@ -205,8 +205,7 @@ public class MainActivity extends ActionBarActivity {
     public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
         Log.d(TAG, "Update board with new network Table info (I_TABLE)...");
         
-        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
-        getSupportActionBar().setTitle(getString(R.string.title_table, tableInfo.tableId));
+        setAndShowTitle(tableInfo.tableId);
         
         boardView_.resetBoard();
         boardView_.setTableType(TableType.TABLE_TYPE_NETWORK);
@@ -322,6 +321,17 @@ public class MainActivity extends ActionBarActivity {
         }
         
         boardView_.invalidate();
+        
+        // Set table Id.
+        TableInfo tableInfo = HoxApp.getApp().getMyTable();
+        if (tableInfo.isValid()) {
+            setAndShowTitle(tableInfo.tableId);
+        }
+    }
+    
+    private void setAndShowTitle(String title) {
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
+        getSupportActionBar().setTitle(getString(R.string.title_table, title));
     }
     
     public void onReplayBegin(View view) {
