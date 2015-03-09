@@ -180,7 +180,7 @@ public class TableTimeTracker {
     }
     
     private void runTimerTask() {
-        Log.v(TAG, "Run a timer task...");
+        //Log.v(TAG, "Run a timer task...");
         
         TextViewUpdater textViewUpdater = new TextViewUpdater();
         

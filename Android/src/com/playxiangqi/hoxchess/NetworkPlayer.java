@@ -175,9 +175,11 @@ class NetworkPlayer extends Thread {
                             break;
                     }
                 } catch (IOException e) {
-                    Log.e(TAG, "An IOException exception while handling network messages.");
-                    e.printStackTrace();
+                    Log.w(TAG, "An IOException exception while handling network messages.");
                     connectionState_ = ConnectionState.CONNECTION_STATE_NONE;
+                    if (!disconnectionRequested_) {
+                        disconnectionRequested_ = true;
+                    }
                     HoxApp.getApp().postNetworkCode(NETWORK_CODE_IO_EXCEPTION);
                     return;
                 }
@@ -469,12 +471,12 @@ class NetworkPlayer extends Thread {
             Log.d(TAG, "READ (data): ... bytesRead = " + bytesRead);
             if (bytesRead == -1) {
                 //
-                // TODO: It appears that we at least should handle the (-1) return value:
+                // NOTE: It appears that we at least should handle the (-1) return value:
                 //  http://stackoverflow.com/questions/3484972/java-socketchannel-doesnt-detect-disconnection
                 //  http://stackoverflow.com/questions/14010194/detecting-socket-disconnection
                 //
                 Log.w(TAG, "READ (data): ... bytesRead returns -1, which is an orderly close.");
-                break;
+                throw new IOException("READ returns -1 (an orderly close detected)");
                 
             } else if (bytesRead <= 0) {
                 break;
