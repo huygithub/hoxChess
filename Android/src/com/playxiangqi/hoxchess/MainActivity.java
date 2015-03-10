@@ -275,20 +275,20 @@ public class MainActivity extends ActionBarActivity {
         }
     }
     
-    private void onBoardViewCreated() {
+    private void onBoardViewCreated(MainActivity activity) {
         Log.d(TAG, "onBoardViewCreated...");
         
-        boardView_ = (BoardView) placeholderFragment_.getView().findViewById(R.id.board_view);
-        topPlayerLabel_ = (TextView) placeholderFragment_.getView().findViewById(R.id.top_player_label);
-        bottomPlayerLabel_ = (TextView) placeholderFragment_.getView().findViewById(R.id.bottom_player_label);
-        topPlayerButton_ = (Button) placeholderFragment_.getView().findViewById(R.id.top_button);
-        bottomPlayerButton_ = (Button) placeholderFragment_.getView().findViewById(R.id.bottom_button);
+        boardView_ = (BoardView) activity.findViewById(R.id.board_view);
+        topPlayerLabel_ = (TextView) activity.findViewById(R.id.top_player_label);
+        bottomPlayerLabel_ = (TextView) activity.findViewById(R.id.bottom_player_label);
+        topPlayerButton_ = (Button) activity.findViewById(R.id.top_button);
+        bottomPlayerButton_ = (Button) activity.findViewById(R.id.bottom_button);
         
         // Game timers.
-        TextView topGameTimeView = (TextView) placeholderFragment_.getView().findViewById(R.id.top_game_time);
-        TextView topMoveTimeView = (TextView) placeholderFragment_.getView().findViewById(R.id.top_move_time);
-        TextView bottomGameTimeView = (TextView) placeholderFragment_.getView().findViewById(R.id.bottom_game_time);
-        TextView bottomMoveTimeView = (TextView) placeholderFragment_.getView().findViewById(R.id.bottom_move_time);
+        TextView topGameTimeView = (TextView) activity.findViewById(R.id.top_game_time);
+        TextView topMoveTimeView = (TextView) activity.findViewById(R.id.top_move_time);
+        TextView bottomGameTimeView = (TextView) activity.findViewById(R.id.bottom_game_time);
+        TextView bottomMoveTimeView = (TextView) activity.findViewById(R.id.bottom_move_time);
     
         TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
         timeTracker.setUITextViews(
@@ -385,19 +385,20 @@ public class MainActivity extends ActionBarActivity {
             super.onActivityCreated(savedInstanceState);
             Log.d(TAG, "onActivityCreated...");
             
-            ((MainActivity) getActivity()).onBoardViewCreated();
+            MainActivity activity = (MainActivity) getActivity();
+            activity.onBoardViewCreated(activity);
         }
         
         @Override
         public void onDestroy () {
             super.onDestroy();
-            Log.e(TAG, "onDestroy...");
+            Log.i(TAG, "onDestroy...");
         }
         
         @Override
         public void onDetach () {
             super.onDetach();
-            Log.e(TAG, "onDetach...");
+            Log.i(TAG, "onDetach...");
         }
     }
 }
