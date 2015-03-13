@@ -27,7 +27,6 @@ import com.playxiangqi.hoxchess.Enums.TableType;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
-import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
@@ -37,11 +36,6 @@ import android.widget.Toast;
 public class HoxApp extends Application {
 
     private static final String TAG = "HoxApp";
-    
-    private static final String SHARED_PREFERENCES_APP_SETTINGS = "APP_SETTINGS";
-    private static final String KEY_SAVED_AI_LEVEL_INDEX = "SAVED_AI_LEVEL_INDEX";
-    private static final String KEY_SAVED_ACCOUNT_USERNAME = "SAVED_ACCOUNT_USERNAME";
-    private static final String KEY_SAVED_ACCOUNT_PASSWORD = "SAVED_ACCOUNT_PASSWORD";
     
     private static HoxApp thisApp_;
     
@@ -87,7 +81,7 @@ public class HoxApp extends Application {
         referee_ = new Referee();
         
         aiEngine_.initGame();
-        currentAILevel_ = loadAILevelPreferences();
+        currentAILevel_ = SettingsActivity.getAILevel(this);
         aiEngine_.setDifficultyLevel(currentAILevel_);
         
         networkPlayer_ = new NetworkPlayer();
@@ -103,62 +97,45 @@ public class HoxApp extends Application {
     public int getAILevel() {
         return currentAILevel_;
     }
-    
-    private int loadAILevelPreferences() {
-        SharedPreferences sharedPreferences =
-                thisApp_.getSharedPreferences(SHARED_PREFERENCES_APP_SETTINGS, MODE_PRIVATE);
-        int aiLevel = sharedPreferences.getInt(KEY_SAVED_AI_LEVEL_INDEX, 0);
-        Log.d(TAG, "Load existing AI level: " + aiLevel);
-        
+
+    public void onAILevelChanged(int aiLevel) {
+        Log.d(TAG, "On new AI level: " + aiLevel);        
         currentAILevel_ = aiLevel;
-        return aiLevel;
+        aiEngine_.setDifficultyLevel(currentAILevel_);
     }
-    
-    public void savePreferences(int aiLevel) {
-        Log.d(TAG, "Save the new AI level: " + aiLevel);
-        SharedPreferences sharedPreferences =
-                thisApp_.getSharedPreferences(SHARED_PREFERENCES_APP_SETTINGS, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(KEY_SAVED_AI_LEVEL_INDEX, aiLevel);
-        editor.commit();
-        
-        if (aiLevel != currentAILevel_) {
-            currentAILevel_ = aiLevel;
-            aiEngine_.setDifficultyLevel(currentAILevel_);
+
+    public void onAccountPidChanged(String pid) {
+        Log.d(TAG, "On new pid: " + pid);
+        if (!TextUtils.equals(pid_, pid)) {
+            if (this.isOnline() && isLoginOK_) {
+                Log.i(TAG, "... (online & LoginOK) Skip using the new pid: " + pid + ".");
+            } else {
+                Log.i(TAG, "... (offline) Save new pid: " + pid + ".");
+                pid_ = pid;
+            }
         }
     }
 
-    public AccountInfo loadPreferences_Account() {
-        SharedPreferences sharedPreferences =
-                thisApp_.getSharedPreferences(SHARED_PREFERENCES_APP_SETTINGS, MODE_PRIVATE);
-        
-        AccountInfo accountInfo = new AccountInfo();
-        
-        accountInfo.username = sharedPreferences.getString(KEY_SAVED_ACCOUNT_USERNAME, "");
-        accountInfo.password = sharedPreferences.getString(KEY_SAVED_ACCOUNT_PASSWORD, "");
-        Log.d(TAG, "Load existing account. username: [" + accountInfo.username + "]");
-        
-        return accountInfo;
-    }
-    
-    public void savePreferences_Account(String username, String password) {
-        Log.d(TAG, "Save the new account settings.");
-        SharedPreferences sharedPreferences =
-                thisApp_.getSharedPreferences(SHARED_PREFERENCES_APP_SETTINGS, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(KEY_SAVED_ACCOUNT_USERNAME, username);
-        editor.putString(KEY_SAVED_ACCOUNT_PASSWORD, password);
-        editor.commit();
-        
-        if (!TextUtils.equals(pid_, username) || !TextUtils.equals(password_, password)) {
+    public void onAccountPasswordChanged(String password) {
+        Log.d(TAG, "On new password...");
+        if (!TextUtils.equals(password_, password)) {
             if (this.isOnline() && isLoginOK_) {
-                Log.i(TAG, "... (online & LoginOK) Skip using the new username: " + username + ".");
+                Log.i(TAG, "... (online & LoginOK) Skip using the new password.");
             } else {
-                Log.i(TAG, "... (offline) Save new username: " + username + ".");
-                pid_ = username;
+                Log.i(TAG, "... (offline) Save new password.");
                 password_ = password;
             }
         }
+    }
+    
+    public AccountInfo loadPreferences_Account() {
+        AccountInfo accountInfo = new AccountInfo();
+        
+        accountInfo.username = SettingsActivity.getAccountPid(this);
+        accountInfo.password = SettingsActivity.getAccountPassword(this);
+        Log.d(TAG, "Load existing account. username: [" + accountInfo.username + "]");
+        
+        return accountInfo;
     }
     
     //---------------------------------------------------------

@@ -1,95 +1,119 @@
 package com.playxiangqi.hoxchess;
 
-import com.playxiangqi.hoxchess.HoxApp.AccountInfo;
-
-import android.support.v7.app.ActionBarActivity;
+import android.text.TextUtils;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
+import android.preference.ListPreference;
+import android.preference.Preference;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.MenuItem;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.RadioGroup.OnCheckedChangeListener;
-import android.widget.TextView;
 
-public class SettingsActivity extends ActionBarActivity {
+public class SettingsActivity extends PreferenceActivity
+                        implements OnSharedPreferenceChangeListener {
 
     private static final String TAG = "SettingsActivity";
     
-    private RadioGroup aiLevelRadioGroup_;
-    private TextView accountUsername_;
-    private TextView accountPassword_;
+    private static final String KEY_PREF_AI_LEVEL = "pref_key_ai_level";
+    private static final String KEY_PREF_ACCOUNT_USERNAME = "pref_key_playxiangqi_username";
+    private static final String KEY_PREF_ACCOUNT_PASSWORD = "pref_key_playxiangqi_password";
     
+    @SuppressWarnings("deprecation")
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_settings);
+        addPreferencesFromResource(R.xml.preferences);
         
         Log.d(TAG, "onCreate:");
-        
-        aiLevelRadioGroup_ = (RadioGroup)findViewById(R.id.radiogroup_ai_level);
-        aiLevelRadioGroup_.setOnCheckedChangeListener(aiLevelOnCheckedChangeListener_);
-        
-        accountUsername_ = (TextView)findViewById(R.id.account_username);
-        accountPassword_ = (TextView)findViewById(R.id.account_password);
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         
         loadExistingSettings();
     }
-    
+
+    @SuppressWarnings("deprecation")
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                Log.d(TAG, "onOptionsItemSelected: The HOME button clicked");
-                saveNewSettings();
-                break;
-                
-            default:
-                break;
-        
-        }
-        return super.onOptionsItemSelected(item);
+    protected void onResume() {
+        super.onResume();
+        getPreferenceScreen().getSharedPreferences()
+                .registerOnSharedPreferenceChangeListener(this);
     }
-    
+
+    @SuppressWarnings("deprecation")
     @Override
-    public void onBackPressed() {
-        Log.d(TAG, "onBackPressed): ...");
-        saveNewSettings();
-        super.onBackPressed();
+    protected void onPause() {
+        super.onPause();
+        getPreferenceScreen().getSharedPreferences()
+                .unregisterOnSharedPreferenceChangeListener(this);
     }
-    
+
+    @SuppressWarnings("deprecation")
     private void loadExistingSettings() {
         Log.d(TAG, "Load existing settings...");
         
-        int aiLevel = HoxApp.getApp().getAILevel();
-        RadioButton savedCheckedRadioButton =
-                (RadioButton) aiLevelRadioGroup_.getChildAt(aiLevel);
-        savedCheckedRadioButton.setChecked(true);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        ListPreference aiPref = (ListPreference) findPreference(KEY_PREF_AI_LEVEL);        
+        Log.d(TAG, ".... AI Level: " +  aiPref.getValue() + ", " + aiPref.getEntry());
+        aiPref.setSummary(aiPref.getEntry());
         
-        final AccountInfo accountInfo = HoxApp.getApp().loadPreferences_Account();
-        accountUsername_.setText(accountInfo.username);
-        accountPassword_.setText(accountInfo.password);
+        Preference pref = findPreference(KEY_PREF_ACCOUNT_USERNAME);
+        pref.setSummary(sharedPreferences.getString(KEY_PREF_ACCOUNT_USERNAME, ""));
+        
+        pref = findPreference(KEY_PREF_ACCOUNT_PASSWORD);
+        String password = sharedPreferences.getString(KEY_PREF_ACCOUNT_PASSWORD, "");
+        pref.setSummary(getPasswordForDisplay(password));
     }
     
-    private void saveNewSettings() {
-        Log.d(TAG, "Save new settings...");
+    @SuppressWarnings("deprecation")
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        Log.d(TAG, "On preferences changed: key=" + key);
         
-        final String username = accountUsername_.getText().toString();
-        final String password = accountPassword_.getText().toString();
-        HoxApp.getApp().savePreferences_Account(username, password);
-    }
-    
-    private OnCheckedChangeListener aiLevelOnCheckedChangeListener_ =
-            new OnCheckedChangeListener() {
-        @Override
-        public void onCheckedChanged(RadioGroup group, int checkedId) {
-            RadioButton checkedRadioButton =
-                    (RadioButton) aiLevelRadioGroup_.findViewById(checkedId);
-            int checkedIndex = aiLevelRadioGroup_.indexOfChild(checkedRadioButton);
-            HoxApp.getApp().savePreferences(checkedIndex);
+        // Set summary to be the user-description for the selected value
+        Preference pref = findPreference(key);
+        
+        if (key.equals(KEY_PREF_AI_LEVEL)) {
+            ListPreference aiPref = (ListPreference) pref;
+            pref.setSummary(aiPref.getEntry());
+            int aiLevel = Integer.parseInt(aiPref.getValue());
+            HoxApp.getApp().onAILevelChanged(aiLevel);
+            
+        } else if (key.equals(KEY_PREF_ACCOUNT_USERNAME)) {
+            String pid = sharedPreferences.getString(key, "");
+            pref.setSummary(pid);
+            HoxApp.getApp().onAccountPidChanged(pid);
+            
+        } else if (key.equals(KEY_PREF_ACCOUNT_PASSWORD)) {
+            String password = sharedPreferences.getString(key, "");
+            pref.setSummary(getPasswordForDisplay(password));
+            HoxApp.getApp().onAccountPasswordChanged(password);
         }
-    };
+    }
+    
+    private String getPasswordForDisplay(String value) {
+        return TextUtils.isEmpty(value) ? "" : getString(R.string.password_masked_value);
+    }
+    
+    public static int getAILevel(Context context) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        int aiLevel = Integer.parseInt(sharedPreferences.getString(KEY_PREF_AI_LEVEL, "0"));       
+        Log.d(TAG, ".... Got AI Level: " +  aiLevel);
+        return aiLevel;
+    }
+
+    public static String getAccountPid(Context context) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        String pid = sharedPreferences.getString(KEY_PREF_ACCOUNT_USERNAME, "");    
+        Log.d(TAG, ".... Got Account pid: " +  pid); // Player ID.
+        return pid;
+    }
+
+    public static String getAccountPassword(Context context) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        String password = sharedPreferences.getString(KEY_PREF_ACCOUNT_PASSWORD, "");    
+        Log.d(TAG, ".... Got Account password: " +  password);
+        return password;
+    }
     
 }

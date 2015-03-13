@@ -326,8 +326,11 @@ class NetworkPlayer extends Thread {
 
                 } else if (key.isReadable()) {
                     Log.d(TAG, "a channel is ready for reading");
-                    readIncomingData();
-                    processIncomingData();
+                    try {
+                        readIncomingData();
+                    } finally {
+                        processIncomingData(); // always process whatever data collected so far.
+                    }
 
                 } else if (key.isWritable()) {
                     //Log.d(TAG, "a channel is ready for writing");
