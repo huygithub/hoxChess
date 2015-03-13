@@ -15,7 +15,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 public class TablesActivity extends ActionBarActivity {
 
@@ -51,10 +50,8 @@ public class TablesActivity extends ActionBarActivity {
                 int itemPosition = position; // ListView Clicked item index
                 TableInfo itemValue = (TableInfo) tablesListView_.getItemAtPosition(position);
                 
-                Toast.makeText(
-                        getApplicationContext(),
-                        "Position:" + itemPosition + " TabeId: " + itemValue.tableId + ", ListItem: "
-                                + itemValue, Toast.LENGTH_LONG).show();
+                Log.d(TAG, "Position:" + itemPosition + " TabeId: " + itemValue.tableId
+                        + ", ListItem: " + itemValue);
                 
                 // Return the table-ID.
                 Intent result = new Intent();

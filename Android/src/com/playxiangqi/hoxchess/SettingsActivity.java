@@ -17,6 +17,7 @@ public class SettingsActivity extends PreferenceActivity
     private static final String TAG = "SettingsActivity";
     
     private static final String KEY_PREF_AI_LEVEL = "pref_key_ai_level";
+    private static final String KEY_PREF_ACCOUNT_LOGIN = "pref_key_playxiangqi_login_with_account";
     private static final String KEY_PREF_ACCOUNT_USERNAME = "pref_key_playxiangqi_username";
     private static final String KEY_PREF_ACCOUNT_PASSWORD = "pref_key_playxiangqi_password";
     
@@ -97,22 +98,30 @@ public class SettingsActivity extends PreferenceActivity
     
     public static int getAILevel(Context context) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        int aiLevel = Integer.parseInt(sharedPreferences.getString(KEY_PREF_AI_LEVEL, "0"));       
+        int aiLevel = Integer.parseInt(sharedPreferences.getString(KEY_PREF_AI_LEVEL,
+                context.getString(R.string.AILevel_default)));       
         Log.d(TAG, ".... Got AI Level: " +  aiLevel);
         return aiLevel;
     }
 
+    public static boolean getLoginWithAccountFlag(Context context) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean loginWithAccount = sharedPreferences.getBoolean(KEY_PREF_ACCOUNT_LOGIN, false);
+        Log.d(TAG, ".... Got loginWithAccount: " +  loginWithAccount);
+        return loginWithAccount;
+    }
+    
     public static String getAccountPid(Context context) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        String pid = sharedPreferences.getString(KEY_PREF_ACCOUNT_USERNAME, "");    
+        String pid = sharedPreferences.getString(KEY_PREF_ACCOUNT_USERNAME, "");
         Log.d(TAG, ".... Got Account pid: " +  pid); // Player ID.
         return pid;
     }
 
     public static String getAccountPassword(Context context) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        String password = sharedPreferences.getString(KEY_PREF_ACCOUNT_PASSWORD, "");    
-        Log.d(TAG, ".... Got Account password: " +  password);
+        String password = sharedPreferences.getString(KEY_PREF_ACCOUNT_PASSWORD, "");
+        Log.d(TAG, ".... Got Account password.");
         return password;
     }
     

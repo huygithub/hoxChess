@@ -58,5 +58,8 @@ public class Enums {
         GAME_STATUS_BLACK_WIN,      // Game Over. Black wins
         GAME_STATUS_DRAWN           // Game Over. Drawn.
     }
+ 
+    public static final String HC_GUEST_PREFIX = "Guest#";
+    public static final int MAX_GUEST_ID = 10000;
     
 }

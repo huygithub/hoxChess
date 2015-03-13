@@ -20,6 +20,7 @@ package com.playxiangqi.hoxchess;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.Random;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.GameStatus;
@@ -104,6 +105,38 @@ public class HoxApp extends Application {
         aiEngine_.setDifficultyLevel(currentAILevel_);
     }
 
+    /**
+     * Returns a pseudo-random number between min and max, inclusive.
+     * The difference between min and max can be at most
+     * <code>Integer.MAX_VALUE - 1</code>.
+     * 
+     * Reference;
+     *   http://stackoverflow.com/questions/363681/generating-random-integers-in-a-range-with-java
+     *
+     * @param min Minimum value
+     * @param max Maximum value.  Must be greater than min.
+     * @return Integer between min and max, inclusive.
+     * @see java.util.Random#nextInt(int)
+     */
+    private static int randInt(int min, int max) {
+        // NOTE: Usually this should be a field rather than a method
+        // variable so that it is not re-seeded every call.
+        Random rand = new Random();
+
+        // nextInt is normally exclusive of the top value,
+        // so add 1 to make it inclusive
+        int randomNum = rand.nextInt((max - min) + 1) + min;
+
+        return randomNum;
+    }
+
+    @SuppressLint("DefaultLocale")
+    private String generateGuestPid() {
+        final int randNum = randInt(1, Enums.MAX_GUEST_ID);
+        // Note: The portion "an" below stands for "Android".
+        return String.format("%san%d", Enums.HC_GUEST_PREFIX, randNum);
+    }
+    
     public void onAccountPidChanged(String pid) {
         Log.d(TAG, "On new pid: " + pid);
         if (!TextUtils.equals(pid_, pid)) {
@@ -128,12 +161,19 @@ public class HoxApp extends Application {
         }
     }
     
-    public AccountInfo loadPreferences_Account() {
+    private AccountInfo loadPreferences_Account() {
         AccountInfo accountInfo = new AccountInfo();
         
-        accountInfo.username = SettingsActivity.getAccountPid(this);
-        accountInfo.password = SettingsActivity.getAccountPassword(this);
-        Log.d(TAG, "Load existing account. username: [" + accountInfo.username + "]");
+        boolean loginWithAccount = SettingsActivity.getLoginWithAccountFlag(this);
+        if (loginWithAccount) {
+            accountInfo.username = SettingsActivity.getAccountPid(this);
+            accountInfo.password = SettingsActivity.getAccountPassword(this);
+            Log.d(TAG, "Load existing account. Player ID: [" + accountInfo.username + "]");
+        } else {
+            accountInfo.username = generateGuestPid();
+            accountInfo.password = "";
+            Log.d(TAG, "Load existing account. Guest ID: [" + accountInfo.username + "]");
+        }
         
         return accountInfo;
     }

@@ -15,23 +15,27 @@
         android:key="pref_key_playxiangqi_account">
         
 	    <CheckBoxPreference
-	        android:key="pref_key_playxiangqi_login_as_guest"
+	        android:key="pref_key_playxiangqi_login_with_account"
 	        android:title="@string/playxiangqi_login_with_account"
-	        android:summary="@string/playxiangqi_website"
 	        android:defaultValue="false" />
         
         <EditTextPreference 
             android:key="pref_key_playxiangqi_username"
-            android:dependency="pref_key_playxiangqi_login_as_guest"
+            android:dependency="pref_key_playxiangqi_login_with_account"
             android:summary="@string/playxiangqi_username"
             android:title="@string/playxiangqi_username" />
         
         <EditTextPreference
             android:key="pref_key_playxiangqi_password"
-            android:dependency="pref_key_playxiangqi_login_as_guest"
+            android:dependency="pref_key_playxiangqi_login_with_account"
             android:summary="@string/playxiangqi_password"
             android:title="@string/playxiangqi_password"
             android:inputType="textPassword" />
+        
+        <Preference android:title="@string/playxiangqi_website" >
+            <intent android:action="android.intent.action.VIEW"
+                    android:data="http://www.playxiangqi.com" />
+        </Preference>
         
     </PreferenceCategory>
 
