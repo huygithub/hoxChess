@@ -16,16 +16,19 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+        
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
@@ -34,6 +37,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.playxiangqi.hoxchess.MainActivity" />
         </activity>
+        
         <activity
             android:name=".TablesActivity"
             android:label="@string/title_activity_tables"
@@ -42,6 +46,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.playxiangqi.hoxchess.MainActivity" />
         </activity>
+        
     </application>
 
 </manifest>
