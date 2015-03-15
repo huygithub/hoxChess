@@ -1,46 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.playxiangqi.hoxchess.MainActivity" >
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- New, should appear as action button -->
     <item android:id="@+id/action_new_table"
           android:icon="@drawable/ic_action_new"
           android:title="@string/action_new"
-          app:showAsAction="ifRoom" />
+          android:showAsAction="ifRoom" />
 
     <item android:id="@+id/action_play_online"
           android:icon="@drawable/ic_action_web_site"
           android:title="@string/action_play_online"
-          app:showAsAction="ifRoom" />
+          android:showAsAction="ifRoom" />
     
     <item android:id="@+id/action_settings"
           android:title="@string/action_settings"
-          app:showAsAction="never" />
+          android:showAsAction="never" />
 
     <item android:id="@+id/action_reverse_view"
           android:title="@string/action_reverse_view"
-          app:showAsAction="never" />
+          android:showAsAction="never" />
     
     <item android:id="@+id/action_close_table"
           android:title="@string/action_close"
-          app:showAsAction="never" />
+          android:showAsAction="never" />
 
     <item android:id="@+id/action_offer_draw"
           android:title="@string/action_draw"
-          app:showAsAction="never" />
+          android:showAsAction="never" />
 
     <item android:id="@+id/action_offer_resign"
           android:title="@string/action_resign"
-          app:showAsAction="never" />
+          android:showAsAction="never" />
 
     <item android:id="@+id/action_reset_table"
           android:title="@string/action_reset"
-          app:showAsAction="never" />
+          android:showAsAction="never" />
     
     <item android:id="@+id/action_logout"
           android:title="@string/action_logout"
-          app:showAsAction="never" />
+          android:showAsAction="never" />
     
 </menu>

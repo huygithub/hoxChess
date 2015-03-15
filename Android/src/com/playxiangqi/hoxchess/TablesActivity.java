@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -16,7 +15,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class TablesActivity extends ActionBarActivity {
+public class TablesActivity extends Activity {
 
     private static final String TAG = "TablesActivity";
     

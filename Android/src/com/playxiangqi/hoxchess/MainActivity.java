@@ -25,9 +25,9 @@ import com.playxiangqi.hoxchess.Enums.GameStatus;
 import com.playxiangqi.hoxchess.Enums.TableType;
 import com.playxiangqi.hoxchess.Piece.Move;
 
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v4.app.Fragment;
+import android.app.ActionBar;
+import android.app.Activity;
+import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -43,7 +43,7 @@ import android.widget.TextView;
 /**
  * The main (entry-point) activity.
  */
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity {
 
     private static final String TAG = "MainActivity";
 
@@ -63,24 +63,24 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         
         // Needs to be called before setting the content view
-        supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         
         setContentView(R.layout.activity_main);
         
-        getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
+        getActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
         
         Log.d(TAG, "onCreate: savedInstanceState = " + savedInstanceState + ".");
         placeholderFragment_ = new PlaceholderFragment();
         
         if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
+            getFragmentManager().beginTransaction()
                     .add(R.id.container, placeholderFragment_)
                     .commit();
         }
         
         HoxApp.getApp().registerMainActivity(this);
     }
-
+    
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -152,7 +152,7 @@ public class MainActivity extends ActionBarActivity {
                 HoxApp.getApp().handleRequestToResetTable();
                 return true;
             case R.id.action_play_online:
-                setSupportProgressBarIndeterminateVisibility(Boolean.TRUE);
+                setProgressBarIndeterminateVisibility(true);
                 HoxApp.getApp().handlePlayOnlineClicked();
                 return true;
             case R.id.action_logout:
@@ -189,7 +189,7 @@ public class MainActivity extends ActionBarActivity {
     public void startActvityToListTables(String content) {
         Log.d(TAG, "Start activity (LIST): ENTER.");
         
-        setSupportProgressBarIndeterminateVisibility(Boolean.FALSE);
+        setProgressBarIndeterminateVisibility(false);
         
         Intent intent = new Intent(this, TablesActivity.class);
         intent.putExtra("content", content);
@@ -249,7 +249,7 @@ public class MainActivity extends ActionBarActivity {
     
     public void clearTable() {
         Log.d(TAG, "Clear the table. Make it an empty one.");
-        getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
+        getActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
         boardView_.resetBoard();
     }
     
@@ -262,7 +262,7 @@ public class MainActivity extends ActionBarActivity {
     }
     
     public void onNetworkCode(int networkCode) {
-        setSupportProgressBarIndeterminateVisibility(Boolean.FALSE);
+        setProgressBarIndeterminateVisibility(false);
     }
     
     @Override
@@ -299,7 +299,6 @@ public class MainActivity extends ActionBarActivity {
         TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
         playerTracker.setUIViews(
                 topPlayerLabel_, topPlayerButton_, bottomPlayerLabel_, bottomPlayerButton_);
-        playerTracker.syncUI();
         
         // Restore the previous state of the board.
         List<Move> historyMoves = HoxApp.getApp().getReferee().getHistoryMoves();
@@ -329,9 +328,15 @@ public class MainActivity extends ActionBarActivity {
         }
     }
     
+    private void onBoardViewResume(MainActivity activity) {
+        Log.d(TAG, "onBoardViewResume...");
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.syncUI(); // Among things to be updated is AI Level.
+    }
+    
     private void setAndShowTitle(String title) {
-        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
-        getSupportActionBar().setTitle(getString(R.string.title_table, title));
+        getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
+        getActionBar().setTitle(getString(R.string.title_table, title));
     }
     
     public void onReplayBegin(View view) {
@@ -387,6 +392,14 @@ public class MainActivity extends ActionBarActivity {
             
             MainActivity activity = (MainActivity) getActivity();
             activity.onBoardViewCreated(activity);
+        }
+
+        @Override
+        public void onResume () {
+            super.onDestroy();
+            Log.i(TAG, "onResume...");
+            MainActivity activity = (MainActivity) getActivity();
+            activity.onBoardViewResume(activity);
         }
         
         @Override
