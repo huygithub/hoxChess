@@ -58,6 +58,8 @@ public class MainActivity extends Activity {
     
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
     
+    private int notifCount_ = 0;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,6 +95,23 @@ public class MainActivity extends Activity {
         Log.d(TAG, "(ActionBar) onCreateOptionsMenu");
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_activity_actions, menu);
+        
+        // Set up the new badge.
+        // Reference:
+        //  http://stackoverflow.com/questions/17696486/actionbar-notification-count-icon-like-google-have
+        //
+        View count = menu.findItem(R.id.badge).getActionView();
+        Button notifCount = (Button) count.findViewById(R.id.notif_count);
+        notifCount.setText(String.valueOf(notifCount_));
+        
+        notifCount.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                notifCount_ = 0;
+                invalidateOptionsMenu();
+                openChatView();
+            }
+        });
+        
         return super.onCreateOptionsMenu(menu);
     }
     
@@ -172,6 +191,12 @@ public class MainActivity extends Activity {
     private void openSettingsView() {
         Log.d(TAG, "Open 'Settings' view...");
         Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
+    }
+
+    private void openChatView() {
+        Log.d(TAG, "Open 'Chat' view...");
+        Intent intent = new Intent(this, ChatBubbleActivity.class);
         startActivity(intent);
     }
     
@@ -259,6 +284,12 @@ public class MainActivity extends Activity {
 
     public void onGameReset() {
         boardView_.resetBoard();
+    }
+
+    public void onMessageReceived(String sender, String message) {
+        Log.d(TAG, "On new message from: " + sender + " = [" + message + "]");
+        notifCount_++;
+        invalidateOptionsMenu();
     }
     
     public void onNetworkCode(int networkCode) {

@@ -89,6 +89,7 @@ class NetworkPlayer extends Thread {
     private static final int MSG_NETWORK_SEND_RESIGN = 9;
     private static final int MSG_NETWORK_SEND_NEW = 10;
     private static final int MSG_NETWORK_SEND_RESET = 11;
+    private static final int MSG_NETWORK_SEND_MSG = 12;
     
     @SuppressLint("HandlerLeak") @Override
     public void run() {
@@ -168,6 +169,14 @@ class NetworkPlayer extends Thread {
                             @SuppressWarnings("unchecked")
                             Map<String, String> map = (Map<String, String>) msg.obj;
                             send_RESET(map);
+                            break;
+                        }
+                        
+                        case MSG_NETWORK_SEND_MSG:
+                        {
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> map = (Map<String, String>) msg.obj;
+                            send_MSG(map);
                             break;
                         }
                         
@@ -260,6 +269,14 @@ class NetworkPlayer extends Thread {
         map.put("tid", tableId);
         map.put("move", move);
         handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_MOVE, map));
+    }
+    
+    public void sendRequest_MSG(String tableId, String msg) {
+        Log.d(TAG, "Send 'MSG' request to server...");
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("tid", tableId);
+        map.put("msg", msg);
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_MSG, map));
     }
     
     public void sendRequest_NEW(String itimes) {
@@ -439,6 +456,13 @@ class NetworkPlayer extends Thread {
     private void send_RESET(Map<String, String> map) throws IOException {
         final String tableId = map.get("tid");
         String request = "op=RESET&pid=" + pid_ + "&tid=" + tableId;
+        sendRequest(request);
+    }
+    
+    private void send_MSG(Map<String, String> map) throws IOException {
+        final String tableId = map.get("tid");
+        final String msg = map.get("msg");
+        String request = "op=MSG&pid=" + pid_ + "&tid=" + tableId + "&msg=" + msg;
         sendRequest(request);
     }
     

@@ -19,7 +19,9 @@
 package com.playxiangqi.hoxchess;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
@@ -54,6 +56,7 @@ public class HoxApp extends Application {
     private boolean isLoginOK_ = false;
     
     private WeakReference<MainActivity> mainActivity_;
+    private WeakReference<ChatBubbleActivity> chatActivity_ = new WeakReference<ChatBubbleActivity>(null);
     private TableInfo myTable_ = new TableInfo();
     private ColorEnum myColor_ = ColorEnum.COLOR_RED;
     
@@ -62,6 +65,8 @@ public class HoxApp extends Application {
     
     private TableTimeTracker timeTracker_ = new TableTimeTracker();
     private TablePlayerTracker playerTracker_ = new TablePlayerTracker(TableType.TABLE_TYPE_LOCAL);
+    
+    private List<ChatMessage> newMessages_ = new ArrayList<ChatMessage>();
     
     // ----------------
     public class AccountInfo {
@@ -182,6 +187,10 @@ public class HoxApp extends Application {
     public void registerMainActivity(MainActivity activity) {
         mainActivity_ = new WeakReference<MainActivity>(activity);
     }
+
+    public void registerChatActivity(ChatBubbleActivity activity) {
+        chatActivity_ = new WeakReference<ChatBubbleActivity>(activity);
+    }
     
     // --------------------------------------------------------
     /**
@@ -253,6 +262,7 @@ public class HoxApp extends Application {
         final String op = newEvent.get("op");
         final int code = Integer.parseInt( newEvent.get("code") );
         final String content = newEvent.get("content");
+        final String tableId = newEvent.get("tid");
         
         if ("LOGIN".equals(op)) {
             handleNetworkEvent_LOGIN(code, content);
@@ -276,6 +286,8 @@ public class HoxApp extends Application {
             handleNetworkEvent_RESET(content);
         } else if ("DRAW".equals(op)) {
             handleNetworkEvent_DRAW(content);
+        } else if ("MSG".equals(op)) {
+            handleNetworkEvent_MSG(content, tableId);
         }
     }
     
@@ -458,6 +470,7 @@ public class HoxApp extends Application {
             myColor_ = ColorEnum.COLOR_UNKNOWN;
             gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
             timeTracker_.stop();
+            newMessages_.clear();
             MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
                 mainActivity.clearTable();
@@ -599,6 +612,40 @@ public class HoxApp extends Application {
                 pid + " offered to DRAW the game", Toast.LENGTH_LONG).show();
     }
     
+    private void handleNetworkEvent_MSG(String content, String tableId) {
+        Log.d(TAG, "Handle event (MSG): ENTER.");
+        final String[] components = content.split(";");
+        final String sender = components[0];
+        if (components.length < 2) {
+            Log.i(TAG, "... Received an empty message from [" + sender + "]. Ignore it.");
+            return;
+        }
+        final String message = components[1];
+        
+        if (TextUtils.isEmpty(tableId) ||
+                !myTable_.hasId(tableId)) { // not the table I am interested in?
+            Log.w(TAG, "Ignore a MSG from sender: " + sender);
+            return;
+        }
+        
+        final String newMessage = sender + ": " + message;
+        ChatMessage chatMsg = new ChatMessage(true, newMessage);
+        newMessages_.add(chatMsg);
+        
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity == null) {
+            Log.w(TAG, "The main activity is NULL. Ignore this E_END event.");
+            return;
+        }
+        
+        ChatBubbleActivity chatActivity = chatActivity_.get();
+        if (chatActivity != null) {
+            chatActivity.onMessageReceived(chatMsg);
+        } else {
+            mainActivity.onMessageReceived(sender, message);
+        }
+    }
+    
     private void onGameEnded() {
         Log.d(TAG, "On game-ended...");
         timeTracker_.stop();
@@ -660,6 +707,10 @@ public class HoxApp extends Application {
     
     public Referee getReferee() {
         return referee_;
+    }
+    
+    public List<ChatMessage> getNewMessages() {
+        return newMessages_;
     }
     
     public boolean isMyTurn() {
@@ -843,6 +894,16 @@ public class HoxApp extends Application {
         }
         
         networkPlayer_.sendRequest_JOIN(myTable_.tableId, joinColor);
+    }
+    
+    public void handleLocalMessage(ChatMessage chatMsg) {
+        Log.d(TAG, "Handle local message: [" + chatMsg.message + "]");
+        if (!myTable_.isValid()) { // Not a network table?
+            Log.i(TAG, "No network table. Ignore the local message.");
+            return;
+        }
+        newMessages_.add(chatMsg);
+        networkPlayer_.sendRequest_MSG(myTable_.tableId, chatMsg.message);
     }
     
     @SuppressLint("DefaultLocale")
