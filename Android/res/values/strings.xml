@@ -65,5 +65,6 @@
     <string name="title_table">Table #%1$s</string>
     <string name="notifications">Show Notifications</string>
     <string name="chat_button_send">Send</string>
+    <string name="chat_empty_text">No message</string>
     
 </resources>

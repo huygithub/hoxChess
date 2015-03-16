@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <color name="noti_shape_bg_zero">#777777</color>
+    <color name="noti_shape_bg_new">#CC0001</color>
+    
+</resources>

@@ -34,7 +34,8 @@ public class ChatBubbleActivity extends Activity {
         setContentView(R.layout.activity_chat);
 
         buttonSend = (Button) findViewById(R.id.buttonSend);
-        listView = (ListView) findViewById(R.id.listView1);
+        listView = (ListView) findViewById(R.id.listView);
+        listView.setEmptyView(findViewById(R.id.emptyView));
 
         intputLayout = findViewById(R.id.input_layout);
         

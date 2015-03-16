@@ -5,12 +5,19 @@
     android:orientation="vertical" >
 
     <ListView
-        android:id="@+id/listView1"
+        android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="80dp">
     </ListView>
 
+    <!-- Here is the view to show if the list is emtpy -->
+    <TextView android:id="@+id/emptyView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="@string/chat_empty_text" />
+    
     <RelativeLayout
         android:id="@+id/input_layout"
         android:layout_width="fill_parent"

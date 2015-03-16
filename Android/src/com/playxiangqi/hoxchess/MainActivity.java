@@ -29,6 +29,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -100,11 +101,15 @@ public class MainActivity extends Activity {
         // Reference:
         //  http://stackoverflow.com/questions/17696486/actionbar-notification-count-icon-like-google-have
         //
-        View count = menu.findItem(R.id.badge).getActionView();
-        Button notifCount = (Button) count.findViewById(R.id.notif_count);
-        notifCount.setText(String.valueOf(notifCount_));
+        View countView = menu.findItem(R.id.badge).getActionView();
+        Button countButton = (Button) countView.findViewById(R.id.notif_count);
+        countButton.setText(String.valueOf(notifCount_));
         
-        notifCount.setOnClickListener(new View.OnClickListener() {
+        GradientDrawable notiBackgroundShape = (GradientDrawable) countButton.getBackground();
+        int notiColor = (notifCount_ > 0 ? R.color.noti_shape_bg_new : R.color.noti_shape_bg_zero);
+        notiBackgroundShape.setColor(getResources().getColor(notiColor));
+        
+        countButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 notifCount_ = 0;
                 invalidateOptionsMenu();
