@@ -246,6 +246,8 @@ public class HoxApp extends Application {
         if (mainActivity != null) {
             mainActivity.updateBoardWithNewAIMove(fromPos, toPos);
         }
+        
+        handleAIMove(fromPos, toPos);
     }
     
     private void onNetworkEvent(String eventString) {
@@ -360,6 +362,11 @@ public class HoxApp extends Application {
             playerTracker_.syncUI();
             
             networkPlayer_.sendRequest_LIST();
+            
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.clearTable();
+            }
         }
     }
     
@@ -447,8 +454,11 @@ public class HoxApp extends Application {
             mainActivity.updateBoardWithNewMove(move);
         }
         
-        if (referee_.getMoveCount() > 1) { // The game has started?
-            playerTracker_.syncUI();
+        if (referee_.getMoveCount() == 2) { // The game has started?
+            //playerTracker_.syncUI();
+            if (mainActivity != null) {
+                mainActivity.onGameStatusChanged();
+            }
         }
     }
     
@@ -649,6 +659,10 @@ public class HoxApp extends Application {
     private void onGameEnded() {
         Log.d(TAG, "On game-ended...");
         timeTracker_.stop();
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.onGameStatusChanged();
+        }
     }
     
     public void handlePlayOnlineClicked() {
@@ -683,6 +697,11 @@ public class HoxApp extends Application {
     
     public boolean isGameOver() {
         return isGameOver_;
+    }
+    
+    public boolean isGameInProgress() {
+        return ( !isGameOver_ &&
+                referee_.getMoveCount() > 1 );
     }
     
     public GameStatus getGameStatus() {
@@ -914,6 +933,10 @@ public class HoxApp extends Application {
         
         if (referee_.getMoveCount() == 2) {
             timeTracker_.start();
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.onGameStatusChanged();
+            }
         }
         
         if (referee_.getMoveCount() > 1) { // The game has started?
@@ -948,12 +971,16 @@ public class HoxApp extends Application {
         }
     }
     
-    public void handleAIMove(Position fromPos, Position toPos) {
+    private void handleAIMove(Position fromPos, Position toPos) {
         Log.i(TAG, "Handle AI move: referee 's moveCount = " + referee_.getMoveCount());
         timeTracker_.nextColor();
         
         if (referee_.getMoveCount() == 2) {
             timeTracker_.start();
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.onGameStatusChanged();
+            }
         }
         
         if (!referee_.isGameInProgress()) {

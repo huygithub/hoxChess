@@ -22,7 +22,6 @@ import java.util.List;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.GameStatus;
-import com.playxiangqi.hoxchess.Enums.TableType;
 import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.app.ActionBar;
@@ -38,6 +37,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -82,6 +82,32 @@ public class MainActivity extends Activity {
         }
         
         HoxApp.getApp().registerMainActivity(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        adjustScreenOnFlagBasedOnGameStatus();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+        adjustScreenOnFlagBasedOnGameStatus();
+    }
+    
+    public void onGameStatusChanged() {
+        adjustScreenOnFlagBasedOnGameStatus();
+    }
+    
+    private void adjustScreenOnFlagBasedOnGameStatus() {
+        if (HoxApp.getApp().isGameInProgress()) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
     }
     
     @Override
@@ -238,7 +264,6 @@ public class MainActivity extends Activity {
         setAndShowTitle(tableInfo.tableId);
         
         boardView_.resetBoard();
-        boardView_.setTableType(TableType.TABLE_TYPE_NETWORK);
     }
 
     public void resetBoardWithNewMoves(String[] moves) {
@@ -258,12 +283,13 @@ public class MainActivity extends Activity {
         TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
         timeTracker.setInitialColor(nextColor);
         timeTracker.start();
+        
+        adjustScreenOnFlagBasedOnGameStatus();
     }
 
     public void openNewPracticeTable() {
         Log.d(TAG, "Open a new practice table");
         boardView_.resetBoard();
-        boardView_.setTableType(TableType.TABLE_TYPE_LOCAL);
     }
     
     public void updateBoardWithNewMove(String move) {
@@ -272,7 +298,7 @@ public class MainActivity extends Activity {
         int col1 = move.charAt(0) - '0';
         int row2 = move.charAt(3) - '0';
         int col2 = move.charAt(2) - '0';
-        Log.i(TAG, "... Network move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
+        //Log.i(TAG, "... Network move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
         boardView_.onNetworkMoveMade(new Position(row1, col1), new Position(row2, col2));
         boardView_.invalidate();
     }
@@ -281,10 +307,12 @@ public class MainActivity extends Activity {
         Log.d(TAG, "Clear the table. Make it an empty one.");
         getActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
         boardView_.resetBoard();
+        adjustScreenOnFlagBasedOnGameStatus();
     }
     
     public void onGameEnded(Enums.GameStatus gameStatus) {
         boardView_.onGameEnded(gameStatus);
+        adjustScreenOnFlagBasedOnGameStatus();
     }
 
     public void onGameReset() {

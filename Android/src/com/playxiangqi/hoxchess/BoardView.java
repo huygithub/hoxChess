@@ -21,7 +21,6 @@ package com.playxiangqi.hoxchess;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.playxiangqi.hoxchess.Enums.TableType;
 import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.content.Context;
@@ -41,8 +40,6 @@ import android.widget.ImageView;
 public class BoardView extends ImageView {
 
     private static final String TAG = "BoardView";
-    
-    private TableType tableType_ = TableType.TABLE_TYPE_LOCAL;
     
     private static final int offset_ = 50; // in pixels
     private int cellSize_;
@@ -518,10 +515,6 @@ public class BoardView extends ImageView {
         recentPiece_ = fromPiece;
         
         didMoveOccur(fromPos, toPos, capture, status);
-        
-        if (tableType_ == TableType.TABLE_TYPE_LOCAL) {
-            HoxApp.getApp().handleAIMove(fromPos, toPos);
-        }
     }
     
     public void restoreMove(Position fromPos, Position toPos, boolean isLastMove) {
@@ -681,10 +674,6 @@ public class BoardView extends ImageView {
                 // Do nothing.
         }
         this.invalidate(); // Request to redraw the board.
-    }
-    
-    public void setTableType(TableType tableType) {
-        tableType_ = tableType;
     }
     
     public int getMoveCount() {
