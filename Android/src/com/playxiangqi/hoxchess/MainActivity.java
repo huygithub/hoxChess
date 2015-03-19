@@ -35,10 +35,12 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 /**
@@ -211,9 +213,9 @@ public class MainActivity extends Activity {
             case R.id.action_settings:
                 openSettingsView();
                 return true;
-            case R.id.action_reverse_view:
-                reverseView();
-                return true;
+            //case R.id.action_reverse_view:
+            //    reverseView();
+            //    return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -347,7 +349,7 @@ public class MainActivity extends Activity {
         }
     }
     
-    private void onBoardViewCreated(MainActivity activity) {
+    private void onBoardViewCreated(final MainActivity activity) {
         Log.d(TAG, "onBoardViewCreated...");
         
         boardView_ = (BoardView) activity.findViewById(R.id.board_view);
@@ -355,6 +357,25 @@ public class MainActivity extends Activity {
         bottomPlayerLabel_ = (TextView) activity.findViewById(R.id.bottom_player_label);
         topPlayerButton_ = (Button) activity.findViewById(R.id.top_button);
         bottomPlayerButton_ = (Button) activity.findViewById(R.id.bottom_button);
+        
+        // Setup the long-click handlers to handle BEGIN and END actions of replay.
+        ImageButton previousButton = (ImageButton) activity.findViewById(R.id.replay_previous);
+        previousButton.setOnLongClickListener(new OnLongClickListener() { 
+            @Override
+            public boolean onLongClick(View v) {
+                activity.onReplayBegin();
+                return true;
+            }
+        });
+        
+        ImageButton nextButton = (ImageButton) activity.findViewById(R.id.replay_next);
+        nextButton.setOnLongClickListener(new OnLongClickListener() { 
+            @Override
+            public boolean onLongClick(View v) {
+                activity.onReplayEnd();
+                return true;
+            }
+        });
         
         // Game timers.
         TextView topGameTimeView = (TextView) activity.findViewById(R.id.top_game_time);
@@ -411,7 +432,7 @@ public class MainActivity extends Activity {
         getActionBar().setTitle(getString(R.string.title_table, title));
     }
     
-    public void onReplayBegin(View view) {
+    private void onReplayBegin() {
         boardView_.onReplay_BEGIN();
     }
     
@@ -423,8 +444,12 @@ public class MainActivity extends Activity {
         boardView_.onReplay_NEXT(true);
     }
     
-    public void onReplayEnd(View view) {
+    private void onReplayEnd() {
         boardView_.onReplay_END();
+    }
+
+    public void onReverseView(View view) {
+        boardView_.reverseView();
     }
     
     public void onTopButtonClick(View view) {

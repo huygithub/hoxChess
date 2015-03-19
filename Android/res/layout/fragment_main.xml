@@ -101,44 +101,40 @@
         
     </RelativeLayout>
     
-    <LinearLayout
+    <RelativeLayout
 	    android:orientation="horizontal"
 	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:gravity="center" >
-
-        <ImageButton
-              android:id="@+id/replay_begin"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:contentDescription="@string/replay_begin"
-              android:src="@drawable/ic_action_previous"
-              android:onClick="onReplayBegin" />
+	    android:layout_height="wrap_content">
         
         <ImageButton
               android:id="@+id/replay_previous"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
+              android:layout_alignParentLeft="true"
               android:contentDescription="@string/replay_prev"
               android:src="@drawable/ic_action_previous_item"
-              android:onClick="onReplayPrevious" />
+              android:onClick="onReplayPrevious"
+              android:longClickable="true" />
 
         <ImageButton
               android:id="@+id/replay_next"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
+              android:layout_toRightOf="@id/replay_previous"
               android:contentDescription="@string/replay_next"
               android:src="@drawable/ic_action_next_item"
-              android:onClick="onReplayNext" />
-        
+              android:onClick="onReplayNext"
+              android:longClickable="true" />
+
         <ImageButton
-              android:id="@+id/replay_end"
+              android:id="@+id/reverse_view"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:contentDescription="@string/replay_end"
-              android:src="@drawable/ic_action_next"
-              android:onClick="onReplayEnd" />
-            
-    </LinearLayout>
+              android:layout_alignParentRight="true"
+              android:contentDescription="@string/action_reverse_view"
+              android:src="@drawable/ic_action_shuffle"
+              android:onClick="onReverseView" />
+        
+    </RelativeLayout>
     
 </LinearLayout>

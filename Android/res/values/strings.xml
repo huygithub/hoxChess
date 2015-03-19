@@ -49,10 +49,8 @@
     <string name="login_error_wrong_password">Password is wrong</string>
     <string name="login_error_general_error">Failed to login</string>
     
-    <string name="replay_begin">Begin</string>
     <string name="replay_prev">Prev</string>
     <string name="replay_next">Next</string>
-    <string name="replay_end">End</string>
     
     <string name="replay_text">Replay %1$d / %2$d</string>
     
@@ -62,7 +60,7 @@
     <string name="label_game_time_zero">00:00</string>
     <string name="label_move_time_zero">0:00</string>
     
-    <string name="title_table">Table #%1$s</string>
+    <string name="title_table">#%1$s</string>
     <string name="notifications">Show Notifications</string>
     <string name="chat_button_send">Send</string>
     <string name="chat_empty_text">No message</string>

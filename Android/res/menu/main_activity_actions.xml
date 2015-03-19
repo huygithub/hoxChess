@@ -5,7 +5,7 @@
     <item android:id="@+id/action_new_table"
           android:icon="@drawable/ic_action_new"
           android:title="@string/action_new"
-          android:showAsAction="ifRoom" />
+          android:showAsAction="always" />
 
     <item android:id="@+id/action_play_online"
           android:icon="@drawable/ic_action_web_site"
@@ -25,9 +25,11 @@
           android:title="@string/action_settings"
           android:showAsAction="never" />
 
+    <!-- 
     <item android:id="@+id/action_reverse_view"
           android:title="@string/action_reverse_view"
           android:showAsAction="never" />
+    -->
     
     <item android:id="@+id/action_close_table"
           android:title="@string/action_close"
