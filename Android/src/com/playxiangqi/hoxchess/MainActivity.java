@@ -310,6 +310,14 @@ public class MainActivity extends Activity {
         adjustScreenOnFlagBasedOnGameStatus();
     }
     
+    public void onLocalPlayerJoined(ColorEnum myColor) {
+        // Reverse the board view so that my seat is always at the bottom of the screen.
+        if (  (myColor == ColorEnum.COLOR_RED && !isBlackOnTop_) ||
+              (myColor == ColorEnum.COLOR_BLACK && isBlackOnTop_) ) {
+            reverseView();
+        }
+    }
+    
     public void onGameEnded(Enums.GameStatus gameStatus) {
         boardView_.onGameEnded(gameStatus);
         adjustScreenOnFlagBasedOnGameStatus();

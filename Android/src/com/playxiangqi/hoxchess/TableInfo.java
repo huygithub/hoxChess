@@ -71,7 +71,6 @@ public class TableInfo {
                 break;
                 
             case COLOR_NONE:
-            {
                 if (pid.equals(blackId)) {
                     blackId = "";
                     blackRating = "0";
@@ -80,7 +79,6 @@ public class TableInfo {
                     redRating = "0";
                 }
                 break;
-            }
                 
             default:
                 break;
@@ -97,7 +95,7 @@ public class TableInfo {
         }
     }
     
-    static public String formatPlayerInfo(String pid, String rating) {
+    public static String formatPlayerInfo(String pid, String rating) {
         return (pid.length() == 0
                 ? "*" : String.format("%s(%s)", pid, rating));
     }

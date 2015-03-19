@@ -60,20 +60,12 @@ public class HoxApp extends Application {
     private TableInfo myTable_ = new TableInfo();
     private ColorEnum myColor_ = ColorEnum.COLOR_RED;
     
-    private boolean isGameOver_ = false;
     private GameStatus gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
     
     private TableTimeTracker timeTracker_ = new TableTimeTracker();
     private TablePlayerTracker playerTracker_ = new TablePlayerTracker(TableType.TABLE_TYPE_LOCAL);
     
     private List<ChatMessage> newMessages_ = new ArrayList<ChatMessage>();
-    
-    // ----------------
-    public class AccountInfo {
-        public String username;
-        public String password;
-    }
-    // ----------------
     
     public HoxApp() {
         // Empty
@@ -166,21 +158,17 @@ public class HoxApp extends Application {
         }
     }
     
-    private AccountInfo loadPreferences_Account() {
-        AccountInfo accountInfo = new AccountInfo();
-        
+    private void loadPreferences_Account() {
         boolean loginWithAccount = SettingsActivity.getLoginWithAccountFlag(this);
         if (loginWithAccount) {
-            accountInfo.username = SettingsActivity.getAccountPid(this);
-            accountInfo.password = SettingsActivity.getAccountPassword(this);
-            Log.d(TAG, "Load existing account. Player ID: [" + accountInfo.username + "]");
+            pid_ = SettingsActivity.getAccountPid(this);
+            password_ = SettingsActivity.getAccountPassword(this);
+            Log.d(TAG, "Load existing account. Player ID: [" + pid_ + "]");
         } else {
-            accountInfo.username = generateGuestPid();
-            accountInfo.password = "";
-            Log.d(TAG, "Load existing account. Guest ID: [" + accountInfo.username + "]");
+            pid_ = generateGuestPid();
+            password_ = "";
+            Log.d(TAG, "Load existing account. Guest ID: [" + pid_ + "]");
         }
-        
-        return accountInfo;
     }
     
     //---------------------------------------------------------
@@ -387,7 +375,6 @@ public class HoxApp extends Application {
             return;
         }
         
-        isGameOver_ = false;
         gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
         myTable_ = new TableInfo(content);
         
@@ -485,8 +472,8 @@ public class HoxApp extends Application {
             if (mainActivity != null) {
                 mainActivity.clearTable();
             }
-        
-        } else { // Other player left my table?
+         // Other player left my table?
+        } else {
             myTable_.onPlayerLeft(pid);
         }
         
@@ -521,24 +508,22 @@ public class HoxApp extends Application {
         }
         
         final Enums.ColorEnum playerColor = stringToPlayerColor(color);
-        
         myTable_.onPlayerJoined(pid, rating, playerColor);
         
-        if ("Red".equals(color)) {
-            if (pid.equals(pid_)) {
-                myColor_ = ColorEnum.COLOR_RED;
-            }
-            
-        } else if ("Black".equals(color)) {
-            if (pid.equals(pid_)) {
-                myColor_ = ColorEnum.COLOR_BLACK;
-            }
-            
-        } else if ("None".equals(color)) {
-            if (pid.equals(pid_)) {
-                myColor_ = ColorEnum.COLOR_NONE;
-            }
+        switch (playerColor) {
+            case COLOR_RED:
+                if (pid.equals(pid_)) myColor_ = ColorEnum.COLOR_RED;
+                break;
+            case COLOR_BLACK:
+                if (pid.equals(pid_)) myColor_ = ColorEnum.COLOR_BLACK;
+                break;
+            case COLOR_NONE:
+                if (pid.equals(pid_)) myColor_ = ColorEnum.COLOR_NONE;
+                break;
+            default:
+                break;
         }
+        mainActivity.onLocalPlayerJoined(myColor_);
         
         playerTracker_.onPlayerJoin(pid, rating, playerColor);
         playerTracker_.syncUI();
@@ -561,10 +546,6 @@ public class HoxApp extends Application {
             return;
         }
         
-        isGameOver_ = true;
-        timeTracker_.stop();
-        playerTracker_.syncUI();
-        
         GameStatus gameStatus = GameStatus.GAME_STATUS_UNKNOWN;
         
         if ("black_win".equals(gameResult)) {
@@ -576,6 +557,8 @@ public class HoxApp extends Application {
         }
         gameStatus_ = gameStatus;
         mainActivity.onGameEnded(gameStatus);
+        timeTracker_.stop();
+        playerTracker_.syncUI();
     }
     
     private void handleNetworkEvent_RESET(String content) {
@@ -594,7 +577,6 @@ public class HoxApp extends Application {
             return;
         }
         
-        isGameOver_ = false;
         gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
         mainActivity.onGameReset();
         timeTracker_.stop();
@@ -668,9 +650,7 @@ public class HoxApp extends Application {
     public void handlePlayOnlineClicked() {
         Log.d(TAG, "Action 'Play Online' clicked...");
         if ( !networkPlayer_.isOnline() || !isLoginOK_ ) {
-            final AccountInfo accountInfo = loadPreferences_Account();
-            pid_ = accountInfo.username;
-            password_ = accountInfo.password;
+            loadPreferences_Account(); // to get pid_ and password_
             
             networkPlayer_.setLoginInfo(pid_,  password_);
             networkPlayer_.connectToServer();
@@ -696,11 +676,13 @@ public class HoxApp extends Application {
     }
     
     public boolean isGameOver() {
-        return isGameOver_;
+        return (gameStatus_ == GameStatus.GAME_STATUS_BLACK_WIN ||
+                gameStatus_ == GameStatus.GAME_STATUS_RED_WIN ||
+                gameStatus_ == GameStatus.GAME_STATUS_DRAWN );
     }
     
     public boolean isGameInProgress() {
-        return ( !isGameOver_ &&
+        return ( !isGameOver() &&
                 referee_.getMoveCount() > 1 );
     }
     
@@ -808,7 +790,7 @@ public class HoxApp extends Application {
         else if (this.isOnline() && 
               ( myColor_ == ColorEnum.COLOR_UNKNOWN ||
                 myColor_ == ColorEnum.COLOR_NONE ||
-               isGameOver_ )) {
+                isGameOver() )) {
             
             if (myTable_.isValid()) {
                 networkPlayer_.sendRequest_LEAVE(myTable_.tableId); // Leave the current table.
