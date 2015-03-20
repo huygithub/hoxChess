@@ -449,7 +449,7 @@ public class MainActivity extends Activity {
     }
 
     public void onReverseView(View view) {
-        boardView_.reverseView();
+        reverseView();
     }
     
     public void onTopButtonClick(View view) {
