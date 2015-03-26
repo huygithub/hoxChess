@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.GameStatus;
+import com.playxiangqi.hoxchess.Enums.TableType;
 import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.app.ActionBar;
@@ -41,7 +42,9 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * The main (entry-point) activity.
@@ -155,29 +158,23 @@ public class MainActivity extends Activity {
         menu.findItem(R.id.action_logout).setVisible(
                 HoxApp.getApp().isOnline());
         
-        final boolean isInOnlineTable = HoxApp.getApp().getMyTable().isValid();
+        final TableType tableType = HoxApp.getApp().getPlayerTracker().getTableType();
+        final boolean isNetworkTable = (tableType == TableType.TABLE_TYPE_NETWORK);
         final ColorEnum myColor = HoxApp.getApp().getMyColor();
         final boolean isGameOver = HoxApp.getApp().isGameOver();
         final int moveCount = boardView_.getMoveCount();
         
         if (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED) {
-            if (moveCount >= 2) { // The game has actually started?
-                menu.findItem(R.id.action_offer_draw).setVisible(!isGameOver);
-                menu.findItem(R.id.action_offer_resign).setVisible(!isGameOver);
+            if (!isNetworkTable) {
+                menu.findItem(R.id.action_close_table).setVisible(false);
+            } else if (moveCount >= 2) { // The game has actually started?
                 menu.findItem(R.id.action_close_table).setVisible(isGameOver);
             } else {
-                menu.findItem(R.id.action_offer_draw).setVisible(false);
-                menu.findItem(R.id.action_offer_resign).setVisible(false);
                 menu.findItem(R.id.action_close_table).setVisible(true);
             }
-            menu.findItem(R.id.action_reset_table).setVisible(
-                    isGameOver || (moveCount < 2));
             
         } else {
-            menu.findItem(R.id.action_offer_draw).setVisible(false);
-            menu.findItem(R.id.action_offer_resign).setVisible(false);
-            menu.findItem(R.id.action_close_table).setVisible(isInOnlineTable);
-            menu.findItem(R.id.action_reset_table).setVisible(false);
+            menu.findItem(R.id.action_close_table).setVisible(isNetworkTable);
         }
         return true; // display the menu
     }
@@ -450,6 +447,80 @@ public class MainActivity extends Activity {
 
     public void onReverseView(View view) {
         reverseView();
+    }
+
+    public void onResetTable(View view) {
+        PopupMenu popup = new PopupMenu(this, view);
+        popup.getMenuInflater().inflate(R.menu.table_actions, popup.getMenu());
+        
+        final TableType tableType = HoxApp.getApp().getPlayerTracker().getTableType();
+        switch (tableType) {
+            case TABLE_TYPE_LOCAL:
+                popup.getMenu().removeItem(R.id.action_offer_draw);
+                popup.getMenu().removeItem(R.id.action_offer_resign);
+                break;
+                
+            case TABLE_TYPE_NETWORK:
+                final boolean isGameOver = HoxApp.getApp().isGameOver();
+                final ColorEnum myColor = HoxApp.getApp().getMyColor();
+                final boolean amIplaying = (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED);
+                final int moveCount = boardView_.getMoveCount();
+                if (isGameOver) {
+                    popup.getMenu().removeItem(R.id.action_offer_draw);
+                    popup.getMenu().removeItem(R.id.action_offer_resign);
+                } else if (!amIplaying) {
+                    popup.getMenu().removeItem(R.id.action_offer_draw);
+                    popup.getMenu().removeItem(R.id.action_offer_resign);
+                    popup.getMenu().removeItem(R.id.action_reset_table);
+                }  else if (moveCount >= 2) { // game has started?
+                    popup.getMenu().removeItem(R.id.action_reset_table);
+                } else {
+                    popup.getMenu().removeItem(R.id.action_offer_draw);
+                    popup.getMenu().removeItem(R.id.action_offer_resign);
+                }
+                break;
+                
+            case TABLE_TYPE_EMPTY: // falls through
+            default:
+                popup.getMenu().removeItem(R.id.action_offer_draw);
+                popup.getMenu().removeItem(R.id.action_offer_resign);
+                popup.getMenu().removeItem(R.id.action_reset_table);
+                break;
+        }
+        
+        if (popup.getMenu().size() == 0) {
+            Log.i(TAG, "(on 'Reset' button click) No need to show popup menu!");
+            return;
+        }
+        
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.action_offer_draw:
+                        HoxApp.getApp().handleRequestToOfferDraw();
+                        Toast.makeText(HoxApp.getApp(),
+                                getString(R.string.action_draw),
+                                Toast.LENGTH_SHORT).show();
+                        return true;
+                        
+                    case R.id.action_offer_resign:
+                        HoxApp.getApp().handleRequestToOfferResign();
+                        Toast.makeText(HoxApp.getApp(),
+                                getString(R.string.action_resign),
+                                Toast.LENGTH_SHORT).show();
+                        return true;
+                        
+                    case R.id.action_reset_table:
+                        HoxApp.getApp().handleRequestToResetTable();
+                        return true;
+                        
+                    default:
+                        return true;
+                }
+            }
+        });
+        
+        popup.show();
     }
     
     public void onTopButtonClick(View view) {

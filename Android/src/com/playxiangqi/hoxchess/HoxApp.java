@@ -820,14 +820,29 @@ public class HoxApp extends Application {
         }
         networkPlayer_.sendRequest_RESIGN(myTable_.tableId);
     }
-
+    
     public void handleRequestToResetTable() {
         Log.i(TAG, "Send request to 'Reset Table'...");
-        if (!myTable_.isValid()) {
-            Log.w(TAG, "No current table. Ignore the request to 'Reset Table' the current Table");
-            return;
+        TableType tableType = playerTracker_.getTableType();
+        
+        if (tableType == TableType.TABLE_TYPE_LOCAL) {
+            //playerTracker_.setTableType(TableType.TABLE_TYPE_LOCAL); // A new practice table.
+            playerTracker_.syncUI();
+            myColor_ = ColorEnum.COLOR_RED;
+            aiEngine_.initGame();
+            timeTracker_.stop();
+            timeTracker_.reset();
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.openNewPracticeTable();
+            }
+        } else if (tableType == TableType.TABLE_TYPE_NETWORK) {
+            if (!myTable_.isValid()) {
+                Log.w(TAG, "No current table. Ignore the request to 'Reset Table' the current Table");
+                return;
+            }
+            networkPlayer_.sendRequest_RESET(myTable_.tableId);
         }
-        networkPlayer_.sendRequest_RESET(myTable_.tableId);
     }
     
     public void handlePlayerButtonClick(Enums.ColorEnum clickedColor) {

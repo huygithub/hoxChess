@@ -125,7 +125,7 @@
               android:src="@drawable/ic_action_next_item"
               android:onClick="onReplayNext"
               android:longClickable="true" />
-
+        
         <ImageButton
               android:id="@+id/reverse_view"
               android:layout_width="wrap_content"
@@ -134,6 +134,15 @@
               android:contentDescription="@string/action_reverse_view"
               android:src="@drawable/ic_action_shuffle"
               android:onClick="onReverseView" />
+        
+        <ImageButton
+              android:id="@+id/action_reset"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_toLeftOf="@id/reverse_view"
+              android:contentDescription="@string/action_reset"
+              android:src="@drawable/ic_action_rotate_right"
+              android:onClick="onResetTable" />
         
     </RelativeLayout>
     
