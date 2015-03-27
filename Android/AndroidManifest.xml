@@ -55,6 +55,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.playxiangqi.hoxchess.MainActivity" />
         </activity>
+
+        <activity
+            android:name=".AboutActivity"
+            android:label="@string/about_title"
+            android:parentActivityName=".SettingsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.playxiangqi.hoxchess.SettingsActivity" />
+        </activity>
         
     </application>
 

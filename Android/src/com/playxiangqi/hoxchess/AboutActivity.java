@@ -18,42 +18,30 @@
  */
 package com.playxiangqi.hoxchess;
 
-/**
- * A player
- */
-public class PlayerInfo {
+import android.app.Activity;
+import android.os.Bundle;
+import android.text.Html;
+import android.util.Log;
+import android.widget.TextView;
 
-    public String pid = "";
-    public String rating = "0";
-    
-    public PlayerInfo() {
-        // empty
-    }
-    
-    public PlayerInfo(String pid, String rating) {
-        this.pid = pid;
-        this.rating = rating;
-    }
-    
-    public boolean hasPid(String pid) {
-        return this.pid.equals(pid);
-    }
-    
-    public boolean isValid() {
-        return (pid.length() > 0);
-    }
-    
-    public String getInfo() {
-        return formatPlayerInfo(pid, rating);
-    }
+public class AboutActivity extends Activity {
+    private static final String TAG = "AboutActivity";
     
     @Override
-    public String toString() {
-        return getInfo();
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        Log.d(TAG, "onCreate");
+        setContentView(R.layout.activity_about);
+        
+        TextView htmlTextView = (TextView)findViewById(R.id.html_text);
+        htmlTextView.setText(Html.fromHtml(getString(R.string.about_html)));
     }
 
-    static public String formatPlayerInfo(String pid, String rating) {
-        return (pid.length() == 0
-                ? "*" : String.format("%s(%s)", pid, rating));
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
     }
+
 }

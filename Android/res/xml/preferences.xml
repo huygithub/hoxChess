@@ -39,4 +39,18 @@
         
     </PreferenceCategory>
 
+    <!-- About -->
+    <PreferenceCategory 
+        android:title="@string/about_title">
+        
+        <Preference android:title="@string/version"
+                    android:summary="@string/copyright" >
+            <intent
+	             android:action="android.intent.action.VIEW"
+	             android:targetPackage="com.playxiangqi.hoxchess"
+	             android:targetClass="com.playxiangqi.hoxchess.AboutActivity" /> 
+        </Preference>
+        
+    </PreferenceCategory>
+    
 </PreferenceScreen>

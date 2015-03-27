@@ -65,4 +65,27 @@
     <string name="chat_button_send">Send</string>
     <string name="chat_empty_text">No message</string>
     
+    <string name="about_title">About</string>
+    <string name="version">Version 1.0</string>
+    <string name="copyright">Copyright \u00A9 2015 PlayXiangqi</string>
+    
+    <string name="about_html">
+<![CDATA[
+<body>
+<h3>HOXChess by PlayXiangqi</h3>
+<div>
+  <b>HOXChess by PlayXiangqi</b> is an open source XiangQi application for iOS and Android devices,
+  hosted on <a href="https://github.com/huygithub/hoxChess">https://github.com/huygithub/hoxChess</a>.
+  <p>Please contact us at <a href="mailto:hoxchess@playxiangqi.com">hoxchess@PlayXiangqi.com</a></p>
+</div>
+
+<h3>Acknowledgement</h3>
+<div>
+  <p><b>HaQiKi D</b> is an AI engine written by H.G. Muller at
+     <a href="http://home.hccnet.nl/h.g.muller/XQhaqikid.html">http://home.hccnet.nl/h.g.muller</a></p>
+</div>
+</body>
+]]>
+    </string>
+    
 </resources>
