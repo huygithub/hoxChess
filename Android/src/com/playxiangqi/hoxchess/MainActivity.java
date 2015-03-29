@@ -102,6 +102,17 @@ public class MainActivity extends Activity {
         Log.d(TAG, "onPause");
         adjustScreenOnFlagBasedOnGameStatus();
     }
+
+    @Override
+    public void onBackPressed() {
+        Log.d(TAG, "onBackPressed");
+        final TableType tableType = HoxApp.getApp().getPlayerTracker().getTableType();
+        if (tableType == TableType.TABLE_TYPE_NETWORK) {
+            HoxApp.getApp().handleRequestToCloseCurrentTable();
+        } else {
+            super.onBackPressed();
+        }
+    }
     
     public void onGameStatusChanged() {
         adjustScreenOnFlagBasedOnGameStatus();
@@ -164,6 +175,8 @@ public class MainActivity extends Activity {
         final boolean isGameOver = HoxApp.getApp().isGameOver();
         final int moveCount = boardView_.getMoveCount();
         
+        menu.findItem(R.id.action_new_table).setVisible(tableType == TableType.TABLE_TYPE_EMPTY);
+        
         if (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED) {
             if (!isNetworkTable) {
                 menu.findItem(R.id.action_close_table).setVisible(false);
@@ -185,6 +198,9 @@ public class MainActivity extends Activity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
+            case android.R.id.home:
+                HoxApp.getApp().handleRequestToCloseCurrentTable();
+                return true;
             case R.id.action_new_table:
                 HoxApp.getApp().handleRequestToOpenNewTable();
                 return true;
@@ -261,7 +277,8 @@ public class MainActivity extends Activity {
         Log.d(TAG, "Update board with new network Table info (I_TABLE)...");
         
         setAndShowTitle(tableInfo.tableId);
-        
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        invalidateOptionsMenu(); // Recreate the options menu
         boardView_.resetBoard();
     }
 
@@ -305,6 +322,8 @@ public class MainActivity extends Activity {
     public void clearTable() {
         Log.d(TAG, "Clear the table. Make it an empty one.");
         getActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
+        getActionBar().setDisplayHomeAsUpEnabled(false);
+        invalidateOptionsMenu(); // Recreate the options menu
         boardView_.resetBoard();
         adjustScreenOnFlagBasedOnGameStatus();
     }
@@ -329,7 +348,7 @@ public class MainActivity extends Activity {
     public void onMessageReceived(String sender, String message) {
         Log.d(TAG, "On new message from: " + sender + " = [" + message + "]");
         notifCount_++;
-        invalidateOptionsMenu();
+        invalidateOptionsMenu(); // Recreate the options menu
     }
     
     public void onNetworkCode(int networkCode) {
