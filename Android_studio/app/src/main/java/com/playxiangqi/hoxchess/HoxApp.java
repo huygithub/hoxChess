@@ -287,7 +287,7 @@ public class HoxApp extends Application {
         switch (networkCode) {
             case NetworkPlayer.NETWORK_CODE_CONNECTED:
                 Toast.makeText(HoxApp.thisApp_,
-                        "Connection is establed",
+                        "Connection established",
                         Toast.LENGTH_LONG).show();
                 break;
             
@@ -732,15 +732,27 @@ public class HoxApp extends Application {
     
     public void logoutFromNetwork() {
         Log.d(TAG, "Logout from network...");
+
+        if (myTable_.isValid()) {
+            Log.i(TAG, "Leave the current table: " + myTable_.tableId);
+            myTable_ = new TableInfo();
+            myColor_ = ColorEnum.COLOR_UNKNOWN;
+            gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
+            timeTracker_.stop();
+            newMessages_.clear();
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.clearTable();
+            }
+        }
+
+        playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
+        playerTracker_.syncUI();
+
         if (networkPlayer_.isOnline() ) {
             networkPlayer_.disconnectFromServer();
         }
-        myTable_ = new TableInfo();
         isLoginOK_ = false;
-    }
-    
-    public NetworkPlayer getNetworkPlayer() {
-        return networkPlayer_;
     }
     
     public void handleTableSelection(String tableId) {

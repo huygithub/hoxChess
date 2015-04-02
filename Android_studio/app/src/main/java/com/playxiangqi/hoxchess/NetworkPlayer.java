@@ -25,9 +25,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.UnresolvedAddressException;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import android.annotation.SuppressLint;
@@ -81,15 +79,7 @@ class NetworkPlayer extends Thread {
     private static final int MSG_NETWORK_CONNECT_TO_SERVER = 1;
     private static final int MSG_NETWORK_DISCONNECT_FROM_SERVER = 2;
     private static final int MSG_NETWORK_CHECK_FOR_WORK = 3;
-    private static final int MSG_NETWORK_SEND_LIST = 4;
-    private static final int MSG_NETWORK_SEND_JOIN = 5;
-    private static final int MSG_NETWORK_SEND_LEAVE = 6;
-    private static final int MSG_NETWORK_SEND_MOVE = 7;
-    private static final int MSG_NETWORK_SEND_DRAW = 8;
-    private static final int MSG_NETWORK_SEND_RESIGN = 9;
-    private static final int MSG_NETWORK_SEND_NEW = 10;
-    private static final int MSG_NETWORK_SEND_RESET = 11;
-    private static final int MSG_NETWORK_SEND_MSG = 12;
+    private static final int MSG_NETWORK_SEND_REQUEST = 4;
     
     @SuppressLint("HandlerLeak") @Override
     public void run() {
@@ -112,73 +102,9 @@ class NetworkPlayer extends Thread {
                             handleCheckForWork();
                             break;
 
-                        case MSG_NETWORK_SEND_LIST:
-                            send_LIST();
+                        case MSG_NETWORK_SEND_REQUEST:
+                            sendRequest((String) msg.obj);
                             break;
-
-                        case MSG_NETWORK_SEND_JOIN:
-                        {
-                            @SuppressWarnings("unchecked")
-                            Map<String, String> map = (Map<String, String>) msg.obj;
-                            send_JOIN(map);
-                            break;
-                        }
-
-                        case MSG_NETWORK_SEND_LEAVE:
-                        {
-                            @SuppressWarnings("unchecked")
-                            Map<String, String> map = (Map<String, String>) msg.obj;
-                            send_LEAVE(map);
-                            break;
-                        }
-
-                        case MSG_NETWORK_SEND_MOVE:
-                        {
-                            @SuppressWarnings("unchecked")
-                            Map<String, String> map = (Map<String, String>) msg.obj;
-                            send_MOVE(map);
-                            break;
-                        }
-                        
-                        case MSG_NETWORK_SEND_DRAW:
-                        {
-                            @SuppressWarnings("unchecked")
-                            Map<String, String> map = (Map<String, String>) msg.obj;
-                            send_DRAW(map);
-                            break;
-                        }
-                        
-                        case MSG_NETWORK_SEND_RESIGN:
-                        {
-                            @SuppressWarnings("unchecked")
-                            Map<String, String> map = (Map<String, String>) msg.obj;
-                            send_RESIGN(map);
-                            break;
-                        }
-           
-                        case MSG_NETWORK_SEND_NEW:
-                        {
-                            @SuppressWarnings("unchecked")
-                            Map<String, String> map = (Map<String, String>) msg.obj;
-                            send_NEW(map);
-                            break;
-                        }
-                        
-                        case MSG_NETWORK_SEND_RESET:
-                        {
-                            @SuppressWarnings("unchecked")
-                            Map<String, String> map = (Map<String, String>) msg.obj;
-                            send_RESET(map);
-                            break;
-                        }
-                        
-                        case MSG_NETWORK_SEND_MSG:
-                        {
-                            @SuppressWarnings("unchecked")
-                            Map<String, String> map = (Map<String, String>) msg.obj;
-                            send_MSG(map);
-                            break;
-                        }
                         
                         default:
                             break;
@@ -224,66 +150,56 @@ class NetworkPlayer extends Thread {
     
     public void sendRequest_LIST() {
         Log.d(TAG, "Send 'LIST' request to server...");
-        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_LIST));
+        String request = "op=LIST&pid=" + pid_;
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
 
     public void sendRequest_JOIN(String tableId, String joinColor) {
         Log.d(TAG, "Send 'JOIN' to server... TableId: " + tableId + ", joinColor: " + joinColor);
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("tid", tableId);
-        map.put("color", joinColor);
-        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_JOIN, map));
+        String request = "op=JOIN&pid=" + pid_ + "&tid=" + tableId + "&color=" + joinColor;
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
 
     public void sendRequest_LEAVE(String tableId) {
         Log.d(TAG, "Send 'LEAVE' request to server...");
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("tid", tableId);
-        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_LEAVE, map));
+        String request = "op=LEAVE&pid=" + pid_ + "&tid=" + tableId;
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
 
     public void sendRequest_DRAW(String tableId) {
         Log.d(TAG, "Send 'DRAW' request to server...");
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("tid", tableId);
-        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_DRAW, map));
+        String request = "op=DRAW&pid=" + pid_ + "&tid=" + tableId;
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
 
     public void sendRequest_RESIGN(String tableId) {
         Log.d(TAG, "Send 'RESIGN' request to server...");
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("tid", tableId);
-        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_RESIGN, map));
+        String request = "op=RESIGN&pid=" + pid_ + "&tid=" + tableId;
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
 
     public void sendRequest_RESET(String tableId) {
         Log.d(TAG, "Send 'RESET' request to server...");
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("tid", tableId);
-        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_RESET, map));
+        String request = "op=RESET&pid=" + pid_ + "&tid=" + tableId;
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
     
     public void sendRequest_MOVE(String tableId, String move) {
         Log.d(TAG, "Send 'MOVE' request to server...");
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("tid", tableId);
-        map.put("move", move);
-        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_MOVE, map));
+        String request = "op=MOVE&pid=" + pid_ + "&tid=" + tableId  + "&move=" + move;
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
     
     public void sendRequest_MSG(String tableId, String msg) {
         Log.d(TAG, "Send 'MSG' request to server...");
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("tid", tableId);
-        map.put("msg", msg);
-        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_MSG, map));
+        String request = "op=MSG&pid=" + pid_ + "&tid=" + tableId + "&msg=" + msg;
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
     
     public void sendRequest_NEW(String itimes) {
         Log.d(TAG, "Send 'NEW (table)' request to server. itimes = " + itimes);
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("itimes", itimes);
-        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_NEW, map));
+        String request = "op=NEW&pid=" + pid_ + "&itimes=" + itimes;
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
     
     private void handleConnectToServer() throws IOException {
@@ -329,9 +245,7 @@ class NetworkPlayer extends Thread {
         //Log.d(TAG, "Handle 'Check for work'...");
             
         int readyChannels = selector_.select(1000); // 1-second interval
-        if (readyChannels == 0) {
-            // Do nothing
-        } else {
+        if (readyChannels > 0) {
             Set<SelectionKey> selectedKeys = selector_.selectedKeys();
             Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 
@@ -409,62 +323,6 @@ class NetworkPlayer extends Thread {
         connectionState_ = ConnectionState.CONNECTION_STATE_CONNECTED;
         Log.i(TAG, "LOGOUT: End");
     }
-
-    private void send_LIST() throws IOException {
-        String request = "op=LIST&pid=" + pid_;
-        sendRequest(request);
-    }
-
-    private void send_JOIN(Map<String, String> map) throws IOException {
-        final String tableId = map.get("tid");
-        final String joinColor = map.get("color");
-        String request = "op=JOIN&pid=" + pid_ + "&tid=" + tableId + "&color=" + joinColor;
-        sendRequest(request);
-    }
-
-    private void send_LEAVE(Map<String, String> map) throws IOException {
-        final String tableId = map.get("tid");
-        String request = "op=LEAVE&pid=" + pid_ + "&tid=" + tableId;
-        sendRequest(request);
-    }
-
-    private void send_MOVE(Map<String, String> map) throws IOException {
-        final String tableId = map.get("tid");
-        final String move = map.get("move");
-        String request = "op=MOVE&pid=" + pid_ + "&tid=" + tableId  + "&move=" + move;
-        sendRequest(request);
-    }
-    
-    private void send_DRAW(Map<String, String> map) throws IOException {
-        final String tableId = map.get("tid");
-        String request = "op=DRAW&pid=" + pid_ + "&tid=" + tableId;
-        sendRequest(request);
-    }
-
-    private void send_RESIGN(Map<String, String> map) throws IOException {
-        final String tableId = map.get("tid");
-        String request = "op=RESIGN&pid=" + pid_ + "&tid=" + tableId;
-        sendRequest(request);
-    }
-
-    private void send_NEW(Map<String, String> map) throws IOException {
-        final String itimes = map.get("itimes");
-        String request = "op=NEW&pid=" + pid_ + "&itimes=" + itimes;
-        sendRequest(request);
-    }
-    
-    private void send_RESET(Map<String, String> map) throws IOException {
-        final String tableId = map.get("tid");
-        String request = "op=RESET&pid=" + pid_ + "&tid=" + tableId;
-        sendRequest(request);
-    }
-    
-    private void send_MSG(Map<String, String> map) throws IOException {
-        final String tableId = map.get("tid");
-        final String msg = map.get("msg");
-        String request = "op=MSG&pid=" + pid_ + "&tid=" + tableId + "&msg=" + msg;
-        sendRequest(request);
-    }
     
     /**
      * A helper to send a request to the server.
@@ -491,7 +349,7 @@ class NetworkPlayer extends Thread {
     private void readIncomingData() throws IOException {
         Log.i(TAG, "READ (data): Enter. inData_ 's length = " + inData_.length());
         
-        ByteBuffer buf = ByteBuffer.allocate(1*1024);
+        ByteBuffer buf = ByteBuffer.allocate(1024);
         
         while (true) {
             int bytesRead = socketChannel_.read(buf); // read into buffer.
