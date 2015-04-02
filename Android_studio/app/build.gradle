@@ -1,0 +1,36 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 20
+    buildToolsVersion "22.0.0"
+
+    defaultConfig {
+        applicationId "com.playxiangqi.hoxchess"
+        minSdkVersion 11
+        targetSdkVersion 20
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_1_6
+            targetCompatibility JavaVersion.VERSION_1_6
+        }
+
+        sourceSets.main {
+            jni.srcDirs = [] // Do not run default ndkbuild
+        }
+
+        //ndk {
+        //    moduleName "AI_MaxQi"
+        //}
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+dependencies {
+    compile 'com.android.support:support-v4:20.0.0'
+    compile 'com.android.support:appcompat-v7:20.0.0'
+}

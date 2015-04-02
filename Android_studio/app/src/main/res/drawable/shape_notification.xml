@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+ Reference:
+   http://stackoverflow.com/questions/17696486/actionbar-notification-count-icon-like-google-have
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+       android:shape="rectangle">
+       
+    <stroke android:color="#22000000" android:width="2dp"/>
+    <corners android:radius="5dp" />
+    <solid android:color="@color/noti_shape_bg_zero"/>
+</shape>
