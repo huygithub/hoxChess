@@ -606,7 +606,7 @@ public class BoardView extends ImageView {
     
     private void onGameOver(Canvas canvas) {
         canvas.drawText(
-                "Game Over",
+                this.getContext().getString(R.string.game_over_text),
                 offset_ + cellSize_*2.5f,
                 offset_ + cellSize_*4.7f,
                 noticePaint_);

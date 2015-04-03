@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">HOXChess</string>
+    <string name="ai_label">AI</string>
+    <string name="you_label">Bạn</string>
+    <string name="action_settings">Cài Đặt</string>
+    <string name="action_reverse_view">Đổi cách nhìn</string>
+    <string name="action_new">Bàn mới</string>
+    <string name="action_close">Đóng bàn</string>
+    <string name="action_draw">Xin Huề</string>
+    <string name="action_resign">Xin Thua</string>
+    <string name="action_reset">Lập bàn mới</string>
+    <string name="action_play_online">Chơi trực tuyến</string>
+    <string name="action_logout">Thoát</string>
+    <string name="board_alt">Bàn cơ`</string>
+    <string name="title_activity_tables">Bàn</string>
+    <string name="title_activity_chat">Trò Chuyện</string>
+        
+    <string-array name="AILevel_entries">
+	    <item>Dể</item>
+	    <item>Thường</item>
+	    <item>Khó</item>
+    </string-array>
+    
+    <string-array name="AILevel_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string name="AILevel_default">1</string>
+    
+    <string name="ai_level">Cấp Nhân Tạo</string>
+    <string name="level_easy">Dể</string>
+    <string name="level_medium">Thường</string>
+    <string name="level_difficult">Khó</string>
+    <string name="ai_label_easy">AI (Dể)</string>
+    <string name="ai_label_medium">AI (Thường)</string>
+    <string name="ai_label_difficult">AI (Khó)</string>
+    
+    <string name="playxiangqi_account">Trương mục PlayXiangqi</string>
+    <string name="playxiangqi_login_with_account">Nhập với trương mục</string>
+    <string name="playxiangqi_username">Ký Danh</string>
+    <string name="playxiangqi_password">Mật Mã</string>
+    <string name="password_masked_value">*****</string>
+    <string name="playxiangqi_website">Ghé Thăm: <a href="http://www.playxiangqi.com/index.php?page=register">PlayXiangqi.com</a></string>
+    <string name="login_error_wrong_username">Ký Danh sai</string>
+    <string name="login_error_wrong_password">Mật Mã sai</string>
+    <string name="login_error_general_error">Failed to login</string>
+    
+    <string name="replay_prev">Trước</string>
+    <string name="replay_next">Kế</string>
+
+    <string name="game_over_text">Bàn đã xong</string>
+    <string name="replay_text">Xem lại %1$d / %2$d</string>
+    
+    <string name="button_play_black">Chơi ĐEN</string>
+    <string name="button_play_red">Chơi ĐỎ</string>
+    
+    <string name="label_game_time_zero">00:00</string>
+    <string name="label_move_time_zero">0:00</string>
+    
+    <string name="title_table">#%1$s</string>
+    <string name="notifications">Tin Nhắn</string>
+    <string name="chat_button_send">Gửi</string>
+    <string name="chat_empty_text">Không có tin nhắn</string>
+    
+    <string name="about_title">Giới thiệu</string>
+    <string name="version">Phiên Bản 1.0</string>
+    <string name="copyright">Bản Quyền \u00A9 2015 PlayXiangqi</string>
+    
+    <string name="about_html">
+<![CDATA[
+<body>
+<h3>HOXChess by PlayXiangqi</h3>
+<div>
+  <b>HOXChess by PlayXiangqi</b> is an open source XiangQi application for iOS and Android devices,
+  hosted on <a href="https://github.com/huygithub/hoxChess">https://github.com/huygithub/hoxChess</a>.
+  <p>Please contact us at <a href="mailto:hoxchess@playxiangqi.com">hoxchess@PlayXiangqi.com</a></p>
+</div>
+
+<h3>Acknowledgement</h3>
+<div>
+  <p><b>HaQiKi D</b> is an AI engine written by H.G. Muller at
+     <a href="http://home.hccnet.nl/h.g.muller/XQhaqikid.html">http://home.hccnet.nl/h.g.muller</a></p>
+</div>
+</body>
+]]>
+    </string>
+    
+</resources>
