@@ -22,7 +22,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.GameStatus;
@@ -46,7 +45,7 @@ public class HoxApp extends Application {
     
     private String pid_ = ""; // My player 's ID.
     private String password_ = ""; // My player 's password.
-    private String myRating_ = "0";
+    //private String myRating_ = "0";
     
     private Referee referee_;
     
@@ -102,38 +101,6 @@ public class HoxApp extends Application {
         aiEngine_.setDifficultyLevel(currentAILevel_);
     }
 
-    /**
-     * Returns a pseudo-random number between min and max, inclusive.
-     * The difference between min and max can be at most
-     * <code>Integer.MAX_VALUE - 1</code>.
-     * 
-     * Reference;
-     *   http://stackoverflow.com/questions/363681/generating-random-integers-in-a-range-with-java
-     *
-     * @param min Minimum value
-     * @param max Maximum value.  Must be greater than min.
-     * @return Integer between min and max, inclusive.
-     * @see java.util.Random#nextInt(int)
-     */
-    private static int randInt(int min, int max) {
-        // NOTE: Usually this should be a field rather than a method
-        // variable so that it is not re-seeded every call.
-        Random rand = new Random();
-
-        // nextInt is normally exclusive of the top value,
-        // so add 1 to make it inclusive
-        int randomNum = rand.nextInt((max - min) + 1) + min;
-
-        return randomNum;
-    }
-
-    @SuppressLint("DefaultLocale")
-    private String generateGuestPid() {
-        final int randNum = randInt(1, Enums.MAX_GUEST_ID);
-        // Note: The portion "an" below stands for "Android".
-        return String.format("%san%d", Enums.HC_GUEST_PREFIX, randNum);
-    }
-    
     public void onAccountPidChanged(String pid) {
         Log.d(TAG, "On new pid: " + pid);
         if (!TextUtils.equals(pid_, pid)) {
@@ -165,7 +132,7 @@ public class HoxApp extends Application {
             password_ = SettingsActivity.getAccountPassword(this);
             Log.d(TAG, "Load existing account. Player ID: [" + pid_ + "]");
         } else {
-            pid_ = generateGuestPid();
+            pid_ = Utils.generateGuestPid();
             password_ = "";
             Log.d(TAG, "Load existing account. Guest ID: [" + pid_ + "]");
         }
@@ -199,13 +166,7 @@ public class HoxApp extends Application {
             switch (msg.what) {
             case MSG_AI_MOVE_READY:
             {
-                String aiMove = (String) msg.obj;
-                Log.d(TAG, "(MessageHandler) AI returned this move [" + aiMove + "].");
-                int row1 = aiMove.charAt(0) - '0';
-                int col1 = aiMove.charAt(1) - '0';
-                int row2 = aiMove.charAt(2) - '0';
-                int col2 = aiMove.charAt(3) - '0';
-                HoxApp.getApp().onAIMoveMade(new Position(row1, col1), new Position(row2, col2));
+                HoxApp.getApp().onAIMoveMade((String) msg.obj);
                 break;
             }
             case MSG_NETWORK_EVENT:
@@ -217,25 +178,44 @@ public class HoxApp extends Application {
             }
             case MSG_NETWORK_CODE:
             {
-                int networkCode = ((Integer) msg.obj).intValue();
-                HoxApp.getApp().onNetworkCode(networkCode);
+                HoxApp.getApp().onNetworkCode((Integer) msg.obj);
                 break;
-            }            
+            }
             default:
                 break;
             }
         }
-    };
+    }
     
-    private void onAIMoveMade(Position fromPos, Position toPos) {
-        Log.d(TAG, "On AI move = " + fromPos + " => " + toPos);
+    private void onAIMoveMade(String aiMove) {
+        Log.d(TAG, "AI returned this move [" + aiMove + "].");
+
+        int row1 = aiMove.charAt(0) - '0';
+        int col1 = aiMove.charAt(1) - '0';
+        int row2 = aiMove.charAt(2) - '0';
+        int col2 = aiMove.charAt(3) - '0';
+
+        Position fromPos = new Position(row1, col1);
+        Position toPos = new Position(row2, col2);
         
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
             mainActivity.updateBoardWithNewAIMove(fromPos, toPos);
         }
-        
-        handleAIMove(fromPos, toPos);
+
+        timeTracker_.nextColor();
+
+        if (referee_.getMoveCount() == 2) {
+            timeTracker_.start();
+            if (mainActivity != null) {
+                mainActivity.onGameStatusChanged();
+            }
+        }
+
+        if (!referee_.isGameInProgress()) {
+            Log.i(TAG, "The game has ended. Do nothing.");
+            onGameEnded();
+        }
     }
     
     private void onNetworkEvent(String eventString) {
@@ -343,7 +323,7 @@ public class HoxApp extends Application {
         
         if (pid_.equals(pid)) { // my LOGIN?
             Log.i(TAG, "Received my LOGIN info [" + pid + " " + rating + "].");
-            myRating_ = rating;
+            //myRating_ = rating;
             
             myColor_ = ColorEnum.COLOR_UNKNOWN;
             playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
@@ -666,10 +646,6 @@ public class HoxApp extends Application {
     public String getMyPid() {
         return pid_;
     }
-
-    public String getMyRating() {
-        return myRating_;
-    }
     
     public ColorEnum getMyColor() {
         return myColor_;
@@ -692,10 +668,6 @@ public class HoxApp extends Application {
     
     public TableInfo getMyTable() {
         return myTable_;
-    }
-    
-    public String getCurrentTableId() {
-        return myTable_.tableId;
     }
     
     public TableTimeTracker getTimeTracker() {
@@ -896,7 +868,7 @@ public class HoxApp extends Application {
                 break;
         }
         
-        String joinColor = null;
+        String joinColor;
         if (requestedColor == ColorEnum.COLOR_NONE) joinColor = "None";
         else if (requestedColor == ColorEnum.COLOR_RED) joinColor = "Red";
         else if (requestedColor == ColorEnum.COLOR_BLACK) joinColor = "Black";
@@ -980,25 +952,6 @@ public class HoxApp extends Application {
         }
     }
     
-    private void handleAIMove(Position fromPos, Position toPos) {
-        Log.i(TAG, "Handle AI move: referee 's moveCount = " + referee_.getMoveCount());
-        timeTracker_.nextColor();
-        
-        if (referee_.getMoveCount() == 2) {
-            timeTracker_.start();
-            MainActivity mainActivity = mainActivity_.get();
-            if (mainActivity != null) {
-                mainActivity.onGameStatusChanged();
-            }
-        }
-        
-        if (!referee_.isGameInProgress()) {
-            Log.i(TAG, "The game has ended. Do nothing.");
-            onGameEnded();
-            return;
-        }
-    }
-    
     public void postNetworkEvent(String eventString) {
         Log.d(TAG, "Post Network event = [" + eventString + "]");
         messageHandler_.sendMessage(
@@ -1008,7 +961,7 @@ public class HoxApp extends Application {
     public void postNetworkCode(int networkCode) {
         Log.d(TAG, "Post Network code = [" + networkCode + "]");
         messageHandler_.sendMessage(
-                messageHandler_.obtainMessage(MSG_NETWORK_CODE, Integer.valueOf(networkCode)) );
+                messageHandler_.obtainMessage(MSG_NETWORK_CODE, networkCode) );
     }
     
 }

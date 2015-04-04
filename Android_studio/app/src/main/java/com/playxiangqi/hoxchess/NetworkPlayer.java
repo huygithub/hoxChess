@@ -116,7 +116,6 @@ class NetworkPlayer extends Thread {
                         disconnectionRequested_ = true;
                     }
                     HoxApp.getApp().postNetworkCode(NETWORK_CODE_IO_EXCEPTION);
-                    return;
                 }
             }
         };
@@ -329,6 +328,11 @@ class NetworkPlayer extends Thread {
      */
     private void sendRequest(String request) throws IOException {
         Log.d(TAG, "Send request: Enter");
+
+        if (socketChannel_ == null) {
+            Log.w(TAG, "The socket channel is null. Ignore this request: " + request);
+            return;
+        }
 
         ByteBuffer buf = ByteBuffer.allocate(128);
         buf.clear();
