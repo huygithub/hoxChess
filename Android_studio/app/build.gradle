@@ -14,6 +14,7 @@ android {
         }
 
         sourceSets.main {
+            jniLibs.srcDir 'src/main/libs'
             jni.srcDirs = [] // Do not run default ndkbuild
         }
 
