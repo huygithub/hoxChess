@@ -54,4 +54,14 @@ public class Utils {
         return String.format("%san%d", Enums.HC_GUEST_PREFIX, randNum);
     }
 
+    /**
+     * Converts a string of a "network" color to an enum.
+     */
+    public static Enums.ColorEnum stringToPlayerColor(String color) {
+        if ("Red".equals(color)) return Enums.ColorEnum.COLOR_RED;
+        if ("Black".equals(color)) return Enums.ColorEnum.COLOR_BLACK;
+        if ("None".equals(color)) return Enums.ColorEnum.COLOR_NONE;
+        return Enums.ColorEnum.COLOR_UNKNOWN;
+    }
+
 }

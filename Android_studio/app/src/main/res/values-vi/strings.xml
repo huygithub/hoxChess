@@ -47,6 +47,8 @@
     <string name="login_error_wrong_username">Ký Danh sai</string>
     <string name="login_error_wrong_password">Mật Mã sai</string>
     <string name="login_error_general_error">Failed to login</string>
+
+    <string name="msg_connection_established">Mạng được thành lập</string>
     
     <string name="replay_prev">Trước</string>
     <string name="replay_next">Kế</string>

@@ -262,12 +262,12 @@ public class HoxApp extends Application {
     }
     
     private void onNetworkCode(int networkCode) {
-        Log.d(TAG, "On Network code:" + networkCode + ". ENTER.");
+        Log.d(TAG, "On Network code: " + networkCode);
         
         switch (networkCode) {
             case NetworkPlayer.NETWORK_CODE_CONNECTED:
                 Toast.makeText(HoxApp.thisApp_,
-                        "Connection established",
+                        getString(R.string.msg_connection_established),
                         Toast.LENGTH_LONG).show();
                 break;
             
@@ -278,9 +278,7 @@ public class HoxApp extends Application {
                 break;
 
             case NetworkPlayer.NETWORK_CODE_IO_EXCEPTION:
-                Toast.makeText(HoxApp.thisApp_,
-                        "An IOException exception while handling network messages!",
-                        Toast.LENGTH_LONG).show();
+                handleNetworkError();
                 break;
                 
             default:
@@ -461,13 +459,6 @@ public class HoxApp extends Application {
         playerTracker_.syncUI();
     }
     
-    private Enums.ColorEnum stringToPlayerColor(String color) {
-        if ("Red".equals(color)) return ColorEnum.COLOR_RED;
-        if ("Black".equals(color)) return ColorEnum.COLOR_BLACK;
-        if ("None".equals(color)) return ColorEnum.COLOR_NONE;
-        return ColorEnum.COLOR_UNKNOWN;
-    }
-    
     private void handleNetworkEvent_E_JOIN(String content) {
         Log.d(TAG, "Handle event (E_JOIN): ENTER.");
         final String[] components = content.split(";");
@@ -487,7 +478,7 @@ public class HoxApp extends Application {
             return;
         }
         
-        final Enums.ColorEnum playerColor = stringToPlayerColor(color);
+        final Enums.ColorEnum playerColor = Utils.stringToPlayerColor(color);
         myTable_.onPlayerJoined(pid, rating, playerColor);
         
         switch (playerColor) {
@@ -617,7 +608,40 @@ public class HoxApp extends Application {
             mainActivity.onMessageReceived(sender, message);
         }
     }
-    
+
+    private void handleNetworkError() {
+        Log.d(TAG, "Handle network error...");
+
+        // Attempt to login again if we are observing a network table.
+        if (myTable_.isValid()) {
+            closeCurrentNetworkTable();
+            handlePlayOnlineClicked();
+        } else {
+            Toast.makeText(HoxApp.thisApp_,
+                    "An IOException exception while handling network messages!",
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void closeCurrentNetworkTable() {
+        if (myTable_.isValid()) {
+            Log.d(TAG, "Close the current network table: " + myTable_.tableId);
+
+            myTable_ = new TableInfo();
+            myColor_ = ColorEnum.COLOR_UNKNOWN;
+            gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
+            timeTracker_.stop();
+            newMessages_.clear();
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.clearTable();
+            }
+        }
+
+        playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
+        playerTracker_.syncUI();
+    }
+
     private void onGameEnded() {
         Log.d(TAG, "On game-ended...");
         timeTracker_.stop();
@@ -705,21 +729,7 @@ public class HoxApp extends Application {
     public void logoutFromNetwork() {
         Log.d(TAG, "Logout from network...");
 
-        if (myTable_.isValid()) {
-            Log.i(TAG, "Leave the current table: " + myTable_.tableId);
-            myTable_ = new TableInfo();
-            myColor_ = ColorEnum.COLOR_UNKNOWN;
-            gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
-            timeTracker_.stop();
-            newMessages_.clear();
-            MainActivity mainActivity = mainActivity_.get();
-            if (mainActivity != null) {
-                mainActivity.clearTable();
-            }
-        }
-
-        playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
-        playerTracker_.syncUI();
+        closeCurrentNetworkTable();
 
         if (networkPlayer_.isOnline() ) {
             networkPlayer_.disconnectFromServer();

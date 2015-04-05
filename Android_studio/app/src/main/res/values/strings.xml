@@ -47,7 +47,9 @@
     <string name="login_error_wrong_username">Username is wrong</string>
     <string name="login_error_wrong_password">Password is wrong</string>
     <string name="login_error_general_error">Failed to login</string>
-    
+
+    <string name="msg_connection_established">Connection established</string>
+
     <string name="replay_prev">Prev</string>
     <string name="replay_next">Next</string>
 
