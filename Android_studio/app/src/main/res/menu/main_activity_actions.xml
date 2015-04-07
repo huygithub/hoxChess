@@ -24,30 +24,10 @@
     <item android:id="@+id/action_settings"
           android:title="@string/action_settings"
           android:showAsAction="never" />
-
-    <!-- 
-    <item android:id="@+id/action_reverse_view"
-          android:title="@string/action_reverse_view"
-          android:showAsAction="never" />
-    -->
     
     <item android:id="@+id/action_close_table"
           android:title="@string/action_close"
           android:showAsAction="never" />
-
-    <!-- 
-    <item android:id="@+id/action_offer_draw"
-          android:title="@string/action_draw"
-          android:showAsAction="never" />
-
-    <item android:id="@+id/action_offer_resign"
-          android:title="@string/action_resign"
-          android:showAsAction="never" />
-
-    <item android:id="@+id/action_reset_table"
-          android:title="@string/action_reset"
-          android:showAsAction="never" />
-    -->
     
     <item android:id="@+id/action_logout"
           android:title="@string/action_logout"

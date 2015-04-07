@@ -615,7 +615,7 @@ public class HoxApp extends Application {
         // Attempt to login again if we are observing a network table.
         if (myTable_.isValid()) {
             closeCurrentNetworkTable();
-            handlePlayOnlineClicked();
+            networkPlayer_.connectToServer();
         } else {
             Toast.makeText(HoxApp.thisApp_,
                     "An IOException exception while handling network messages!",
