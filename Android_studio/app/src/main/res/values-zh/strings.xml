@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">HOXChess</string>
+    <string name="ai_label">AI</string>
+    <string name="you_label">您</string>
+    <string name="action_settings">设置</string>
+    <string name="action_reverse_view">切换桌子</string>
+    <string name="action_new">新的表</string>
+    <string name="action_close">退出棋桌</string>
+    <string name="action_draw">平局</string>
+    <string name="action_resign">认输</string>
+    <string name="action_reset">棋桌重置</string>
+    <string name="action_play_online">在线游戏</string>
+    <string name="action_logout">注销</string>
+    <string name="board_alt">棋盘</string>
+    <string name="title_activity_tables">桌子</string>
+    <string name="title_activity_chat">谈话</string>
+        
+    <string-array name="AILevel_entries">
+	    <item>简单</item>
+	    <item>普通</item>
+	    <item>困难</item>
+    </string-array>
+    
+    <string-array name="AILevel_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string name="AILevel_default">1</string>
+    
+    <string name="ai_level">级别AI</string>
+    <string name="ai_label_easy">AI (简单)</string>
+    <string name="ai_label_medium">AI (普通)</string>
+    <string name="ai_label_difficult">AI (困难)</string>
+    
+    <string name="playxiangqi_account">PlayXiangqi账户</string>
+    <string name="password_masked_value">*****</string>
+    <string name="playxiangqi_website">访问: <a href="http://www.playxiangqi.com/index.php?page=register">PlayXiangqi.com</a></string>
+    <string name="login_error_wrong_username">用户名是错误的</string>
+    <string name="login_error_wrong_password">密码错误</string>
+    <string name="login_error_general_error">Failed to login</string>
+
+    <string name="msg_connection_established">建立连接</string>
+
+    <string name="replay_prev">Prev</string>
+    <string name="replay_next">Next</string>
+
+    <string name="game_over_text">游戏结束</string>
+    <string name="replay_text">重放 %1$d / %2$d</string>
+    
+    <string name="button_play_black">选择黑色</string>
+    <string name="button_play_red">选择红色</string>
+    
+    <string name="label_game_time_zero">00:00</string>
+    <string name="label_move_time_zero">0:00</string>
+    
+    <string name="title_table">#%1$s</string>
+    <string name="notifications">通知</string>
+    <string name="chat_button_send">发送</string>
+    <string name="chat_empty_text">无消息</string>
+    
+    <string name="about_title">关于</string>
+    <string name="version">1.0版</string>
+    <string name="copyright">版权所有2015年PlayXiangqi</string>
+    
+    <string name="about_html">
+<![CDATA[
+<body>
+<h3>HOXChess by PlayXiangqi</h3>
+<div>
+  <b>HOXChess by PlayXiangqi</b> is an open source XiangQi application for iOS and Android devices,
+  hosted on <a href="https://github.com/huygithub/hoxChess">https://github.com/huygithub/hoxChess</a>.
+  <p>Please contact us at <a href="mailto:hoxchess@playxiangqi.com">hoxchess@PlayXiangqi.com</a></p>
+</div>
+
+<h3>Acknowledgement</h3>
+<div>
+  <p><b>HaQiKi D</b> is an AI engine written by H.G. Muller at
+     <a href="http://home.hccnet.nl/h.g.muller/XQhaqikid.html">http://home.hccnet.nl/h.g.muller</a></p>
+</div>
+</body>
+]]>
+    </string>
+    <string name="level_easy">简单</string>
+    <string name="level_difficult">困难</string>
+    <string name="level_medium">普通</string>
+    <string name="playxiangqi_username">用户名</string>
+    <string name="playxiangqi_password">密码</string>
+    <string name="playxiangqi_login_with_account">用账号登录</string>
+
+</resources>
