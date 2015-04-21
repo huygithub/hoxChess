@@ -19,6 +19,7 @@
 package com.playxiangqi.hoxchess;
 
 import android.annotation.SuppressLint;
+import android.content.res.Configuration;
 
 import java.util.Random;
 
@@ -62,6 +63,15 @@ public class Utils {
         if ("Black".equals(color)) return Enums.ColorEnum.COLOR_BLACK;
         if ("None".equals(color)) return Enums.ColorEnum.COLOR_NONE;
         return Enums.ColorEnum.COLOR_UNKNOWN;
+    }
+
+    /**
+     * Converts a Orientation enum to a string.
+     */
+    public static String orientationToString(int orientation) {
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) { return "ORIENTATION_LANDSCAPE"; }
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) { return "ORIENTATION_PORTRAIT"; }
+        return "ORIENTATION_UNDEFINED";
     }
 
 }

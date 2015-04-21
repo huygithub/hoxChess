@@ -24,6 +24,7 @@ import java.util.List;
 import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -148,10 +149,9 @@ public class BoardView extends ImageView {
             public boolean onPreDraw() {
                 int finalHeight = getMeasuredHeight();
                 int finalWidth = getMeasuredWidth();
-                Log.i(TAG, "~~~ onPreDraw(): Width x Height = " + finalWidth
-                        + " x " + finalHeight);
+                Log.i(TAG, "~~~ onPreDraw(): WxH = " + finalWidth + " x " + finalHeight);
 
-                adjustBoardParameters(finalWidth);
+                adjustBoardParameters(finalWidth, finalHeight);
 
                 final ViewTreeObserver vto = getViewTreeObserver();
                 vto.removeOnPreDrawListener(this);
@@ -207,8 +207,6 @@ public class BoardView extends ImageView {
     @Override
     protected void onDraw(Canvas canvas) {
     	super.onDraw(canvas);
-    	Log.d(TAG, "onDraw(): ENTER. isBlackOnTop = " + isBlackOnTop_);
-
     	drawBoard(canvas, Color.BLACK, Color.WHITE);
     	drawAllPieces(canvas);
     
@@ -218,8 +216,25 @@ public class BoardView extends ImageView {
             onGameOver(canvas);
         }
     }
-	
-    private void adjustBoardParameters(int boardWidth) {
+
+    private void adjustBoardParameters(int finalWidth, int finalHeight) {
+        /* Reference:
+         *   http://stackoverflow.com/questions/2795833/check-orientation-on-android-phone
+         */
+        int configuration = getContext().getResources().getConfiguration().orientation;
+        Log.d(TAG, "adjustBoardParameters(): configuration = " + Utils.orientationToString(configuration));
+
+        if (configuration == Configuration.ORIENTATION_LANDSCAPE) {
+            final int EXTRA_MARGIN = 20;
+            finalWidth = (int) ((finalHeight / 9.0) * 8) - EXTRA_MARGIN;
+            //finalHeight = 700;
+            Log.i(TAG, "adjustBoardParameters(): (LANDSCAPE mode) Adjusted Width => " + finalWidth);
+
+            getLayoutParams().width = finalWidth;
+            requestLayout();
+        }
+
+        int boardWidth = Math.min(finalWidth, finalHeight);
         cellSize_ = (boardWidth - 2 * offset_)/8;
         pieceSize_ = (int) (cellSize_ * 0.8f);
         if ((pieceSize_ % 2) == 1) { --pieceSize_; } // Make it an event number.
@@ -230,7 +245,7 @@ public class BoardView extends ImageView {
         // The empty board
         final int boardW = getMeasuredWidth();
         final int boardH = getMeasuredHeight();
-        Log.i(TAG, "onDraw(): ~~~ board WxH = " + boardW + ", " + boardH + ".");
+        Log.i(TAG, "drawBoard(): WxH = " + boardW + "x" + boardH + ". blackOnTop = " + isBlackOnTop_);
 
         for (int i = 0; i < 10; i++) { // Horizontal lines
             canvas.drawLine(offset_, offset_+i*cellSize_, offset_+8*cellSize_, offset_+i*cellSize_, linePaint_);
