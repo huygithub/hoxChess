@@ -944,15 +944,15 @@ public class HoxApp extends Application {
             }
             
             Log.d(TAG, "Ask AI (MaxQi) to generate a new move...");
-            new Thread(new Runnable() {
+            messageHandler_.postDelayed(new Runnable() {
                 public void run() {
                     final String aiMove = aiEngine_.generateMove();
                     Log.d(TAG, "... AI returned this move [" + aiMove + "].");
                     messageHandler_.sendMessage(
                             messageHandler_.obtainMessage(MSG_AI_MOVE_READY, aiMove) );
                 }
-            }).start();
-            
+            }, 2000); // Add some delay so that the user can see the move clearly.
+
         }
         else { // a network table
             final String move = String.format("%d%d%d%d",

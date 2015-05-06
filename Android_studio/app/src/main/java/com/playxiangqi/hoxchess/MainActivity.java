@@ -269,15 +269,16 @@ public class MainActivity extends Activity {
 
     public void updateBoardWithNewAIMove(Position fromPos, Position toPos) {
         Log.d(TAG, "Update board with a new AI move = " + fromPos + " => " + toPos);
-        boardView_.onAIMoveMade(fromPos, toPos);
-        boardView_.invalidate();
+        boardView_.makeMove(fromPos, toPos, true);
     }
     
     public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
         Log.d(TAG, "Update board with new network Table info (I_TABLE)...");
         
         setAndShowTitle(tableInfo.tableId);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getActionBar() != null) {
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+        }
         invalidateOptionsMenu(); // Recreate the options menu
         boardView_.resetBoard();
     }
@@ -291,7 +292,7 @@ public class MainActivity extends Activity {
             int row2 = move.charAt(3) - '0';
             int col2 = move.charAt(2) - '0';
             Log.i(TAG, "... Network move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
-            boardView_.onNetworkMoveMade(new Position(row1, col1), new Position(row2, col2));
+            boardView_.makeMove(new Position(row1, col1), new Position(row2, col2), false);
         }
         boardView_.invalidate();
         
@@ -315,8 +316,7 @@ public class MainActivity extends Activity {
         int row2 = move.charAt(3) - '0';
         int col2 = move.charAt(2) - '0';
         //Log.i(TAG, "... Network move [ " + row1 + ", " + col1 + " => " + row2 + ", " + col2 + "]");
-        boardView_.onNetworkMoveMade(new Position(row1, col1), new Position(row2, col2));
-        boardView_.invalidate();
+        boardView_.makeMove(new Position(row1, col1), new Position(row2, col2), true);
     }
     
     public void clearTable() {

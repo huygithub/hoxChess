@@ -23,6 +23,11 @@ import java.util.List;
 
 import com.playxiangqi.hoxchess.Piece.Move;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
+import android.animation.TypeEvaluator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -31,6 +36,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -38,7 +44,10 @@ import android.view.MotionEvent;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
-public class BoardView extends ImageView {
+import junit.framework.Assert;
+
+public class BoardView extends ImageView
+        implements ValueAnimator.AnimatorUpdateListener {
 
     private static final String TAG = "BoardView";
     
@@ -54,7 +63,9 @@ public class BoardView extends ImageView {
     private Paint selectPaint_;
     private Paint recentPaint_;
     private Paint noticePaint_;
-    
+
+    private ObjectAnimator animator_;
+
     private Piece[] _redPieces = new Piece[16];
     private Piece[] _blackPieces = new Piece[16];
     
@@ -324,14 +335,46 @@ public class BoardView extends ImageView {
             }
         }
         
-        if (selectedPiece_ != null) {
+        if (selectedPiece_ != null && !selectedPiece_.isAnimated()) {
             drawPiece(canvas, selectedPiece_, PieceDrawMode.PIECE_DRAW_MODE_SELECTED);
         } else if (recentPiece_ != null) {
             drawPiece(canvas, recentPiece_, PieceDrawMode.PIECE_DRAW_MODE_RECENT);
         }
     }
-    
+
+    private PointF convertPositionToPoint(Position position) {
+        final int imageRadius = pieceSize_ / 2;
+
+        Position viewPos = getViewPosition(position);
+
+        final float left = offset_ - imageRadius + viewPos.column*cellSize_;
+        final float top  = offset_ - imageRadius + viewPos.row*cellSize_;
+        return new PointF(left, top);
+    }
+
+    private void drawPieceAtPoint(Canvas canvas, Piece piece, PointF point) {
+        Bitmap bitmap = piece.getBitmap();
+
+        final float left = point.x;
+        final float top  = point.y;
+
+        canvas.drawBitmap(bitmap, null,
+                new RectF( // left, top, right, bottom
+                        left,
+                        top,
+                        left + pieceSize_,
+                        top + pieceSize_),
+                null);
+    }
+
     private void drawPiece(Canvas canvas, Piece piece, PieceDrawMode drawMode) {
+        // Special case for a piece that is being animated.
+        if (piece.isAnimated()) {
+            final PointF point = piece.getPointF();
+            drawPieceAtPoint(canvas, piece, point);
+            return;
+        }
+
         final int imageRadius = pieceSize_ / 2;
         Bitmap bitmap = piece.getBitmap();
         
@@ -434,6 +477,60 @@ public class BoardView extends ImageView {
         return false; // Return false for other touch events
     }
 
+    // *******************************************************************************************
+    public class PositionEvaluator implements TypeEvaluator {
+
+        public Object evaluate(float fraction, Object startValue, Object endValue) {
+            final PointF fromPoint = (PointF) startValue;
+            final PointF toPoint = (PointF) endValue;
+            Log.i(TAG, "evaluate: fraction: " + fraction + ", from: " + fromPoint + " => " + toPoint);
+
+            float startX = fromPoint.x;
+            float endX = toPoint.x;
+            float finalX = startX + fraction * (endX - startX);
+
+            float startY = fromPoint.y;
+            float endY = toPoint.y;
+            float finalY =  startY + fraction * (endY - startY);
+
+            Log.i(TAG, "evaluate: ... finalPoint:(" + finalX + ", " + finalY + ")");
+            return new PointF(finalX, finalY);
+        }
+    }
+
+    @Override
+    public void onAnimationUpdate(ValueAnimator animation)
+    {
+        Log.i(TAG, "onAnimationUpdate: ... animation.getAnimatedValue() = "
+                + animation.getAnimatedValue()
+                + ", animation.getRepeatCount()=" + animation.getRepeatCount());
+
+        Piece piece = (Piece) animator_.getTarget();
+        Log.d(TAG, "onAnimationUpdate: ...piece.getPreviousPointF() = " + piece.getPreviousPointF()
+                + ", piece.getPointF() = " + piece.getPointF());
+
+        final int padding = 5; // To make sure the area around the piece getting re-drawn.
+
+        PointF previousPoint = piece.getPreviousPointF();
+        int preLeft = (int) previousPoint.x;
+        int preTop = (int) previousPoint.y;
+        invalidate(// left, top, right, bottom
+                preLeft - padding,
+                preTop - padding,
+                preLeft + pieceSize_ + 2*padding,
+                preTop + pieceSize_ + 2*padding);
+
+        PointF point = (PointF) animation.getAnimatedValue();
+        int left = (int) point.x;
+        int top = (int) point.y;
+        invalidate(// left, top, right, bottom
+                left - padding,
+                top - padding,
+                left + pieceSize_ + 2*padding,
+                top + pieceSize_ + 2*padding);
+    }
+    // *******************************************************************************************
+
     /**
      * Handles a touch event at a given location.
      */
@@ -444,7 +541,7 @@ public class BoardView extends ImageView {
         Position hitPosition = new Position();
         hitPosition.row = Math.round((eventY - offset_) / cellSize_);
         hitPosition.column = Math.round((eventX - offset_) / cellSize_);
-        Position viewPos = getViewPosition(hitPosition);
+        final Position viewPos = getViewPosition(hitPosition);
         Log.d(TAG, "... Hit position = " + hitPosition + ", View-position = " + viewPos);
         
         // CASE 1: No piece selected yet?
@@ -470,14 +567,26 @@ public class BoardView extends ImageView {
                 selectedPiece_ = null;  // Clear this "in-progress" move.
             }
             else {
-                Piece capture = tryCapturePieceAtPostion(viewPos);
-                
-                selectedPiece_.setPosition(viewPos);
-                Position fromPos = selectedPosition_; // Save before resetting it.
+                final Piece capture = getPieceAtViewPosition(viewPos);
+                final Position fromPos = selectedPosition_; // Save before resetting it.
                 selectedPosition_ = null;
-                recentPiece_ = selectedPiece_;
-                onLocalMoveMade(fromPos, viewPos, capture, status);
-                selectedPiece_ = null;
+                recentPiece_ = null;
+
+                Animator.AnimatorListener listener = new AnimatorListenerAdapter() {
+                    public void onAnimationEnd(Animator animation) {
+                        selectedPiece_.setPosition(viewPos);
+                        selectedPiece_.setIsAnimated(false);
+                        recentPiece_ = selectedPiece_;
+                        if (capture != null) {
+                            capture.setCapture(true);
+                        }
+                        onLocalMoveMade(fromPos, viewPos, capture, status);
+                        selectedPiece_ = null;
+                        BoardView.this.invalidate();
+                    }
+                };
+
+                movePieceToPositionWithAnimation(selectedPiece_, fromPos, viewPos, listener);
             }
         }
         
@@ -485,7 +594,23 @@ public class BoardView extends ImageView {
         //       The current method using invalidate() which will redraw the entire view.
         this.invalidate();
     }
-    
+
+    private void movePieceToPositionWithAnimation(final Piece piece, final Position fromPos,
+                                                  final Position toPos,
+                                                  Animator.AnimatorListener listener) {
+        piece.setIsAnimated(true);
+
+        final PointF fromPoint = convertPositionToPoint(fromPos);
+        final PointF toPoint = convertPositionToPoint(toPos);
+
+        animator_ = ObjectAnimator.ofObject(piece, "pointF",
+                new PositionEvaluator(), fromPoint, toPoint);
+        animator_.setDuration(500);
+        animator_.addUpdateListener(this);
+        animator_.addListener(listener);
+        animator_.start();
+    }
+
     private void onLocalMoveMade(Position fromPos, Position toPos, Piece capture, int gameStatus) {
         Log.d(TAG, " on Local move = " + fromPos + " => " + toPos);
         
@@ -494,44 +619,50 @@ public class BoardView extends ImageView {
         HoxApp.getApp().handleLocalMove(fromPos, toPos);
     }
 
-    public void onNetworkMoveMade(Position fromPos, Position toPos) {
-        Log.d(TAG, " on Network move = " + fromPos + " => " + toPos);
-        onAIMoveMade(fromPos, toPos);
-    }
-    
-    public void onAIMoveMade(Position fromPos, Position toPos) {
-        Log.d(TAG, " on AI move = " + fromPos + " => " + toPos);
-        
+    public void makeMove(final Position fromPos, final Position toPos, boolean animated) {
+        Log.d(TAG, "*** Make move = " + fromPos + " => " + toPos);
+
         final int status = referee_.validateMove(fromPos.row, fromPos.column,
-                                                 toPos.row, toPos.column);
+                toPos.row, toPos.column);
         Log.d(TAG, "... (native referee) move-validation returned status = " + status);
-        
+
         if (status == Referee.hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
-            Log.e(TAG, " This AI move =" + fromPos + " => " + toPos + " is NOT valid. Do nothing.");
+            Log.e(TAG, " This move =" + fromPos + " => " + toPos + " is NOT valid. Do nothing.");
             return;
         }
-        
+
         // Do not update the Pieces on Board if we are in the review mode.
         if (isBoardInReviewMode()) {
             addMoveToHistory(fromPos, toPos, null /* capture: we don't know yet */);
             return;
         }
-        
-        Piece capture = tryCapturePieceAtPostion(toPos);
-        addMoveToHistory(fromPos, toPos, capture);
-        
-        Piece fromPiece = getPieceAtViewPosition(fromPos);
-        if (fromPiece == null) {
-            Log.e(TAG, "... No 'from' piece is found at " + fromPos);
-            return;
+
+        final Piece fromPiece = getPieceAtViewPosition(fromPos);
+        Assert.assertNotNull("No 'from' piece is found at " + fromPos, fromPiece);
+
+        final Piece capture = tryCapturePieceAtPostion(toPos);
+
+        if (animated) {
+            Animator.AnimatorListener listener = new AnimatorListenerAdapter() {
+                public void onAnimationEnd(Animator animation) {
+                    fromPiece.setPosition(toPos);
+                    fromPiece.setIsAnimated(false);
+                    recentPiece_ = fromPiece;
+                    addMoveToHistory(fromPos, toPos, capture);
+                    didMoveOccur(fromPos, toPos, capture, status);
+                    BoardView.this.invalidate();
+                }
+            };
+            movePieceToPositionWithAnimation(fromPiece, fromPos, toPos, listener);
+
+        } else {
+            fromPiece.setPosition(toPos);
+            recentPiece_ = fromPiece;
+            addMoveToHistory(fromPos, toPos, capture);
+            didMoveOccur(fromPos, toPos, capture, status);
         }
-        
-        fromPiece.setPosition(toPos);
-        recentPiece_ = fromPiece;
-        
-        didMoveOccur(fromPos, toPos, capture, status);
     }
-    
+
     public void restoreMove(Position fromPos, Position toPos, boolean isLastMove) {
         Log.d(TAG, "Restore move = " + fromPos + " => " + toPos + ". isLastMove:" + isLastMove);
         
@@ -548,8 +679,7 @@ public class BoardView extends ImageView {
         recentPiece_ = fromPiece;
         
         if (isLastMove) {
-            int status = referee_.getGameStatus(); // Get the last status.
-            gameStatus_ = status;
+            gameStatus_ = referee_.getGameStatus(); // Get the last status.
         }
         
         if (capture != null) {

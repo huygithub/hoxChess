@@ -19,6 +19,7 @@
 package com.playxiangqi.hoxchess;
 
 import android.graphics.Bitmap;
+import android.graphics.PointF;
 
 /**
  * NOTE:
@@ -32,6 +33,8 @@ public class Piece {
     private String _color;
     private int _row;
     private int _column;
+    private PointF _pointF = new PointF(0, 0);  // The top-left point.
+    private PointF _previousPointF = new PointF(0, 0);
     private BoardView _board;
 
     private int _initialRow;
@@ -42,6 +45,7 @@ public class Piece {
     //private var _image:Image      = new Image();
     //private var _skinIndex:int    = -1;
     private boolean _captured = false;
+    private boolean _isAnimated = false;
     
     public Piece(String type, String color, int row, int column, BoardView board) {
         _type    = type;
@@ -90,7 +94,23 @@ public class Piece {
         _row = newPos.row;
         _column = newPos.column;
     }
-    
+
+    /**
+     * This API is currently needed when animating the piece 's movement.
+     * @param point The point to move to.
+     */
+    public void setPointF(PointF point) {
+        _previousPointF.set(_pointF);
+        _pointF.x = point.x;
+        _pointF.y = point.y;
+    }
+
+    public PointF getPointF() { return _pointF; }
+    public PointF getPreviousPointF() { return _previousPointF; }
+
+    public boolean isAnimated() { return _isAnimated; }
+    public void setIsAnimated(boolean animated) { _isAnimated = animated; }
+
     public Bitmap getBitmap() { return _bitmap; }
     
     /**
