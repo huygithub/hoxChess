@@ -340,7 +340,7 @@ public class HoxApp extends Application {
         Log.d(TAG, "Handle event (LIST): ENTER.");
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
-            mainActivity.startActvityToListTables(content);
+            mainActivity.startActivityToListTables(content);
         }
     }
 

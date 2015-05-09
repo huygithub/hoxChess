@@ -53,6 +53,8 @@ public class MainActivity extends Activity {
 
     private static final String TAG = "MainActivity";
 
+    private static final String STATE_IS_BLACK_ON_TOP = "isBlackOnTop";
+
     private static final int JOIN_TABLE_REQUEST = 1;  // The request code
     
     private Fragment placeholderFragment_;
@@ -94,6 +96,29 @@ public class MainActivity extends Activity {
         super.onResume();
         Log.d(TAG, "onResume");
         adjustScreenOnFlagBasedOnGameStatus();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        Log.d(TAG, "onSaveInstanceState");
+        // Save the table's current game state
+        savedInstanceState.putBoolean(STATE_IS_BLACK_ON_TOP, isBlackOnTop_);
+
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        Log.d(TAG, "onRestoreInstanceState");
+        // Always call the superclass so it can restore the view hierarchy
+        super.onRestoreInstanceState(savedInstanceState);
+
+        // Restore state members from saved instance
+        boolean isBlackOnTop = savedInstanceState.getBoolean(STATE_IS_BLACK_ON_TOP, true);
+        if (!isBlackOnTop) {
+            reverseView();
+        }
     }
 
     @Override
@@ -226,9 +251,6 @@ public class MainActivity extends Activity {
             case R.id.action_settings:
                 openSettingsView();
                 return true;
-            //case R.id.action_reverse_view:
-            //    reverseView();
-            //    return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -257,7 +279,7 @@ public class MainActivity extends Activity {
         HoxApp.getApp().getPlayerTracker().reverseView();
     }
     
-    public void startActvityToListTables(String content) {
+    public void startActivityToListTables(String content) {
         Log.d(TAG, "Start activity (LIST): ENTER.");
         
         setProgressBarIndeterminateVisibility(false);
@@ -568,8 +590,7 @@ public class MainActivity extends Activity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             Log.d(TAG, "onCreateView...");
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
+            return inflater.inflate(R.layout.fragment_main, container, false);
         }
         
         @Override
