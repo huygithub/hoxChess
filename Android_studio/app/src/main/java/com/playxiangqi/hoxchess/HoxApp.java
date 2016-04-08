@@ -72,6 +72,7 @@ public class HoxApp extends Application {
 
     @Override
     public void onCreate() {
+        super.onCreate();
         Log.i(TAG, "onCreate()...");
         thisApp_ = this;
         
