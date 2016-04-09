@@ -97,6 +97,8 @@ public class Piece {
 
     /**
      * This API is currently needed when animating the piece 's movement.
+     * See: movePieceToPositionWithAnimation() of BoardView class.
+     *
      * @param point The point to move to.
      */
     public void setPointF(PointF point) {

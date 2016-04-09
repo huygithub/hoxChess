@@ -52,22 +52,27 @@ public class BoardView extends ImageView
     private static final String TAG = "BoardView";
     
     private static final int offset_ = 50; // in pixels
+
+    // The sizes of Cell and Piece will be adjusted at runtime based on the board 's dimension.
     private int cellSize_;
     private int pieceSize_ = 64;  // (in pixels) Note: It should be an even number.
     
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
     
     private int gameStatus_ = Referee.hoxGAME_STATUS_READY;
-    
+
+    private boolean downTouch_ = false;  // A touch is being in the DOWN position.
+
     private Paint linePaint_;
     private Paint selectPaint_;
     private Paint recentPaint_;
     private Paint noticePaint_;
 
+    private static final long DURATION_OF_ANIMATION = 500; // duration of animation in milliseconds.
     private ObjectAnimator animator_;
 
-    private Piece[] _redPieces = new Piece[16];
-    private Piece[] _blackPieces = new Piece[16];
+    private Piece[] redPieces_ = new Piece[16];
+    private Piece[] blackPieces_ = new Piece[16];
     
     private enum PieceDrawMode {
         PIECE_DRAW_MODE_NORMAL,
@@ -100,9 +105,6 @@ public class BoardView extends ImageView
     private int historyIndex_ = HISTORY_INDEX_END; // Which Move the user is reviewing.
     
     private List<Piece> captureStack_ = new ArrayList<Piece>(); // A stack of captured pieces.
-    
-    // ----
-    boolean mDownTouch = false;
     
     /**
      * @param context
@@ -175,37 +177,37 @@ public class BoardView extends ImageView
     
     private void createPieces() {        
         String color = "Red";
-        _redPieces[0]  = new Piece("chariot",  color, 9, 0, this);
-        _redPieces[1]  = new Piece("horse",    color, 9, 1, this);
-        _redPieces[2]  = new Piece("elephant", color, 9, 2, this);
-        _redPieces[3]  = new Piece("advisor",  color, 9, 3, this);
-        _redPieces[4]  = new Piece("king",     color, 9, 4, this);
-        _redPieces[5]  = new Piece("advisor",  color, 9, 5, this);
-        _redPieces[6]  = new Piece("elephant", color, 9, 6, this);
-        _redPieces[7]  = new Piece("horse",    color, 9, 7, this);
-        _redPieces[8]  = new Piece("chariot",  color, 9, 8, this);
-        _redPieces[9]  = new Piece("cannon",   color, 7, 1, this);
-        _redPieces[10] = new Piece("cannon",   color, 7, 7, this);
+        redPieces_[0]  = new Piece("chariot",  color, 9, 0, this);
+        redPieces_[1]  = new Piece("horse",    color, 9, 1, this);
+        redPieces_[2]  = new Piece("elephant", color, 9, 2, this);
+        redPieces_[3]  = new Piece("advisor",  color, 9, 3, this);
+        redPieces_[4]  = new Piece("king",     color, 9, 4, this);
+        redPieces_[5]  = new Piece("advisor",  color, 9, 5, this);
+        redPieces_[6]  = new Piece("elephant", color, 9, 6, this);
+        redPieces_[7]  = new Piece("horse",    color, 9, 7, this);
+        redPieces_[8]  = new Piece("chariot",  color, 9, 8, this);
+        redPieces_[9]  = new Piece("cannon",   color, 7, 1, this);
+        redPieces_[10] = new Piece("cannon",   color, 7, 7, this);
         
         for (int pawn = 0; pawn < 5; pawn++) {
-            _redPieces[11 + pawn] = new Piece("pawn", color, 6, 2*pawn, this);
+            redPieces_[11 + pawn] = new Piece("pawn", color, 6, 2*pawn, this);
         }
         
         color = "Black";
-        _blackPieces[0]  = new Piece("chariot",  color, 0, 0, this);
-        _blackPieces[1]  = new Piece("horse",    color, 0, 1, this);
-        _blackPieces[2]  = new Piece("elephant", color, 0, 2, this);
-        _blackPieces[3]  = new Piece("advisor",  color, 0, 3, this);
-        _blackPieces[4]  = new Piece("king",     color, 0, 4, this);
-        _blackPieces[5]  = new Piece("advisor",  color, 0, 5, this);
-        _blackPieces[6]  = new Piece("elephant", color, 0, 6, this);
-        _blackPieces[7]  = new Piece("horse",    color, 0, 7, this);
-        _blackPieces[8]  = new Piece("chariot",  color, 0, 8, this);
-        _blackPieces[9]  = new Piece("cannon",   color, 2, 1, this);
-        _blackPieces[10] = new Piece("cannon",   color, 2, 7, this);
+        blackPieces_[0]  = new Piece("chariot",  color, 0, 0, this);
+        blackPieces_[1]  = new Piece("horse",    color, 0, 1, this);
+        blackPieces_[2]  = new Piece("elephant", color, 0, 2, this);
+        blackPieces_[3]  = new Piece("advisor",  color, 0, 3, this);
+        blackPieces_[4]  = new Piece("king",     color, 0, 4, this);
+        blackPieces_[5]  = new Piece("advisor",  color, 0, 5, this);
+        blackPieces_[6]  = new Piece("elephant", color, 0, 6, this);
+        blackPieces_[7]  = new Piece("horse",    color, 0, 7, this);
+        blackPieces_[8]  = new Piece("chariot",  color, 0, 8, this);
+        blackPieces_[9]  = new Piece("cannon",   color, 2, 1, this);
+        blackPieces_[10] = new Piece("cannon",   color, 2, 7, this);
 
         for (int pawn = 0; pawn < 5; pawn++) {
-            _blackPieces[11 + pawn] = new Piece("pawn", color, 3, 2*pawn, this);
+            blackPieces_[11 + pawn] = new Piece("pawn", color, 3, 2*pawn, this);
         }
     }
     
@@ -256,7 +258,7 @@ public class BoardView extends ImageView
         // The empty board
         final int boardW = getMeasuredWidth();
         final int boardH = getMeasuredHeight();
-        Log.i(TAG, "drawBoard(): WxH = " + boardW + "x" + boardH + ". blackOnTop = " + isBlackOnTop_);
+        Log.d(TAG, "drawBoard(): WxH = " + boardW + "x" + boardH + ". blackOnTop = " + isBlackOnTop_);
 
         for (int i = 0; i < 10; i++) { // Horizontal lines
             canvas.drawLine(offset_, offset_+i*cellSize_, offset_+8*cellSize_, offset_+i*cellSize_, linePaint_);
@@ -324,12 +326,12 @@ public class BoardView extends ImageView
     private void drawAllPieces(Canvas canvas) {
         Piece piece;
         for (int i = 0; i < 16; i++) {
-            piece = _redPieces[i];
+            piece = redPieces_[i];
             if (!piece.isCaptured()) { // still alive?
                 drawPiece(canvas, piece, PieceDrawMode.PIECE_DRAW_MODE_NORMAL);
             }
             
-            piece = _blackPieces[i];
+            piece = blackPieces_[i];
             if (!piece.isCaptured()) { // still alive?
                 drawPiece(canvas, piece, PieceDrawMode.PIECE_DRAW_MODE_NORMAL);
             }
@@ -412,7 +414,7 @@ public class BoardView extends ImageView
     
     private void drawHeaderRow(Canvas canvas, int offsetLeft, int offsetTop, boolean bDescending) {
         final int ROWS  = 10;
-        int       top   = 0;
+        int       top;
         final int left  = offsetLeft /*- 40*/;
         int       start = (bDescending ? 0 : ROWS - 1);
 
@@ -427,12 +429,11 @@ public class BoardView extends ImageView
     private void drawHeaderColumn(Canvas canvas, int offsetLeft, int offsetTop, boolean bDescending) {
         final int COLS  = 9;
         final int top   = offsetTop - 35;
-        int   left      = 0;
+        int   left;
         int   start     = (bDescending ? COLS - 1 : 0);
 
         for (int i = 0; i < COLS; i++) {
             left = offsetLeft + (i * cellSize_) - 6;
-            //canvas.drawText(String.valueOf((char) ('a' + start)), left, top, linePaint_);
             canvas.drawText(String.valueOf((char) ('0' + start)), left, top, linePaint_);
             if (bDescending) { start--; }
             else             { start++; }
@@ -455,13 +456,13 @@ public class BoardView extends ImageView
         // Listening for the down and up touch events
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                mDownTouch = true;
+                downTouch_ = true;
                 //Log.d(TAG, "ACTION_DOWN: [X = " + event.getX() + ", Y = " + event.getY() + "].");
                 return true;
 
             case MotionEvent.ACTION_UP:
-                if (mDownTouch) {
-                    mDownTouch = false;
+                if (downTouch_) {
+                    downTouch_ = false;
                     if (isGameInProgress() && !isBoardInReviewMode() 
                             && HoxApp.getApp().isMyTurn()) {
                         handleTouchAtLocation(event.getX(), event.getY());
@@ -479,11 +480,11 @@ public class BoardView extends ImageView
 
     // *******************************************************************************************
     public class PositionEvaluator implements TypeEvaluator {
-
+        @Override
         public Object evaluate(float fraction, Object startValue, Object endValue) {
             final PointF fromPoint = (PointF) startValue;
             final PointF toPoint = (PointF) endValue;
-            Log.i(TAG, "evaluate: fraction: " + fraction + ", from: " + fromPoint + " => " + toPoint);
+            Log.v(TAG, "evaluate: fraction: " + fraction + ", " + fromPoint + " => " + toPoint);
 
             float startX = fromPoint.x;
             float endX = toPoint.x;
@@ -491,23 +492,23 @@ public class BoardView extends ImageView
 
             float startY = fromPoint.y;
             float endY = toPoint.y;
-            float finalY =  startY + fraction * (endY - startY);
+            float finalY = startY + fraction * (endY - startY);
 
-            Log.i(TAG, "evaluate: ... finalPoint:(" + finalX + ", " + finalY + ")");
-            return new PointF(finalX, finalY);
+            final PointF finalPoint = new PointF(finalX, finalY);
+            Log.v(TAG, "evaluate: ... finalPoint = " + finalPoint);
+            return finalPoint;
         }
     }
 
     @Override
-    public void onAnimationUpdate(ValueAnimator animation)
-    {
-        Log.i(TAG, "onAnimationUpdate: ... animation.getAnimatedValue() = "
+    public void onAnimationUpdate(ValueAnimator animation) {
+        Log.v(TAG, "onAnimationUpdate: animation.getAnimatedValue() = "
                 + animation.getAnimatedValue()
-                + ", animation.getRepeatCount()=" + animation.getRepeatCount());
+                + ", repeatCount=" + animation.getRepeatCount());
 
         Piece piece = (Piece) animator_.getTarget();
-        Log.d(TAG, "onAnimationUpdate: ...piece.getPreviousPointF() = " + piece.getPreviousPointF()
-                + ", piece.getPointF() = " + piece.getPointF());
+        Log.v(TAG, "onAnimationUpdate: ...piece.getPreviousPointF() = " + piece.getPreviousPointF()
+                + ", pointF=" + piece.getPointF());
 
         final int padding = 5; // To make sure the area around the piece getting re-drawn.
 
@@ -605,7 +606,7 @@ public class BoardView extends ImageView
 
         animator_ = ObjectAnimator.ofObject(piece, "pointF",
                 new PositionEvaluator(), fromPoint, toPoint);
-        animator_.setDuration(500);
+        animator_.setDuration(DURATION_OF_ANIMATION);
         animator_.addUpdateListener(this);
         animator_.addListener(listener);
         animator_.start();
@@ -709,13 +710,13 @@ public class BoardView extends ImageView
      * @return the piece if found. Otherwise, return null.
      */
     private Piece getPieceAtViewPosition(Position position) {
-        for (Piece piece : _redPieces) {
+        for (Piece piece : redPieces_) {
             if (piece.isCaptured() == false && Position.equals(piece.getPosition(), position)) {
                 return piece;
             }
         }
         
-        for (Piece piece : _blackPieces) {
+        for (Piece piece : blackPieces_) {
             if (piece.isCaptured() == false && Position.equals(piece.getPosition(), position)) {
                 return piece;
             }
@@ -787,11 +788,11 @@ public class BoardView extends ImageView
         // Reset the pieces.
         Piece piece;
         for (int i = 0; i < 16; i++) {
-            piece = _redPieces[i];
+            piece = redPieces_[i];
             piece.setCapture(false);
             piece.setPosition(piece.getInitialPosition());
             
-            piece = _blackPieces[i];
+            piece = blackPieces_[i];
             piece.setCapture(false);
             piece.setPosition(piece.getInitialPosition());
         }
