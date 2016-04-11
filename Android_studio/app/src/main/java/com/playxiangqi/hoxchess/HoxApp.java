@@ -49,7 +49,7 @@ public class HoxApp extends Application {
     
     private Referee referee_;
     
-    private AIEngine aiEngine_ = new AIEngine();
+    private final AIEngine aiEngine_ = new AIEngine();
     
     private NetworkPlayer networkPlayer_;
     private boolean isLoginOK_ = false;
@@ -155,15 +155,17 @@ public class HoxApp extends Application {
     private static final int MSG_AI_MOVE_READY = 1;
     private static final int MSG_NETWORK_EVENT = 2;
     private static final int MSG_NETWORK_CODE = 3;
-    private Handler messageHandler_ = new MessageHandler();
+    private final MessageHandler messageHandler_ = new MessageHandler();
     static class MessageHandler extends Handler {
-        
+
+        private Runnable aiRequest_; // Saved so that we could cancel it later.
+
         MessageHandler() {
             // empty
         }
         
         @Override
-        public void handleMessage(Message msg){
+        public void handleMessage(Message msg) {
             switch (msg.what) {
             case MSG_AI_MOVE_READY:
             {
@@ -185,6 +187,26 @@ public class HoxApp extends Application {
             default:
                 break;
             }
+        }
+
+        public void cancelAnyAIRequest() {
+            if (aiRequest_ != null) {
+                Log.d(TAG, "(MessageHandler) Cancel the pending AI request...");
+                removeCallbacks(aiRequest_);
+                aiRequest_ = null;
+            }
+        }
+
+        public void postAIRequest(final AIEngine aiEngine, long delayMillis) {
+            aiRequest_ = new Runnable() {
+                public void run() {
+                    aiRequest_ = null;
+                    final String aiMove = aiEngine.generateMove();
+                    Log.d(TAG, "... AI returned this move [" + aiMove + "].");
+                    sendMessage(obtainMessage(MSG_AI_MOVE_READY, aiMove) );
+                }
+            };
+            postDelayed(aiRequest_, delayMillis);
         }
     }
     
@@ -821,7 +843,7 @@ public class HoxApp extends Application {
         TableType tableType = playerTracker_.getTableType();
         
         if (tableType == TableType.TABLE_TYPE_LOCAL) {
-            //playerTracker_.setTableType(TableType.TABLE_TYPE_LOCAL); // A new practice table.
+            messageHandler_.cancelAnyAIRequest();
             playerTracker_.syncUI();
             myColor_ = ColorEnum.COLOR_RED;
             aiEngine_.initGame();
@@ -943,16 +965,10 @@ public class HoxApp extends Application {
                 onGameEnded();
                 return;
             }
-            
-            Log.d(TAG, "Ask AI (MaxQi) to generate a new move...");
-            messageHandler_.postDelayed(new Runnable() {
-                public void run() {
-                    final String aiMove = aiEngine_.generateMove();
-                    Log.d(TAG, "... AI returned this move [" + aiMove + "].");
-                    messageHandler_.sendMessage(
-                            messageHandler_.obtainMessage(MSG_AI_MOVE_READY, aiMove) );
-                }
-            }, 2000); // Add some delay so that the user can see the move clearly.
+
+            final long delayMillis = 2000; // Add some delay so that the user can see the move clearly.
+            Log.d(TAG, "Will ask AI (MaxQi) to generate a move after some delay:" +  delayMillis);
+            messageHandler_.postAIRequest(aiEngine_, delayMillis);
 
         }
         else { // a network table

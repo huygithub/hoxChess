@@ -258,7 +258,7 @@ public class BoardView extends ImageView
         // The empty board
         final int boardW = getMeasuredWidth();
         final int boardH = getMeasuredHeight();
-        Log.d(TAG, "drawBoard(): WxH = " + boardW + "x" + boardH + ". blackOnTop = " + isBlackOnTop_);
+        Log.v(TAG, "drawBoard(): WxH = " + boardW + "x" + boardH + ". blackOnTop = " + isBlackOnTop_);
 
         for (int i = 0; i < 10; i++) { // Horizontal lines
             canvas.drawLine(offset_, offset_+i*cellSize_, offset_+8*cellSize_, offset_+i*cellSize_, linePaint_);
@@ -395,7 +395,7 @@ public class BoardView extends ImageView
                     selectPaint_);
         }
         else if (drawMode == PieceDrawMode.PIECE_DRAW_MODE_RECENT) {
-            Log.d(TAG, "... highlight this piece.");
+            Log.v(TAG, "... highlight this piece.");
             canvas.drawCircle(
                     left + imageRadius,
                     top + imageRadius,
@@ -641,7 +641,7 @@ public class BoardView extends ImageView
         final Piece fromPiece = getPieceAtViewPosition(fromPos);
         Assert.assertNotNull("No 'from' piece is found at " + fromPos, fromPiece);
 
-        final Piece capture = tryCapturePieceAtPostion(toPos);
+        final Piece capture = tryCapturePieceAtPosition(toPos);
 
         if (animated) {
             Animator.AnimatorListener listener = new AnimatorListenerAdapter() {
@@ -667,7 +667,7 @@ public class BoardView extends ImageView
     public void restoreMove(Position fromPos, Position toPos, boolean isLastMove) {
         Log.d(TAG, "Restore move = " + fromPos + " => " + toPos + ". isLastMove:" + isLastMove);
         
-        Piece capture = tryCapturePieceAtPostion(toPos);
+        Piece capture = tryCapturePieceAtPosition(toPos);
         addMoveToHistory(fromPos, toPos, capture);
         
         Piece fromPiece = getPieceAtViewPosition(fromPos);
@@ -693,7 +693,7 @@ public class BoardView extends ImageView
      * 
      * @return the captured piece if any. Otherwise, return null.
      */
-    private Piece tryCapturePieceAtPostion(Position position) {
+    private Piece tryCapturePieceAtPosition(Position position) {
         Piece foundPiece = getPieceAtViewPosition(position);
         if (foundPiece == null) {
             Log.v(TAG, "... No piece is (to be captured) found at " + position);
