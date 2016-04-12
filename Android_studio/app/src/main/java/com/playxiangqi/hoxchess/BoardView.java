@@ -634,6 +634,7 @@ public class BoardView extends ImageView
 
         // Do not update the Pieces on Board if we are in the review mode.
         if (isBoardInReviewMode()) {
+            Log.d(TAG, "*** Make move: Board is in Review mode. ONLY add move to History!!!");
             addMoveToHistory(fromPos, toPos, null /* capture: we don't know yet */);
             return;
         }
@@ -641,11 +642,14 @@ public class BoardView extends ImageView
         final Piece fromPiece = getPieceAtViewPosition(fromPos);
         Assert.assertNotNull("No 'from' piece is found at " + fromPos, fromPiece);
 
-        final Piece capture = tryCapturePieceAtPosition(toPos);
-
         if (animated) {
             Animator.AnimatorListener listener = new AnimatorListenerAdapter() {
                 public void onAnimationEnd(Animator animation) {
+                    // NOTE: Board may have entered Review mode while the animation is in progress!
+                    //      However, we will handle such a race condition in the onReplay_PREV()
+                    //      by checking whether a MOVE animation is in progress...
+                    //      See: onReplay_PREV
+                    final Piece capture = tryCapturePieceAtPosition(toPos);
                     fromPiece.setPosition(toPos);
                     fromPiece.setIsAnimated(false);
                     recentPiece_ = fromPiece;
@@ -657,6 +661,7 @@ public class BoardView extends ImageView
             movePieceToPositionWithAnimation(fromPiece, fromPos, toPos, listener);
 
         } else {
+            final Piece capture = tryCapturePieceAtPosition(toPos);
             fromPiece.setPosition(toPos);
             recentPiece_ = fromPiece;
             addMoveToHistory(fromPos, toPos, capture);
@@ -840,12 +845,17 @@ public class BoardView extends ImageView
      * @return true if a replay move was made. false, otherwise.
      */
     public boolean onReplay_PREV(boolean redrawNow) {
-        Log.d(TAG, "on replay-PREVIOUS...");
+        Log.d(TAG, "on replay-PREVIOUS: " + historyIndex_ + " / " + historyMoves_.size() + "...");
         
         if (historyMoves_.size() == 0) {
             return false;
         }
-    
+
+        if (animator_ != null && animator_.isRunning()) {
+            Log.i(TAG, "on replay-PREVIOUS... Move animation is running. Do nothing.");
+            return false;
+        }
+
         if (historyIndex_ == HISTORY_INDEX_END) { // at the END mark?
             historyIndex_ = historyMoves_.size() - 1; // Get the latest move.
         }
@@ -886,7 +896,7 @@ public class BoardView extends ImageView
      * @return true if a replay move was made. false, otherwise.
      */
     public boolean onReplay_NEXT(boolean redrawNow) {
-        Log.d(TAG, "on replay-NEXT...");
+        Log.d(TAG, "on replay-NEXT: " + historyIndex_ + " / " + historyMoves_.size() + "...");
         
         if (historyMoves_.size() == 0) {
             return false;
@@ -906,6 +916,7 @@ public class BoardView extends ImageView
         
         // Move the piece from ORIGINAL --> NEW position.
         Piece piece = getPieceAtViewPosition(move.fromPosition);
+        Assert.assertNotNull("No 'from' piece is found at " + move.fromPosition, piece);
         Piece capture = getPieceAtViewPosition(move.toPosition);
         if (capture != null) {
             capture.setCapture(true);
