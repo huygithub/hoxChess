@@ -91,7 +91,7 @@ public class ChatBubbleActivity extends Activity {
             chatArrayAdapter.add(msg);
         }
         
-        if (HoxApp.getApp().getMyTable().isValid()) {
+        if (HoxApp.getApp().isMyNetworkTableValid()) {
             intputLayout.setVisibility(View.VISIBLE);
         } else {
             intputLayout.setVisibility(View.GONE);

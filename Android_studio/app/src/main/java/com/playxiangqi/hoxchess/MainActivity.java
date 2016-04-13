@@ -441,21 +441,18 @@ public class MainActivity extends Activity {
             boardView_.restoreMove(move.fromPosition, move.toPosition, isLastMove);
             ++moveIndex;
         }
-        
-        final GameStatus gameStatus = HoxApp.getApp().getGameStatus();
-        Log.d(TAG, "... gameStatus = " + gameStatus);
-        if (    gameStatus == GameStatus.GAME_STATUS_BLACK_WIN ||
-                gameStatus == GameStatus.GAME_STATUS_RED_WIN ||
-                gameStatus == GameStatus.GAME_STATUS_DRAWN) {
-           boardView_.onGameEnded(gameStatus);
+
+        if (HoxApp.getApp().isGameOver()) {
+            final GameStatus gameStatus = HoxApp.getApp().getGameStatus();
+            Log.d(TAG, "... Game Over: gameStatus = " + gameStatus);
+            boardView_.onGameEnded(gameStatus);
         }
         
         boardView_.invalidate();
         
         // Set table Id.
-        TableInfo tableInfo = HoxApp.getApp().getMyTable();
-        if (tableInfo.isValid()) {
-            setAndShowTitle(tableInfo.tableId);
+        if (HoxApp.getApp().isMyNetworkTableValid()) {
+            setAndShowTitle(HoxApp.getApp().getMyNetworkTableId());
         }
     }
     
