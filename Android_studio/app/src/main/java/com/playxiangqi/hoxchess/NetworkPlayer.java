@@ -72,6 +72,7 @@ class NetworkPlayer extends Thread {
     public static final int NETWORK_CODE_CONNECTED = 1;
     public static final int NETWORK_CODE_UNRESOLVED_ADDRESS = 2;
     public static final int NETWORK_CODE_IO_EXCEPTION = 3;
+    public static final int NETWORK_CODE_DISCONNECTED = 4;
     
     // -------------------------------------------------------------------------------------
     private Handler handler_;
@@ -277,12 +278,13 @@ class NetworkPlayer extends Thread {
         }
         
         if (disconnectionRequested_) {
-            Log.i(TAG, "Handle 'Connect to server'... Handle disconnection");
+            Log.i(TAG, "Handle 'Check for work'... Handle disconnection");
             if (socketChannel_ != null) {
-                Log.i(TAG, "Handle 'Connect to server'... Closing the channel!");
+                Log.i(TAG, "Handle 'Check for work'... Closing the channel!");
                 socketChannel_.close();
                 socketChannel_ = null;
                 connectionState_ = ConnectionState.CONNECTION_STATE_NONE;
+                HoxApp.getApp().postNetworkCode(NETWORK_CODE_DISCONNECTED);
             }
             disconnectionRequested_ = false;
         } else {

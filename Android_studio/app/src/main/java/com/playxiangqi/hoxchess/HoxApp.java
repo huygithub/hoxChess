@@ -253,7 +253,13 @@ public class HoxApp extends Application {
             case NetworkPlayer.NETWORK_CODE_IO_EXCEPTION:
                 networkController_.handleNetworkError();
                 break;
-                
+
+            case NetworkPlayer.NETWORK_CODE_DISCONNECTED:
+                Toast.makeText(HoxApp.thisApp_,
+                        getString(R.string.msg_connection_disconnected),
+                        Toast.LENGTH_LONG).show();
+                break;
+
             default:
                 break;
         }
@@ -362,7 +368,6 @@ public class HoxApp extends Application {
     }
     
     public void logoutFromNetwork() {
-        Log.d(TAG, "Logout from network...");
         networkController_.logoutFromNetwork();
     }
     
