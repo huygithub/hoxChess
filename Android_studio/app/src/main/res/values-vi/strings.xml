@@ -49,6 +49,7 @@
     <string name="login_error_general_error">Failed to login</string>
 
     <string name="msg_connection_established">Mạng được thành lập</string>
+    <string name="msg_connection_disconnected">Mạng bị ngắt</string>
     
     <string name="replay_prev">Trước</string>
     <string name="replay_next">Kế</string>
@@ -68,8 +69,8 @@
     <string name="chat_empty_text">Không có tin nhắn</string>
     
     <string name="about_title">Giới thiệu</string>
-    <string name="version">Phiên Bản 1.0</string>
-    <string name="copyright">Bản Quyền \u00A9 2015 PlayXiangqi</string>
+    <string name="version">Phiên Bản 1.1</string>
+    <string name="copyright">Bản Quyền \u00A9 2016 PlayXiangqi</string>
     
     <string name="about_html">
 <![CDATA[
