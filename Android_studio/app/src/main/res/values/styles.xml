@@ -1,20 +1,30 @@
 <resources>
 
     <!--
-        Base application theme, dependent on API level. This theme is replaced
-        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+      Reference: https://guides.codepath.com/android/Using-the-App-ToolBar
     -->
-    <style name="AppBaseTheme" parent="Theme.AppCompat.Light">
-        <!--
-            Theme customizations available in newer API levels can go in
-            res/values-vXX/styles.xml, while customizations related to
-            backward-compatibility can go here.
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here.
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
         -->
     </style>
 
-    <!-- Application theme. -->
-    <style name="AppTheme" parent="AppBaseTheme">
-        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+    <style name="ToolbarTheme" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        <!-- This would set the toolbar's background color -->
+        <item name="android:background">?attr/colorPrimaryDark</item>
+        <!-- android:textColorPrimary is the color of the title text in the Toolbar  -->
+        <!-- <item name="android:textColorPrimary">@android:color/holo_blue_light</item> -->
+        <!-- android:actionMenuTextColor is the color of the text of action (menu) items  -->
+        <!-- <item name="actionMenuTextColor">@android:color/holo_green_light</item> -->
+        <!-- Enable these below if you want clicking icons to trigger a ripple effect -->
+        <!--
+        <item name="selectableItemBackground">?android:selectableItemBackground</item>
+        <item name="selectableItemBackgroundBorderless">?android:selectableItemBackground</item>
+        -->
     </style>
 
 </resources>

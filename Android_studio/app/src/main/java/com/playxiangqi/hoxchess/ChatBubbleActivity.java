@@ -24,7 +24,7 @@ public class ChatBubbleActivity extends Activity {
     private ListView listView;
     private EditText chatText;
     private Button buttonSend;
-    private View intputLayout;
+    private View inputLayout;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -37,7 +37,7 @@ public class ChatBubbleActivity extends Activity {
         listView = (ListView) findViewById(R.id.listView);
         listView.setEmptyView(findViewById(R.id.emptyView));
 
-        intputLayout = findViewById(R.id.input_layout);
+        inputLayout = findViewById(R.id.input_layout);
         
         chatArrayAdapter = new ChatArrayAdapter(getApplicationContext(), R.layout.activity_chat_singlemessage);
         listView.setAdapter(chatArrayAdapter);
@@ -92,9 +92,9 @@ public class ChatBubbleActivity extends Activity {
         }
         
         if (HoxApp.getApp().isMyNetworkTableValid()) {
-            intputLayout.setVisibility(View.VISIBLE);
+            inputLayout.setVisibility(View.VISIBLE);
         } else {
-            intputLayout.setVisibility(View.GONE);
+            inputLayout.setVisibility(View.GONE);
         }
     }
     

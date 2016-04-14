@@ -1,0 +1,12 @@
+<!-- The main Tool Bar
+
+   Reference: https://guides.codepath.com/android/Using-the-App-ToolBar
+  -->
+<android.support.v7.widget.Toolbar
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/my_toolbar"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize"
+    android:theme="@style/ToolbarTheme"
+    app:popupTheme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />

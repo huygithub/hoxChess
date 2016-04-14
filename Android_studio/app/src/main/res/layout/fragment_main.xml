@@ -10,14 +10,9 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity$PlaceholderFragment" >
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/my_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:elevation="4dp"
-        android:background="?attr/colorPrimaryDark"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+    <!-- Load the Toolbar -->
+    <include
+        layout="@layout/toolbar_main" />
 
     <RelativeLayout
         android:orientation="horizontal"

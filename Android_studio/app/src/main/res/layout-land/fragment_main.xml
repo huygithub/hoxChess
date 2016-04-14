@@ -114,17 +114,13 @@
         </RelativeLayout>
 
         <!-- Note: Add extra margin (left + right) to align with other views -->
-        <android.support.v7.widget.Toolbar
-                android:id="@+id/my_toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:layout_above="@id/control_container"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
-                android:elevation="4dp"
-                android:background="?attr/colorPrimaryDark"
-                android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+        <include
+            layout="@layout/toolbar_main"
+            android:layout_above="@id/control_container"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp" />
 
         <RelativeLayout
             android:orientation="horizontal"
