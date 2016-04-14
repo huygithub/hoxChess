@@ -25,12 +25,13 @@ import com.playxiangqi.hoxchess.Enums.GameStatus;
 import com.playxiangqi.hoxchess.Enums.TableType;
 import com.playxiangqi.hoxchess.Piece.Move;
 
-import android.app.ActionBar;
-import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -49,7 +50,7 @@ import android.widget.Toast;
 /**
  * The main (entry-point) activity.
  */
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
@@ -76,8 +77,12 @@ public class MainActivity extends Activity {
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         
         setContentView(R.layout.activity_main);
-        
-        getActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
+        } else {
+            Log.w(TAG, "onCreate: getSupportActionBar() = null. Do not set Display options!");
+        }
         
         Log.d(TAG, "onCreate: savedInstanceState = " + savedInstanceState + ".");
         placeholderFragment_ = new PlaceholderFragment();
@@ -171,11 +176,11 @@ public class MainActivity extends Activity {
         View countView = menu.findItem(R.id.badge).getActionView();
         Button countButton = (Button) countView.findViewById(R.id.notif_count);
         countButton.setText(String.valueOf(notifCount_));
-        
+
         GradientDrawable notiBackgroundShape = (GradientDrawable) countButton.getBackground();
         int notiColor = (notifCount_ > 0 ? R.color.noti_shape_bg_new : R.color.noti_shape_bg_zero);
         notiBackgroundShape.setColor(getResources().getColor(notiColor));
-        
+
         countButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 notifCount_ = 0;
@@ -298,8 +303,10 @@ public class MainActivity extends Activity {
         Log.d(TAG, "Update board with new network Table info (I_TABLE)...");
         
         setAndShowTitle(tableInfo.tableId);
-        if (getActionBar() != null) {
-            getActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        } else {
+            Log.w(TAG, "updateBoardWithNewTableInfo: getSupportActionBar() = null. Do not set Display options!");
         }
         invalidateOptionsMenu(); // Recreate the options menu
         boardView_.resetBoard();
@@ -343,8 +350,12 @@ public class MainActivity extends Activity {
     
     public void clearTable() {
         Log.d(TAG, "Clear the table. Make it an empty one.");
-        getActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
-        getActionBar().setDisplayHomeAsUpEnabled(false);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        } else {
+            Log.w(TAG, "clearTable: getSupportActionBar() = null. Do not set Display options!");
+        }
         invalidateOptionsMenu(); // Recreate the options menu
         boardView_.resetBoard();
         adjustScreenOnFlagBasedOnGameStatus();
@@ -389,7 +400,10 @@ public class MainActivity extends Activity {
     
     private void onBoardViewCreated(final MainActivity activity) {
         Log.d(TAG, "onBoardViewCreated...");
-        
+
+        Toolbar myToolbar = (Toolbar) activity.findViewById(R.id.my_toolbar);
+        activity.setSupportActionBar(myToolbar);
+
         boardView_ = (BoardView) activity.findViewById(R.id.board_view);
         topPlayerLabel_ = (TextView) activity.findViewById(R.id.top_player_label);
         bottomPlayerLabel_ = (TextView) activity.findViewById(R.id.bottom_player_label);
@@ -463,8 +477,12 @@ public class MainActivity extends Activity {
     }
     
     private void setAndShowTitle(String title) {
-        getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
-        getActionBar().setTitle(getString(R.string.title_table, title));
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
+            getSupportActionBar().setTitle(getString(R.string.title_table, title));
+        } else {
+            Log.w(TAG, "setAndShowTitle: getSupportActionBar() = null. Do not set Display options!");
+        }
     }
     
     private void onReplayBegin() {

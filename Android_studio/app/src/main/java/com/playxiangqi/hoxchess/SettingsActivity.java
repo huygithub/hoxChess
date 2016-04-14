@@ -45,7 +45,7 @@ public class SettingsActivity extends Activity {
         Log.d(TAG, "onCreate:");
         
         setContentView(R.layout.activity_settings);
-        
+
         getFragmentManager().beginTransaction()
             .add(R.id.container, new SettingsFragment())
             .commit();
