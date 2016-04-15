@@ -1,5 +1,5 @@
 /**
- *  Copyright 2015 Huy Phan <huyphan@playxiangqi.com>
+ *  Copyright 2016 Huy Phan <huyphan@playxiangqi.com>
  * 
  *  This file is part of HOXChess.
  * 
@@ -51,12 +51,13 @@ public class BoardView extends ImageView
 
     private static final String TAG = "BoardView";
     
-    private static final int offset_ = 50; // in pixels
+    private static final int offset_ = 20; // of row/column labels in pixels
 
     // The sizes of Cell and Piece will be adjusted at runtime based on the board 's dimension.
     private int cellSize_;
     private int pieceSize_ = 64;  // (in pixels) Note: It should be an even number.
-    
+    private int startP_; // the offset at which we draw vertical/horizontal lines (in pixels).
+
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
     
     private int gameStatus_ = Referee.hoxGAME_STATUS_READY;
@@ -162,7 +163,6 @@ public class BoardView extends ImageView
             public boolean onPreDraw() {
                 int finalHeight = getMeasuredHeight();
                 int finalWidth = getMeasuredWidth();
-                Log.i(TAG, "~~~ onPreDraw(): WxH = " + finalWidth + " x " + finalHeight);
 
                 adjustBoardParameters(finalWidth, finalHeight);
 
@@ -230,28 +230,30 @@ public class BoardView extends ImageView
         }
     }
 
-    private void adjustBoardParameters(int finalWidth, int finalHeight) {
+    private void adjustBoardParameters(int finalWidth, final int finalHeight) {
         /* Reference:
          *   http://stackoverflow.com/questions/2795833/check-orientation-on-android-phone
          */
         int configuration = getContext().getResources().getConfiguration().orientation;
-        Log.d(TAG, "adjustBoardParameters(): configuration = " + Utils.orientationToString(configuration));
+        Log.i(TAG, "adjustBoardParameters():WxH = " + finalWidth + " x " + finalHeight
+                + ", " + Utils.orientationToString(configuration));
 
         if (configuration == Configuration.ORIENTATION_LANDSCAPE) {
             final int EXTRA_MARGIN = 20;
             finalWidth = (int) ((finalHeight / 9.0) * 8) - EXTRA_MARGIN;
-            //finalHeight = 700;
             Log.i(TAG, "adjustBoardParameters(): (LANDSCAPE mode) Adjusted Width => " + finalWidth);
 
             getLayoutParams().width = finalWidth;
             requestLayout();
         }
 
-        int boardWidth = Math.min(finalWidth, finalHeight);
-        cellSize_ = (boardWidth - 2 * offset_)/8;
+        final int boardWidth = Math.min(finalWidth, finalHeight);
+        cellSize_ = (boardWidth - 2*offset_)/9;
         pieceSize_ = (int) (cellSize_ * 0.8f);
         if ((pieceSize_ % 2) == 1) { --pieceSize_; } // Make it an event number.
-        Log.d(TAG, "adjustBoardParameters(): cellSize_ = " + cellSize_ + ", pieceSize_ = " + pieceSize_);
+        startP_ = offset_ + cellSize_ / 2;
+        Log.d(TAG, "adjustBoardParameters(): cellSize_:" + cellSize_ + ", pieceSize_:" + pieceSize_
+                + ", startP_:" + startP_);
     }
     
     private void drawBoard(Canvas canvas, int bgColor_UNUSED, int lineColor_UNUSED) {
@@ -261,31 +263,30 @@ public class BoardView extends ImageView
         Log.v(TAG, "drawBoard(): WxH = " + boardW + "x" + boardH + ". blackOnTop = " + isBlackOnTop_);
 
         for (int i = 0; i < 10; i++) { // Horizontal lines
-            canvas.drawLine(offset_, offset_+i*cellSize_, offset_+8*cellSize_, offset_+i*cellSize_, linePaint_);
+            canvas.drawLine(startP_, startP_+i*cellSize_, startP_+8*cellSize_, startP_+i*cellSize_, linePaint_);
         }
 
         for (int i = 0; i < 9; i++) { // Vertical lines
             if (i == 0 || i == 8) {
-                canvas.drawLine(offset_ + i*cellSize_, offset_, offset_ + i*cellSize_, offset_ + cellSize_*9, linePaint_);
+                canvas.drawLine(startP_ + i*cellSize_, startP_, startP_ + i*cellSize_, startP_ + cellSize_*9, linePaint_);
             } else {
-                canvas.drawLine(offset_ + i*cellSize_, offset_, offset_ + i*cellSize_, offset_ + cellSize_*4, linePaint_);
-                canvas.drawLine(offset_ + i*cellSize_, offset_ + 5*cellSize_, offset_ + i*cellSize_, offset_ + 5*cellSize_ + cellSize_*4, linePaint_);
+                canvas.drawLine(startP_ + i*cellSize_, startP_, startP_ + i*cellSize_, startP_ + cellSize_*4, linePaint_);
+                canvas.drawLine(startP_ + i*cellSize_, startP_ + 5*cellSize_, startP_ + i*cellSize_, startP_ + 5*cellSize_ + cellSize_*4, linePaint_);
             }
         }
         
         // Diagonal lines to form the Fort (or the Palace).
-        canvas.drawLine(offset_ + 3*cellSize_, offset_, offset_ + 3*cellSize_ + 2*cellSize_, offset_ + 2*cellSize_, linePaint_);
-        canvas.drawLine(offset_ + 5*cellSize_, offset_, offset_ + 5*cellSize_ - 2*cellSize_, offset_ + cellSize_*2, linePaint_);
-        canvas.drawLine(offset_ + 3*cellSize_, offset_ + 7*cellSize_, offset_ + 3*cellSize_ + 2*cellSize_, offset_ + 7*cellSize_ + 2*cellSize_, linePaint_);
-        canvas.drawLine(offset_ + 5*cellSize_, offset_ + 7*cellSize_, offset_ + 5*cellSize_ - 2*cellSize_, offset_ + 7*cellSize_ + 2*cellSize_, linePaint_);
+        canvas.drawLine(startP_ + 3*cellSize_, startP_, startP_ + 3*cellSize_ + 2*cellSize_, startP_ + 2*cellSize_, linePaint_);
+        canvas.drawLine(startP_ + 5*cellSize_, startP_, startP_ + 5*cellSize_ - 2*cellSize_, startP_ + cellSize_*2, linePaint_);
+        canvas.drawLine(startP_ + 3*cellSize_, startP_ + 7*cellSize_, startP_ + 3*cellSize_ + 2*cellSize_, startP_ + 7*cellSize_ + 2*cellSize_, linePaint_);
+        canvas.drawLine(startP_ + 5*cellSize_, startP_ + 7*cellSize_, startP_ + 5*cellSize_ - 2*cellSize_, startP_ + 7*cellSize_ + 2*cellSize_, linePaint_);
         
-        // The labels (a-h and 0-9).
+        // The labels (row: 0-9 and column: 0-8).
         final boolean bDescending = (! isBlackOnTop_);
-        final int imageRadius = (int) (pieceSize_/2);
-        drawHeaderRow(canvas, offset_ - imageRadius - 10, offset_, true /*bDescending*/);
-        drawHeaderRow(canvas, offset_ + cellSize_*8 + imageRadius, offset_, true /*bDescending*/);
-        drawHeaderColumn(canvas, offset_, offset_, bDescending);
-        drawHeaderColumn(canvas, offset_, offset_ + 10*cellSize_ + 20, bDescending);
+        drawHeaderRow(canvas, offset_ /*- imageRadius - 10*/, startP_, true /*bDescending*/);
+        drawHeaderRow(canvas, offset_ + cellSize_*9, startP_, true /*bDescending*/);
+        drawHeaderColumn(canvas, startP_, offset_, bDescending);
+        drawHeaderColumn(canvas, startP_, offset_ + cellSize_*10 /*+ 20*/, bDescending);
         
         // Draw the "mirror" lines for Cannons and Pawns.
         final int nSize  = cellSize_ / 7; // The "mirror" 's size.
@@ -299,7 +300,7 @@ public class BoardView extends ImageView
                 { 1, 7 }, { 7, 7 }
             };
         for (int[] m : mirrors) {
-            int[] point = new int[] { offset_ + m[0]*cellSize_, offset_ + m[1]*cellSize_ };
+            int[] point = new int[] { startP_ + m[0]*cellSize_, startP_ + m[1]*cellSize_ };
             canvas.drawLine(point[0] - nSpace, point[1] - nSpace, point[0] - nSpace - nSize,  point[1] - nSpace, linePaint_);
             canvas.drawLine(point[0] - nSpace, point[1] - nSpace, point[0] - nSpace, point[1] - nSpace - nSize, linePaint_);
             canvas.drawLine(point[0] - nSpace, point[1] + nSpace, point[0] - nSpace - nSize, point[1] + nSpace, linePaint_);
@@ -315,7 +316,7 @@ public class BoardView extends ImageView
             };
         for (int[] m : mirrors)
         {
-            int[] point = { offset_ + m[0]*cellSize_, offset_ + m[1]*cellSize_ };
+            int[] point = { startP_ + m[0]*cellSize_, startP_ + m[1]*cellSize_ };
             canvas.drawLine(point[0] + nSpace, point[1] - nSpace, point[0] + nSpace + nSize, point[1] - nSpace, linePaint_);
             canvas.drawLine(point[0] + nSpace, point[1] - nSpace, point[0] + nSpace, point[1] - nSpace - nSize, linePaint_);
             canvas.drawLine(point[0] + nSpace, point[1] + nSpace, point[0] + nSpace + nSize, point[1] + nSpace, linePaint_);
@@ -349,8 +350,8 @@ public class BoardView extends ImageView
 
         Position viewPos = getViewPosition(position);
 
-        final float left = offset_ - imageRadius + viewPos.column*cellSize_;
-        final float top  = offset_ - imageRadius + viewPos.row*cellSize_;
+        final float left = startP_ - imageRadius + viewPos.column*cellSize_;
+        final float top  = startP_ - imageRadius + viewPos.row*cellSize_;
         return new PointF(left, top);
     }
 
@@ -381,9 +382,8 @@ public class BoardView extends ImageView
         Bitmap bitmap = piece.getBitmap();
         
         Position viewPos = getViewPosition(piece.getPosition());
-        
-        final float left = offset_ - imageRadius + viewPos.column*cellSize_;
-        final float top  = offset_ - imageRadius + viewPos.row*cellSize_;
+        final float left = startP_ - imageRadius + viewPos.column*cellSize_;
+        final float top  = startP_ - imageRadius + viewPos.row*cellSize_;
         
         if (drawMode == PieceDrawMode.PIECE_DRAW_MODE_SELECTED) {
             Log.d(TAG, "... select this piece.");
@@ -427,13 +427,28 @@ public class BoardView extends ImageView
     }
     
     private void drawHeaderColumn(Canvas canvas, int offsetLeft, int offsetTop, boolean bDescending) {
+        /*
+         * NOTE: I still need to learn the way Android draws text, which direction, etc.
+         *   http://www.slideshare.net/rtc1/intro-todrawingtextandroid
+         *   http://stackoverflow.com/questions/10606410/android-canvas-drawtext-y-position-of-text
+         *
+         *       final String text = "0";
+         *       Rect textBounds = new Rect();
+         *       linePaint_.getTextBounds(text, 0, text.length(), textBounds);
+         *       Log.d(TAG, "textBounds: " + textBounds);
+         *       canvas.drawText(text, 0, textBounds.height(), paint);
+         *
+         *  I will use HACK_TOP_OFFSET_IN_PIXELS for now.
+         */
+        final int HACK_TOP_OFFSET_IN_PIXELS = 5; // TODO: Hack the column labels (see above).
+
         final int COLS  = 9;
-        final int top   = offsetTop - 35;
+        final int top   = offsetTop + HACK_TOP_OFFSET_IN_PIXELS;
         int   left;
         int   start     = (bDescending ? COLS - 1 : 0);
 
         for (int i = 0; i < COLS; i++) {
-            left = offsetLeft + (i * cellSize_) - 6;
+            left = offsetLeft + (i * cellSize_) /*- 6*/;
             canvas.drawText(String.valueOf((char) ('0' + start)), left, top, linePaint_);
             if (bDescending) { start--; }
             else             { start++; }
@@ -444,8 +459,8 @@ public class BoardView extends ImageView
         canvas.drawText(
                 HoxApp.getApp().getString(R.string.replay_text,
                         historyIndex_ + 1, historyMoves_.size()),
-                offset_ + cellSize_*2.5f,
-                offset_ + cellSize_*4.7f,
+                startP_ + cellSize_*2.5f,
+                startP_ + cellSize_*4.7f,
                 noticePaint_);
     }
     
@@ -540,8 +555,8 @@ public class BoardView extends ImageView
         
         // Convert the screen position (X px, Y px) => the piece position (row, column).
         Position hitPosition = new Position();
-        hitPosition.row = Math.round((eventY - offset_) / cellSize_);
-        hitPosition.column = Math.round((eventX - offset_) / cellSize_);
+        hitPosition.row = Math.round((eventY - startP_) / cellSize_);
+        hitPosition.column = Math.round((eventX - startP_) / cellSize_);
         final Position viewPos = getViewPosition(hitPosition);
         Log.d(TAG, "... Hit position = " + hitPosition + ", View-position = " + viewPos);
         
@@ -758,8 +773,8 @@ public class BoardView extends ImageView
     private void onGameOver(Canvas canvas) {
         canvas.drawText(
                 this.getContext().getString(R.string.game_over_text),
-                offset_ + cellSize_*2.5f,
-                offset_ + cellSize_*4.7f,
+                startP_ + cellSize_*2.5f,
+                startP_ + cellSize_*4.7f,
                 noticePaint_);
     }
     
