@@ -1,5 +1,5 @@
 /**
- *  Copyright 2015 Huy Phan <huyphan@playxiangqi.com>
+ *  Copyright 2016 Huy Phan <huyphan@playxiangqi.com>
  * 
  *  This file is part of HOXChess.
  * 
@@ -64,17 +64,17 @@ public class TablesActivity extends Activity {
         tablesListView_.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                int itemPosition = position; // ListView Clicked item index
                 TableInfo itemValue = (TableInfo) tablesListView_.getItemAtPosition(position);
                 
-                Log.d(TAG, "Position:" + itemPosition + " TabeId: " + itemValue.tableId
+                Log.d(TAG, "Position:" + position + " TableId: " + itemValue.tableId
                         + ", ListItem: " + itemValue);
                 
                 // Return the table-ID.
                 Intent result = new Intent();
                 result.putExtra("tid", itemValue.tableId);
                 setResult(Activity.RESULT_OK, result);
-                finish();            }
+                finish();
+            }
         });
         
     }
@@ -90,13 +90,14 @@ public class TablesActivity extends Activity {
         }
         Log.d(TAG, ">>> Number of tables = " + tables_.size() + ".");
     }
-    
-    // =============================================================================
-    private class StableArrayAdapter extends ArrayAdapter<TableInfo> {
-        HashMap<TableInfo, Integer> mIdMap = new HashMap<TableInfo, Integer>();
 
-        public StableArrayAdapter(Context context, int textViewResourceId,
-                List<TableInfo> objects) {
+    /**
+     * An array adapter
+     */
+    private static class StableArrayAdapter extends ArrayAdapter<TableInfo> {
+        private HashMap<TableInfo, Integer> mIdMap = new HashMap<TableInfo, Integer>();
+
+        public StableArrayAdapter(Context context, int textViewResourceId, List<TableInfo> objects) {
             super(context, textViewResourceId, objects);
             for (int i = 0; i < objects.size(); ++i) {
                 mIdMap.put(objects.get(i), i);

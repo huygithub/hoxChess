@@ -177,12 +177,6 @@ public class NetworkController {
     private void handleNetworkEvent_I_TABLE(String content) {
         Log.d(TAG, "Handle event (I_TABLE): ENTER.");
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity == null) {
-            Log.w(TAG, "The main activity is NULL. Ignore this I_TABLE event.");
-            return;
-        }
-
         gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
         myTable_ = new TableInfo(content);
 
@@ -209,7 +203,10 @@ public class NetworkController {
         playerTracker_.setRedInfo(myTable_.redId, myTable_.redRating);
         playerTracker_.syncUI();
 
-        mainActivity.updateBoardWithNewTableInfo(myTable_);
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.updateBoardWithNewTableInfo(myTable_);
+        }
     }
 
     private void handleNetworkEvent_I_MOVES(String content) {
@@ -229,6 +226,9 @@ public class NetworkController {
         if (mainActivity != null) {
             mainActivity.resetBoardWithNewMoves(moves);
         }
+
+        timeTracker_.setInitialColor(referee_.getNextColor());
+        timeTracker_.start();
     }
 
     private void handleNetworkEvent_MOVE(String content) {
@@ -248,10 +248,7 @@ public class NetworkController {
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
             mainActivity.updateBoardWithNewMove(move);
-        }
-
-        if (referee_.getMoveCount() == 2) { // The game has started?
-            if (mainActivity != null) {
+            if (referee_.getMoveCount() == 2) { // The game has started?
                 mainActivity.onGameStatusChanged();
             }
         }
