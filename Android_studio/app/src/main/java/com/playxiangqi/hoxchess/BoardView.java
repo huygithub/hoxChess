@@ -787,7 +787,15 @@ public class BoardView extends ImageView
     
     public void resetBoard() {
         Log.d(TAG, "Reset board to the initial state...");
-        
+
+        // It is essential that we end any Move animation now for the Move to take effect
+        // immediately before resetting the table. Otherwise, the Move may occur after
+        // the board 's initial state.
+        if (animator_ != null && animator_.isRunning()) {
+            Log.i(TAG, "Reset board: Move animation is running. End it now!");
+            animator_.end();
+        }
+
         referee_.resetGame();
         
         // Reset the pieces.
@@ -811,7 +819,7 @@ public class BoardView extends ImageView
         historyMoves_.clear();
         historyIndex_ = HISTORY_INDEX_END;
         captureStack_.clear();
-        
+
         this.invalidate(); // Request to redraw the board.
     }
     
