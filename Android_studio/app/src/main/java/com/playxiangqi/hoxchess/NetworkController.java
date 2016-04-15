@@ -621,7 +621,7 @@ public class NetworkController {
             networkPlayer_.sendRequest_NEW(itimes);
         }
         else {
-            Log.w(TAG, "Either offline or currently playing. Ignore this 'open new table request'.");
+            Log.w(TAG, "Either offline or not playing. Ignore this 'open new table request'.");
         }
     }
 

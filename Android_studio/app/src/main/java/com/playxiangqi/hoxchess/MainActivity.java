@@ -251,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
                 HoxApp.getApp().handlePlayOnlineClicked();
                 return true;
             case R.id.action_logout:
-                HoxApp.getApp().logoutFromNetwork();
+                HoxApp.getApp().handleLogoutFromNetwork();
                 return true;
             case R.id.action_settings:
                 openSettingsView();

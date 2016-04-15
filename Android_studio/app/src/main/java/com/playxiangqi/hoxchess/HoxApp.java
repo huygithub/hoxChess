@@ -141,9 +141,7 @@ public class HoxApp extends Application {
 
         private Runnable aiRequest_; // Saved so that we could cancel it later.
 
-        MessageHandler() {
-            // empty
-        }
+        MessageHandler() { /* Empty */ }
         
         @Override
         public void handleMessage(Message msg) {
@@ -192,7 +190,6 @@ public class HoxApp extends Application {
     
     private void onAIMoveMade(String aiMove) {
         Log.d(TAG, "AI returned this move [" + aiMove + "].");
-
         Position fromPos = new Position(aiMove.charAt(0) - '0', aiMove.charAt(1) - '0');
         Position toPos = new Position(aiMove.charAt(2) - '0', aiMove.charAt(3) - '0');
         
@@ -211,7 +208,7 @@ public class HoxApp extends Application {
         }
 
         if (!referee_.isGameInProgress()) {
-            Log.i(TAG, "The game has ended. Do nothing.");
+            Log.i(TAG, "... after AI move => the game has ended.");
             onGameEnded();
         }
     }
@@ -222,7 +219,6 @@ public class HoxApp extends Application {
     
     private void onNetworkCode(int networkCode) {
         Log.d(TAG, "On Network code: " + networkCode);
-        
         switch (networkCode) {
             case NetworkPlayer.NETWORK_CODE_CONNECTED:
                 Toast.makeText(HoxApp.thisApp_,
@@ -264,77 +260,17 @@ public class HoxApp extends Application {
             mainActivity.onGameStatusChanged();
         }
     }
-    
-    public void handlePlayOnlineClicked() {
-        Log.d(TAG, "Action 'Play Online' clicked...");
-        if ( !networkController_.isOnline() || !networkController_.isLoginOK() ) {
-            loadPreferences_Account(); // to get pid_ and password_
 
-            networkController_.setLoginInfo(pid_,  password_);
-            networkController_.connectToServer();
-        } else {
-            networkController_.handleMyRequestToGetListOfTables();
-        }
-    }
-
-    public boolean isOnline() {
-        return networkController_.isOnline();
-    }
-
-    public String getMyPid() {
-        return pid_;
-    }
-    
-    public ColorEnum getMyColor() {
-        switch (playerTracker_.getTableType()) {
-            case TABLE_TYPE_LOCAL:
-                return myColorInLocalTable_;
-
-            case TABLE_TYPE_NETWORK:
-                return networkController_.getMyColor();
-
-            case TABLE_TYPE_EMPTY: // falls through
-            default:
-                return ColorEnum.COLOR_UNKNOWN;
-        }
-    }
-    
-    public boolean isGameOver() {
-        return networkController_.isGameOver();
-    }
-    
-    public boolean isGameInProgress() {
-        return ( !isGameOver() &&
-                referee_.getMoveCount() > 1 );
-    }
-    
-    public GameStatus getGameStatus() {
-        return networkController_.getGameStatus();
-    }
-
-    public boolean isMyNetworkTableValid() {
-        return networkController_.isMyTableValid();
-    }
-
-    public String getMyNetworkTableId() {
-        return networkController_.getMyTableId();
-    }
-
-    public TableTimeTracker getTimeTracker() {
-        return timeTracker_;
-    }
-
-    public TablePlayerTracker getPlayerTracker() {
-        return playerTracker_;
-    }
-    
-    public Referee getReferee() {
-        return referee_;
-    }
-    
-    public List<ChatMessage> getNewMessages() {
-        return networkController_.getNewMessages();
-    }
+    public String getMyPid() { return pid_; }
+    public TableTimeTracker getTimeTracker() { return timeTracker_; }
+    public TablePlayerTracker getPlayerTracker() { return playerTracker_; }
+    public Referee getReferee() { return referee_; }
+    public boolean isOnline() { return networkController_.isOnline(); }
+    public boolean isGameOver() { return networkController_.isGameOver(); }
+    public GameStatus getGameStatus() { return networkController_.getGameStatus(); }
+    public boolean isMyNetworkTableValid() { return networkController_.isMyTableValid(); }
+    public String getMyNetworkTableId() { return networkController_.getMyTableId(); }
+    public List<ChatMessage> getNewMessages() { return networkController_.getNewMessages(); }
     
     public boolean isMyTurn() {
         switch (playerTracker_.getTableType()) {
@@ -352,29 +288,46 @@ public class HoxApp extends Application {
                 return false;
         }
     }
-    
-    public void logoutFromNetwork() {
+
+    public ColorEnum getMyColor() {
+        switch (playerTracker_.getTableType()) {
+            case TABLE_TYPE_LOCAL: return myColorInLocalTable_;
+            case TABLE_TYPE_NETWORK: return networkController_.getMyColor();
+            case TABLE_TYPE_EMPTY: // falls through
+            default: return ColorEnum.COLOR_UNKNOWN;
+        }
+    }
+
+    public boolean isGameInProgress() {
+        return ( !isGameOver() &&
+                referee_.getMoveCount() > 1 );
+    }
+
+    public void handlePlayOnlineClicked() {
+        Log.d(TAG, "Action 'Play Online' clicked...");
+        if ( !networkController_.isOnline() || !networkController_.isLoginOK() ) {
+            loadPreferences_Account(); // to get pid_ and password_
+            networkController_.setLoginInfo(pid_,  password_);
+            networkController_.connectToServer();
+        } else {
+            networkController_.handleMyRequestToGetListOfTables();
+        }
+    }
+
+    public void handleLogoutFromNetwork() {
         networkController_.logoutFromNetwork();
     }
     
     public void handleTableSelection(String tableId) {
-        Log.i(TAG, "Select table: " + tableId + ".");
         networkController_.handleTableSelection(tableId);
     }
 
     public void handleRequestToCloseCurrentTable() {
-        Log.i(TAG, "Close the current table...");
         networkController_.handleRequestToCloseCurrentTable();
     }
     
     public void handleRequestToOpenNewTable() {
         Log.i(TAG, "Request to open a new table...");
-        
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity == null) {
-            Log.w(TAG, "The main activity is NULL. Ignore this 'open new table request'.");
-            return;
-        }
         
         // Case 1: I am not online at all.
         if (!this.isOnline() && !networkController_.isMyTableValid()) {
@@ -383,14 +336,17 @@ public class HoxApp extends Application {
             aiEngine_.initGame();
             timeTracker_.stop();
             timeTracker_.reset();
-            mainActivity.openNewPracticeTable();
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.openNewPracticeTable();
+            }
         }
         // Case 2: I am online and am not playing in any table.
         else if (this.isOnline()) {
             networkController_.handleMyRequestToOpenNewTable();
         }
         else {
-            Log.w(TAG, "Either offline or currently playing. Ignore this 'open new table request'.");
+            Log.w(TAG, "Either offline or not playing. Ignore this 'open new table request'.");
         }
     }
     
@@ -447,7 +403,6 @@ public class HoxApp extends Application {
     }
     
     public void handleLocalMessage(ChatMessage chatMsg) {
-        Log.d(TAG, "Handle local message: [" + chatMsg.message + "]");
         networkController_.handleLocalMessage(chatMsg);
     }
 
@@ -492,13 +447,13 @@ public class HoxApp extends Application {
     }
     
     public void postNetworkEvent(String eventString) {
-        Log.d(TAG, "Post Network event = [" + eventString + "]");
+        Log.d(TAG, "Post network event = [" + eventString + "]");
         messageHandler_.sendMessage(
                 messageHandler_.obtainMessage(MSG_NETWORK_EVENT, eventString) );
     }
 
     public void postNetworkCode(int networkCode) {
-        Log.d(TAG, "Post Network code = [" + networkCode + "]");
+        Log.d(TAG, "Post network code = [" + networkCode + "]");
         messageHandler_.sendMessage(
                 messageHandler_.obtainMessage(MSG_NETWORK_CODE, networkCode) );
     }
