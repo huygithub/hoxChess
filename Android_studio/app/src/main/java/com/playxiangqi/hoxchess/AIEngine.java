@@ -23,8 +23,17 @@ package com.playxiangqi.hoxchess;
  */
 public class AIEngine {
 
+    private int currentAILevel_ = -1; // Default = "invalid level"
+
     public AIEngine() {
         // Do nothing.
+    }
+
+    public int getAILevel() { return currentAILevel_; }
+
+    public void setAILevel(int aiLevel) {
+        currentAILevel_ = aiLevel;
+        setDifficultyLevel(currentAILevel_);
     }
 
     // ****************************** Native code **********************************

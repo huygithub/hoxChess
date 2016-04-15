@@ -25,7 +25,6 @@ import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.GameStatus;
 import com.playxiangqi.hoxchess.Enums.TableType;
 
-import android.annotation.SuppressLint;
 import android.app.Application;
 import android.os.Handler;
 import android.os.Message;
@@ -38,8 +37,6 @@ public class HoxApp extends Application {
     private static final String TAG = "HoxApp";
     
     private static HoxApp thisApp_;
-    
-    private int currentAILevel_ = -1; // Default = "invalid level"
     
     private String pid_ = ""; // My player 's ID.
     private String password_ = ""; // My player 's password.
@@ -58,9 +55,7 @@ public class HoxApp extends Application {
 
     private NetworkController networkController_;
 
-    public HoxApp() {
-        // Empty
-    }
+    public HoxApp() { /* Empty */ }
 
     @Override
     public void onCreate() {
@@ -69,8 +64,7 @@ public class HoxApp extends Application {
         thisApp_ = this;
         
         aiEngine_.initGame();
-        currentAILevel_ = SettingsActivity.getAILevel(this);
-        aiEngine_.setDifficultyLevel(currentAILevel_);
+        aiEngine_.setAILevel(SettingsActivity.getAILevel(this));
 
         networkController_ = new NetworkController(timeTracker_,
                 playerTracker_,
@@ -81,14 +75,11 @@ public class HoxApp extends Application {
         return thisApp_;
     }
     
-    public int getAILevel() {
-        return currentAILevel_;
-    }
+    public int getAILevel() { return aiEngine_.getAILevel(); }
 
     public void onAILevelChanged(int aiLevel) {
-        Log.d(TAG, "On new AI level: " + aiLevel);        
-        currentAILevel_ = aiLevel;
-        aiEngine_.setDifficultyLevel(currentAILevel_);
+        Log.d(TAG, "On new AI level: " + aiLevel);
+        aiEngine_.setAILevel(aiLevel);
     }
 
     public void onAccountPidChanged(String pid) {
@@ -178,7 +169,7 @@ public class HoxApp extends Application {
             }
         }
 
-        public void cancelAnyAIRequest() {
+        public void cancelPendingAIRequest() {
             if (aiRequest_ != null) {
                 Log.d(TAG, "(MessageHandler) Cancel the pending AI request...");
                 removeCallbacks(aiRequest_);
@@ -202,13 +193,8 @@ public class HoxApp extends Application {
     private void onAIMoveMade(String aiMove) {
         Log.d(TAG, "AI returned this move [" + aiMove + "].");
 
-        int row1 = aiMove.charAt(0) - '0';
-        int col1 = aiMove.charAt(1) - '0';
-        int row2 = aiMove.charAt(2) - '0';
-        int col2 = aiMove.charAt(3) - '0';
-
-        Position fromPos = new Position(row1, col1);
-        Position toPos = new Position(row2, col2);
+        Position fromPos = new Position(aiMove.charAt(0) - '0', aiMove.charAt(1) - '0');
+        Position toPos = new Position(aiMove.charAt(2) - '0', aiMove.charAt(3) - '0');
         
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
@@ -409,39 +395,43 @@ public class HoxApp extends Application {
     }
     
     public void handleRequestToOfferDraw() {
-        Log.i(TAG, "Send request to 'Offer Draw'...");
         networkController_.handleRequestToOfferDraw();
     }
     
     public void handleRequestToOfferResign() {
-        Log.i(TAG, "Send request to 'Offer Resign'...");
         networkController_.handleRequestToOfferResign();
     }
     
     public void handleRequestToResetTable() {
-        Log.i(TAG, "Send request to 'Reset Table'...");
-        TableType tableType = playerTracker_.getTableType();
-        
-        if (tableType == TableType.TABLE_TYPE_LOCAL) {
-            messageHandler_.cancelAnyAIRequest();
-            playerTracker_.syncUI();
-            aiEngine_.initGame();
-            timeTracker_.stop();
-            timeTracker_.reset();
-            MainActivity mainActivity = mainActivity_.get();
-            if (mainActivity != null) {
-                mainActivity.openNewPracticeTable();
-            }
-        } else if (tableType == TableType.TABLE_TYPE_NETWORK) {
-            networkController_.handleRequestToResetTable();
+        Log.i(TAG, "Handle request to 'Reset Table'...");
+        switch (playerTracker_.getTableType()) {
+            case TABLE_TYPE_LOCAL:
+                messageHandler_.cancelPendingAIRequest();
+                playerTracker_.syncUI();
+                aiEngine_.initGame();
+                timeTracker_.stop();
+                timeTracker_.reset();
+                MainActivity mainActivity = mainActivity_.get();
+                if (mainActivity != null) {
+                    mainActivity.openNewPracticeTable();
+                }
+                break;
+
+            case TABLE_TYPE_NETWORK:
+                networkController_.handleRequestToResetTable();
+                break;
+
+            case TABLE_TYPE_EMPTY: // falls through
+            default:
+                Log.e(TAG, "Handle request to reset table: Unsupported table type.");
+                break;
         }
     }
     
     public void handlePlayerButtonClick(Enums.ColorEnum clickedColor) {
         Log.i(TAG, "Handle player-button click. clickedColor = " + clickedColor);
 
-        final TableType tableType = playerTracker_.getTableType();
-        switch (tableType) {
+        switch (playerTracker_.getTableType()) {
             case TABLE_TYPE_LOCAL:
                 break; // Do nothing if this is NOT a network table.
 
@@ -451,7 +441,7 @@ public class HoxApp extends Application {
 
             case TABLE_TYPE_EMPTY: // falls through
             default:
-                Log.e(TAG, "Handle player-button click: Unsupported table type = " + tableType);
+                Log.e(TAG, "Handle player-button click: Unsupported table type.");
                 break;
         }
     }
@@ -460,8 +450,7 @@ public class HoxApp extends Application {
         Log.d(TAG, "Handle local message: [" + chatMsg.message + "]");
         networkController_.handleLocalMessage(chatMsg);
     }
-    
-    @SuppressLint("DefaultLocale")
+
     public void handleLocalMove(Position fromPos, Position toPos) {
         Log.i(TAG, "Handle local move: referee 's moveCount = " + referee_.getMoveCount());
         
@@ -478,26 +467,27 @@ public class HoxApp extends Application {
         if (referee_.getMoveCount() > 1) { // The game has started?
             playerTracker_.syncUI();
         }
-        
-        if (!networkController_.isMyTableValid()) { // a local table (with AI)
-            aiEngine_.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
-            
-            if (!referee_.isGameInProgress()) {
-                Log.i(TAG, "The game has ended. Do nothing.");
-                onGameEnded();
-                return;
-            }
 
-            final long delayMillis = 2000; // Add some delay so that the user can see the move clearly.
-            Log.d(TAG, "Will ask AI (MaxQi) to generate a move after some delay:" +  delayMillis);
-            messageHandler_.postAIRequest(aiEngine_, delayMillis);
+        switch (playerTracker_.getTableType()) {
+            case TABLE_TYPE_LOCAL:
+                aiEngine_.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
+                if (!referee_.isGameInProgress()) {
+                    onGameEnded(); // The game has ended. Do nothing
+                } else {
+                    final long delayMillis = 2000; // Add delay so we have time to observe the move.
+                    Log.d(TAG, "Will ask AI to generate a move after some delay:" + delayMillis);
+                    messageHandler_.postAIRequest(aiEngine_, delayMillis);
+                }
+                break;
 
-        }
-        else { // a network table
-            final String move = String.format("%d%d%d%d",
-                    fromPos.column, fromPos.row, toPos.column, toPos.row);
-            Log.i(TAG, " .... move: [" + move + "]");
-            networkController_.handleRequestToSendMove(move);
+            case TABLE_TYPE_NETWORK:
+                networkController_.handleRequestToSendMove(fromPos, toPos);
+                break;
+
+            case TABLE_TYPE_EMPTY: // falls through
+            default:
+                Log.e(TAG, "Handle local move:: Unsupported table type.");
+                break;
         }
     }
     

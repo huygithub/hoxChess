@@ -466,12 +466,13 @@ public class NetworkController {
         }
     }
 
-    public void handleRequestToSendMove(String move) {
-        Log.i(TAG, "Send request to 'Send Move'...");
+    public void handleRequestToSendMove(Position fromPos, Position toPos) {
+        Log.i(TAG, "Send request to 'Send Move': " + fromPos + " => " + toPos);
         if (!isMyTableValid()) {
             Log.w(TAG, "No current table. Ignore the request to 'Offer Resign' the current Table");
             return;
         }
+        final String move = "" + fromPos.column + fromPos.row + toPos.column + toPos.row;
         networkPlayer_.sendRequest_MOVE(myTable_.tableId, move);
     }
 
