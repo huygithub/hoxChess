@@ -27,11 +27,14 @@ import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.GameStatus;
 import com.playxiangqi.hoxchess.Enums.TableType;
 
+import android.os.Handler;
+import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-public class NetworkController {
+public class NetworkController implements NetworkPlayer.NetworkEventListener,
+                                    ChatBubbleActivity.MessageListener {
 
     private static final String TAG = "NetworkController";
     
@@ -52,7 +55,10 @@ public class NetworkController {
     private TablePlayerTracker playerTracker_ = new TablePlayerTracker(TableType.TABLE_TYPE_LOCAL);
     
     private List<ChatMessage> newMessages_ = new ArrayList<ChatMessage>();
-    
+
+    /**
+     * Constructor
+     */
     public NetworkController(TableTimeTracker timeTracker,
                              TablePlayerTracker playerTracker,
                              Referee referee) {
@@ -61,8 +67,59 @@ public class NetworkController {
         playerTracker_ = playerTracker;
         referee_ = referee;
 
+        networkPlayer_.setNetworkEventListener(this);
         if (!networkPlayer_.isAlive()) {
             networkPlayer_.start();
+        }
+    }
+
+    @Override
+    public void onNetworkEvent(String eventString) {
+        Log.d(TAG, "On network event = [" + eventString + "]");
+        messageHandler_.sendMessage(
+                messageHandler_.obtainMessage(MSG_NETWORK_EVENT, eventString) );
+    }
+
+    @Override
+    public void onNetworkCode(int networkCode) {
+        Log.d(TAG, "On network code = [" + networkCode + "]");
+        messageHandler_.sendMessage(
+                messageHandler_.obtainMessage(MSG_NETWORK_CODE, networkCode) );
+    }
+
+    @Override
+    public void onLocalMessage(ChatMessage chatMsg) {
+        this.handleLocalMessage(chatMsg);
+    }
+
+    /**
+     * A message handler to handle UI related tasks.
+     */
+    private static final int MSG_NETWORK_EVENT = 1;
+    private static final int MSG_NETWORK_CODE = 2;
+    private final MessageHandler messageHandler_ = new MessageHandler(this);
+
+    static class MessageHandler extends Handler {
+        private final NetworkController controller_;
+
+        MessageHandler(NetworkController controller) {
+            controller_ = controller;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_NETWORK_EVENT:
+                    controller_.handleNetworkEvent((String) msg.obj);
+                    break;
+
+                case MSG_NETWORK_CODE:
+                    controller_.handleNetworkCode((Integer) msg.obj);
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
 
@@ -87,7 +144,7 @@ public class NetworkController {
      * @param eventString The event
      */
     public void handleNetworkEvent(String eventString) {
-        Log.d(TAG, "Handle a network event: ENTER.");
+        Log.v(TAG, "Handle a network event: ENTER.");
 
         HashMap<String, String> newEvent = new HashMap<String, String>();
 
@@ -129,6 +186,41 @@ public class NetworkController {
         }
     }
 
+    public void handleNetworkCode(int networkCode) {
+        Log.d(TAG, "On Network code: " + networkCode);
+        switch (networkCode) {
+            case NetworkPlayer.NETWORK_CODE_CONNECTED:
+                Toast.makeText(HoxApp.getApp(),
+                        HoxApp.getApp().getString(R.string.msg_connection_established),
+                        Toast.LENGTH_LONG).show();
+                break;
+
+            case NetworkPlayer.NETWORK_CODE_UNRESOLVED_ADDRESS:
+                Toast.makeText(HoxApp.getApp(),
+                        "Failed to connect to the game server (UnresolvedAddressException)!",
+                        Toast.LENGTH_LONG).show();
+                break;
+
+            case NetworkPlayer.NETWORK_CODE_IO_EXCEPTION:
+                this.handleNetworkError();
+                break;
+
+            case NetworkPlayer.NETWORK_CODE_DISCONNECTED:
+                Toast.makeText(HoxApp.getApp(),
+                        HoxApp.getApp().getString(R.string.msg_connection_disconnected),
+                        Toast.LENGTH_LONG).show();
+                break;
+
+            default:
+                break;
+        }
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.onNetworkCode(networkCode);
+        }
+    }
+
     private void handleNetworkEvent_LOGIN(int code, String content) {
         Log.d(TAG, "Handle event (LOGIN): ENTER.");
 
@@ -162,6 +254,7 @@ public class NetworkController {
             MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
                 mainActivity.clearTable();
+                mainActivity.setTableController(TableType.TABLE_TYPE_EMPTY);
             }
         }
     }
@@ -206,6 +299,7 @@ public class NetworkController {
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
             mainActivity.updateBoardWithNewTableInfo(myTable_);
+            mainActivity.setTableController(TableType.TABLE_TYPE_NETWORK);
         }
     }
 
@@ -274,11 +368,13 @@ public class NetworkController {
             gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
             timeTracker_.stop();
             newMessages_.clear();
+            playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
             MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
                 mainActivity.clearTable();
+                mainActivity.setTableController(TableType.TABLE_TYPE_EMPTY);
             }
-            // Other player left my table?
+        // Other player left my table?
         } else {
             myTable_.onPlayerLeft(pid);
         }
@@ -300,12 +396,6 @@ public class NetworkController {
             return;
         }
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity == null) {
-            Log.w(TAG, "The main activity is NULL. Ignore this E_JOIN event.");
-            return;
-        }
-
         final Enums.ColorEnum playerColor = Utils.stringToPlayerColor(color);
         myTable_.onPlayerJoined(pid, rating, playerColor);
 
@@ -323,7 +413,11 @@ public class NetworkController {
             default:
                 break;
         }
-        mainActivity.onLocalPlayerJoined(myColor_);
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.onLocalPlayerJoined(myColor_);
+        }
 
         playerTracker_.onPlayerJoin(pid, rating, playerColor);
         playerTracker_.syncUI();
@@ -340,12 +434,6 @@ public class NetworkController {
             return;
         }
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity == null) {
-            Log.w(TAG, "The main activity is NULL. Ignore this E_END event.");
-            return;
-        }
-
         GameStatus gameStatus = GameStatus.GAME_STATUS_UNKNOWN;
 
         if ("black_win".equals(gameResult)) {
@@ -356,7 +444,11 @@ public class NetworkController {
             gameStatus = GameStatus.GAME_STATUS_DRAWN;
         }
         gameStatus_ = gameStatus;
-        mainActivity.onGameEnded(gameStatus);
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.onGameEnded(gameStatus);
+        }
         timeTracker_.stop();
         playerTracker_.syncUI();
     }
@@ -371,14 +463,12 @@ public class NetworkController {
             return;
         }
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity == null) {
-            Log.w(TAG, "The main activity is NULL. Ignore this E_END event.");
-            return;
-        }
-
         gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
-        mainActivity.onGameReset();
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.onGameReset();
+        }
         timeTracker_.stop();
         timeTracker_.reset();
     }
@@ -391,12 +481,6 @@ public class NetworkController {
 
         if (!myTable_.hasId(tableId)) { // not the table I am interested in?
             Log.w(TAG, "Ignore the DRAW event.");
-            return;
-        }
-
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity == null) {
-            Log.w(TAG, "The main activity is NULL. Ignore this E_END event.");
             return;
         }
 
@@ -542,8 +626,6 @@ public class NetworkController {
     public void handleMyRequestToChangeRole(Enums.ColorEnum clickedColor) {
         Log.d(TAG, "Handle my request to change role to = " + clickedColor);
 
-        //if (!myTable_.isValid()) return; // Do nothing if this is NOT a network table.
-
         Enums.ColorEnum requestedColor = ColorEnum.COLOR_UNKNOWN;
 
         switch (myColor_) {
@@ -651,6 +733,10 @@ public class NetworkController {
 
         playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
         playerTracker_.syncUI();
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.setTableController(TableType.TABLE_TYPE_EMPTY);
+        }
     }
 
     public boolean isGameOver() {

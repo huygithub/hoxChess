@@ -108,8 +108,8 @@ public class TablePlayerTracker {
         
         // Check if I just left the Table.
         if (myPid.equals(pid)) {
-            this.setTableType(TableType.TABLE_TYPE_EMPTY);
-            
+            // Do nothing here. The network controller will take care of this case.
+
         } else { // Other player left my table?
             if (blackPlayer_.hasPid(pid)) {
                 blackPlayer_ = new PlayerInfo();

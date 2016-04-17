@@ -106,7 +106,21 @@ public class BoardView extends ImageView
     private int historyIndex_ = HISTORY_INDEX_END; // Which Move the user is reviewing.
     
     private List<Piece> captureStack_ = new ArrayList<Piece>(); // A stack of captured pieces.
-    
+
+    private BoardEventListener boardEventListener_;
+
+    /**
+     * The Container of this Board must implement this interface.
+     */
+    public interface BoardEventListener {
+        void onLocalMove(Position fromPos, Position toPos);
+        boolean isMyTurn();
+    }
+
+    public void setBoardEventListener(BoardEventListener listener) {
+        boardEventListener_ = listener;
+    }
+
     /**
      * @param context
      */
@@ -479,7 +493,7 @@ public class BoardView extends ImageView
                 if (downTouch_) {
                     downTouch_ = false;
                     if (isGameInProgress() && !isBoardInReviewMode() 
-                            && HoxApp.getApp().isMyTurn()) {
+                            && (boardEventListener_ != null && boardEventListener_.isMyTurn())) {
                         handleTouchAtLocation(event.getX(), event.getY());
                     }
                     
@@ -632,7 +646,9 @@ public class BoardView extends ImageView
         
         addMoveToHistory(fromPos, toPos, capture);
         didMoveOccur(fromPos, toPos, capture, gameStatus);
-        HoxApp.getApp().handleLocalMove(fromPos, toPos);
+        if (boardEventListener_ != null) {
+            boardEventListener_.onLocalMove(fromPos, toPos);
+        }
     }
 
     public void makeMove(final Position fromPos, final Position toPos, boolean animated) {

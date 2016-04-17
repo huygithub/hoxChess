@@ -26,6 +26,17 @@ public class ChatBubbleActivity extends Activity {
     private Button buttonSend;
     private View inputLayout;
 
+    // ------------------------------------------------
+    public interface MessageListener {
+        void onLocalMessage(ChatMessage chatMsg);
+    }
+    private MessageListener messageListener_;
+
+    public void setMessageListener(MessageListener listener) {
+        messageListener_ = listener;
+    }
+    // ------------------------------------------------
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,8 +119,10 @@ public class ChatBubbleActivity extends Activity {
         
         ChatMessage chatMsg = new ChatMessage(false, msg);
         chatArrayAdapter.add(chatMsg);
-        
-        HoxApp.getApp().handleLocalMessage(chatMsg);
+
+        if (messageListener_ != null) {
+            messageListener_.onLocalMessage(chatMsg);
+        }
         return true;
     }
 

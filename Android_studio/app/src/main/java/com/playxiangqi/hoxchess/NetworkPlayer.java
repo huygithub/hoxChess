@@ -1,5 +1,5 @@
 /**
- *  Copyright 2015 Huy Phan <huyphan@playxiangqi.com>
+ *  Copyright 2016 Huy Phan <huyphan@playxiangqi.com>
  * 
  *  This file is part of HOXChess.
  * 
@@ -73,7 +73,18 @@ class NetworkPlayer extends Thread {
     public static final int NETWORK_CODE_UNRESOLVED_ADDRESS = 2;
     public static final int NETWORK_CODE_IO_EXCEPTION = 3;
     public static final int NETWORK_CODE_DISCONNECTED = 4;
-    
+
+    // -------------------------------------------------------------------------------------
+    public interface NetworkEventListener {
+        void onNetworkEvent(String eventString);
+        void onNetworkCode(int networkCode);
+    }
+    private NetworkEventListener networkEventListener_;
+
+    public void setNetworkEventListener(NetworkEventListener listener) {
+        networkEventListener_ = listener;
+    }
+
     // -------------------------------------------------------------------------------------
     private Handler handler_;
 
@@ -116,7 +127,9 @@ class NetworkPlayer extends Thread {
                     if (!disconnectionRequested_) {
                         disconnectionRequested_ = true;
                     }
-                    HoxApp.getApp().postNetworkCode(NETWORK_CODE_IO_EXCEPTION);
+                    if (networkEventListener_ != null) {
+                        networkEventListener_.onNetworkCode(NETWORK_CODE_IO_EXCEPTION);
+                    }
                 }
             }
         };
@@ -124,7 +137,7 @@ class NetworkPlayer extends Thread {
     }
     
     // -------------------------------------------------------------------------------------
-    NetworkPlayer() {
+    public NetworkPlayer() {
        // empty
     }
     
@@ -224,7 +237,9 @@ class NetworkPlayer extends Thread {
         } catch (UnresolvedAddressException ex) {
             Log.e(TAG, "UnresolvedAddressException caught while connecting.");
             connectionState_ = ConnectionState.CONNECTION_STATE_NONE;
-            HoxApp.getApp().postNetworkCode(NETWORK_CODE_UNRESOLVED_ADDRESS);
+            if (networkEventListener_ != null) {
+                networkEventListener_.onNetworkCode(NETWORK_CODE_UNRESOLVED_ADDRESS);
+            }
             return;
         }
         Log.d(TAG, "... Continue with connecting....");
@@ -234,7 +249,9 @@ class NetworkPlayer extends Thread {
         }
         connectionState_ = ConnectionState.CONNECTION_STATE_CONNECTED;
         Log.d(TAG, "... Connection established!");
-        HoxApp.getApp().postNetworkCode(NETWORK_CODE_CONNECTED);
+        if (networkEventListener_ != null) {
+            networkEventListener_.onNetworkCode(NETWORK_CODE_CONNECTED);
+        }
         
         handler_.sendMessageDelayed(handler_.obtainMessage(MSG_NETWORK_CHECK_FOR_WORK), 1000);
         
@@ -284,7 +301,9 @@ class NetworkPlayer extends Thread {
                 socketChannel_.close();
                 socketChannel_ = null;
                 connectionState_ = ConnectionState.CONNECTION_STATE_NONE;
-                HoxApp.getApp().postNetworkCode(NETWORK_CODE_DISCONNECTED);
+                if (networkEventListener_ != null) {
+                    networkEventListener_.onNetworkCode(NETWORK_CODE_DISCONNECTED);
+                }
             }
             disconnectionRequested_ = false;
         } else {
@@ -399,8 +418,10 @@ class NetworkPlayer extends Thread {
                 final String anEvent = inData_.substring(startIndex, index-1);
                 //Log.i(TAG, "Process (data): ... got an event = [" + anEvent + "].");
                 startIndex = index + 1;
-                
-                HoxApp.getApp().postNetworkEvent(anEvent);
+
+                if (networkEventListener_ != null) {
+                    networkEventListener_.onNetworkEvent(anEvent);
+                }
                 
             } else if (bSawOne) {
                 bSawOne = false;

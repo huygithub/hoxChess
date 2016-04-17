@@ -43,14 +43,13 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.PopupMenu;
 import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * The main (entry-point) activity.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+                        implements BoardView.BoardEventListener {
 
     private static final String TAG = "MainActivity";
 
@@ -68,7 +67,19 @@ public class MainActivity extends AppCompatActivity {
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
     
     private int notifCount_ = 0;
-    
+
+    private BaseTableController tableController_ = new BaseTableController();
+
+    public void setTableController(TableType tableType) {
+        tableController_ = BaseTableController.getTableController(tableType);
+        tableController_.setMainActivity(this);
+
+        // Note: Set the listener again even though we already do in onBoardViewCreated !!!
+        if (boardView_ != null) {
+            boardView_.setBoardEventListener(tableController_);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -136,9 +147,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         Log.d(TAG, "onBackPressed");
-        final TableType tableType = HoxApp.getApp().getPlayerTracker().getTableType();
-        if (tableType == TableType.TABLE_TYPE_NETWORK) {
-            HoxApp.getApp().handleRequestToCloseCurrentTable();
+
+        if (tableController_.handleBackPressed()) { // already handled?
+            return;
         } else {
             super.onBackPressed();
         }
@@ -196,30 +207,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         Log.d(TAG, "(ActionBar) onPrepareOptionsMenu");
         super.onPrepareOptionsMenu(menu);
-        menu.findItem(R.id.action_logout).setVisible(
-                HoxApp.getApp().isOnline());
-        
-        final TableType tableType = HoxApp.getApp().getPlayerTracker().getTableType();
-        final boolean isNetworkTable = (tableType == TableType.TABLE_TYPE_NETWORK);
-        final ColorEnum myColor = HoxApp.getApp().getMyColor();
-        final boolean isGameOver = HoxApp.getApp().isGameOver();
-        final int moveCount = boardView_.getMoveCount();
-        
-        menu.findItem(R.id.action_new_table).setVisible(tableType == TableType.TABLE_TYPE_EMPTY);
-        
-        if (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED) {
-            if (!isNetworkTable) {
-                menu.findItem(R.id.action_close_table).setVisible(false);
-            } else if (moveCount >= 2) { // The game has actually started?
-                menu.findItem(R.id.action_close_table).setVisible(isGameOver);
-            } else {
-                menu.findItem(R.id.action_close_table).setVisible(true);
-            }
-            
-        } else {
-            menu.findItem(R.id.action_close_table).setVisible(isNetworkTable);
-        }
-        return true; // display the menu
+        return tableController_.onPrepareOptionsMenu(this, menu);
     }
     
     @Override
@@ -229,29 +217,20 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
             case android.R.id.home:
-                HoxApp.getApp().handleRequestToCloseCurrentTable();
+                tableController_.handleRequestToCloseCurrentTable();
                 return true;
             case R.id.action_new_table:
-                HoxApp.getApp().handleRequestToOpenNewTable();
+                tableController_.handleRequestToOpenNewTable();
                 return true;
             case R.id.action_close_table:
-                HoxApp.getApp().handleRequestToCloseCurrentTable();
-                return true;
-            case R.id.action_offer_draw:
-                HoxApp.getApp().handleRequestToOfferDraw();
-                return true;
-            case R.id.action_offer_resign:
-                HoxApp.getApp().handleRequestToOfferResign();
-                return true;
-            case R.id.action_reset_table:
-                HoxApp.getApp().handleRequestToResetTable();
+                tableController_.handleRequestToCloseCurrentTable();
                 return true;
             case R.id.action_play_online:
                 setProgressBarIndeterminateVisibility(true);
                 HoxApp.getApp().handlePlayOnlineClicked();
                 return true;
             case R.id.action_logout:
-                HoxApp.getApp().handleLogoutFromNetwork();
+                tableController_.handleLogoutFromNetwork();
                 return true;
             case R.id.action_settings:
                 openSettingsView();
@@ -275,11 +254,9 @@ public class MainActivity extends AppCompatActivity {
     
     private void reverseView() {
         Log.d(TAG, "Reverse view...");
-        
         isBlackOnTop_ = !isBlackOnTop_;
         boardView_.reverseView();
-        
-        // Time and Player trackers.
+
         HoxApp.getApp().getTimeTracker().reverseView();
         HoxApp.getApp().getPlayerTracker().reverseView();
     }
@@ -384,11 +361,21 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == JOIN_TABLE_REQUEST) {
             if (resultCode == RESULT_OK) {
                 final String tableId = data.getStringExtra("tid");
-                HoxApp.getApp().handleTableSelection(tableId);
+                tableController_.handleTableSelection(tableId);
             }
         }
     }
-    
+
+    @Override
+    public void onLocalMove(Position fromPos, Position toPos) {
+        tableController_.onLocalMove(fromPos, toPos);
+    }
+
+    @Override
+    public boolean isMyTurn() {
+        return tableController_.isMyTurn();
+    }
+
     private void onBoardViewCreated(final MainActivity activity) {
         Log.d(TAG, "onBoardViewCreated...");
 
@@ -400,25 +387,31 @@ public class MainActivity extends AppCompatActivity {
         bottomPlayerLabel_ = (TextView) activity.findViewById(R.id.bottom_player_label);
         topPlayerButton_ = (Button) activity.findViewById(R.id.top_button);
         bottomPlayerButton_ = (Button) activity.findViewById(R.id.bottom_button);
-        
+
+        boardView_.setBoardEventListener(tableController_);
+
         // Setup the long-click handlers to handle BEGIN and END actions of replay.
         ImageButton previousButton = (ImageButton) activity.findViewById(R.id.replay_previous);
-        previousButton.setOnLongClickListener(new OnLongClickListener() { 
-            @Override
-            public boolean onLongClick(View v) {
-                activity.onReplayBegin();
-                return true;
-            }
-        });
+        if (previousButton != null) {
+            previousButton.setOnLongClickListener(new OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    activity.onReplayBegin();
+                    return true;
+                }
+            });
+        }
         
         ImageButton nextButton = (ImageButton) activity.findViewById(R.id.replay_next);
-        nextButton.setOnLongClickListener(new OnLongClickListener() { 
-            @Override
-            public boolean onLongClick(View v) {
-                activity.onReplayEnd();
-                return true;
-            }
-        });
+        if (nextButton != null) {
+            nextButton.setOnLongClickListener(new OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    activity.onReplayEnd();
+                    return true;
+                }
+            });
+        }
         
         // Game timers.
         TextView topGameTimeView = (TextView) activity.findViewById(R.id.top_game_time);
@@ -497,89 +490,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onResetTable(View view) {
-        PopupMenu popup = new PopupMenu(this, view);
-        popup.getMenuInflater().inflate(R.menu.table_actions, popup.getMenu());
-        
-        final TableType tableType = HoxApp.getApp().getPlayerTracker().getTableType();
-        switch (tableType) {
-            case TABLE_TYPE_LOCAL:
-                popup.getMenu().removeItem(R.id.action_offer_draw);
-                popup.getMenu().removeItem(R.id.action_offer_resign);
-                break;
-                
-            case TABLE_TYPE_NETWORK:
-                final boolean isGameOver = HoxApp.getApp().isGameOver();
-                final ColorEnum myColor = HoxApp.getApp().getMyColor();
-                final boolean amIplaying = (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED);
-                final int moveCount = boardView_.getMoveCount();
-                if (isGameOver) {
-                    popup.getMenu().removeItem(R.id.action_offer_draw);
-                    popup.getMenu().removeItem(R.id.action_offer_resign);
-                } else if (!amIplaying) {
-                    popup.getMenu().removeItem(R.id.action_offer_draw);
-                    popup.getMenu().removeItem(R.id.action_offer_resign);
-                    popup.getMenu().removeItem(R.id.action_reset_table);
-                }  else if (moveCount >= 2) { // game has started?
-                    popup.getMenu().removeItem(R.id.action_reset_table);
-                } else {
-                    popup.getMenu().removeItem(R.id.action_offer_draw);
-                    popup.getMenu().removeItem(R.id.action_offer_resign);
-                }
-                break;
-                
-            case TABLE_TYPE_EMPTY: // falls through
-            default:
-                popup.getMenu().removeItem(R.id.action_offer_draw);
-                popup.getMenu().removeItem(R.id.action_offer_resign);
-                popup.getMenu().removeItem(R.id.action_reset_table);
-                break;
-        }
-        
-        if (popup.getMenu().size() == 0) {
-            Log.i(TAG, "(on 'Reset' button click) No need to show popup menu!");
-            return;
-        }
-        
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.action_offer_draw:
-                        HoxApp.getApp().handleRequestToOfferDraw();
-                        Toast.makeText(HoxApp.getApp(),
-                                getString(R.string.action_draw),
-                                Toast.LENGTH_SHORT).show();
-                        return true;
-                        
-                    case R.id.action_offer_resign:
-                        HoxApp.getApp().handleRequestToOfferResign();
-                        Toast.makeText(HoxApp.getApp(),
-                                getString(R.string.action_resign),
-                                Toast.LENGTH_SHORT).show();
-                        return true;
-                        
-                    case R.id.action_reset_table:
-                        HoxApp.getApp().handleRequestToResetTable();
-                        return true;
-                        
-                    default:
-                        return true;
-                }
-            }
-        });
-        
-        popup.show();
+        tableController_.onClick_resetTable(this, view);
     }
     
     public void onTopButtonClick(View view) {
         Enums.ColorEnum clickedColor =
                 (isBlackOnTop_ ? ColorEnum.COLOR_BLACK : ColorEnum.COLOR_RED);
-        HoxApp.getApp().handlePlayerButtonClick(clickedColor);
+        tableController_.handlePlayerButtonClick(clickedColor);
     }
 
     public void onBottomButtonClick(View view) {
         Enums.ColorEnum clickedColor =
                 (isBlackOnTop_ ? ColorEnum.COLOR_RED : ColorEnum.COLOR_BLACK);
-        HoxApp.getApp().handlePlayerButtonClick(clickedColor);
+        tableController_.handlePlayerButtonClick(clickedColor);
     }
     
     /**
