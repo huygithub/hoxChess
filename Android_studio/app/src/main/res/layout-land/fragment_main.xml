@@ -99,7 +99,7 @@
                   android:layout_height="wrap_content"
                   android:layout_alignParentRight="true"
                   android:contentDescription="@string/action_reset"
-                  android:src="@drawable/ic_action_rotate_right"
+                  android:src="@drawable/ic_action_menu_white"
                   android:onClick="onResetTable" />
 
             <ImageButton
