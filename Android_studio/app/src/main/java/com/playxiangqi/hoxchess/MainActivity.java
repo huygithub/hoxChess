@@ -39,10 +39,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 /**
@@ -58,12 +58,13 @@ public class MainActivity extends AppCompatActivity
     private static final int JOIN_TABLE_REQUEST = 1;  // The request code
     
     private Fragment placeholderFragment_;
+    private ProgressBar progressBar_;
     private BoardView boardView_;
     private TextView topPlayerLabel_;
     private TextView bottomPlayerLabel_;
     private Button topPlayerButton_;
     private Button bottomPlayerButton_;
-    
+
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
     
     private int notifCount_ = 0;
@@ -83,9 +84,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // Needs to be called before setting the content view
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         
         setContentView(R.layout.activity_main);
 
@@ -226,7 +224,7 @@ public class MainActivity extends AppCompatActivity
                 tableController_.handleRequestToCloseCurrentTable();
                 return true;
             case R.id.action_play_online:
-                setProgressBarIndeterminateVisibility(true);
+                progressBar_.setVisibility(View.VISIBLE);
                 HoxApp.getApp().handlePlayOnlineClicked();
                 return true;
             case R.id.action_logout:
@@ -263,8 +261,8 @@ public class MainActivity extends AppCompatActivity
     
     public void startActivityToListTables(String content) {
         Log.d(TAG, "Start activity (LIST): ENTER.");
-        
-        setProgressBarIndeterminateVisibility(false);
+
+        progressBar_.setVisibility(View.GONE);
         
         Intent intent = new Intent(this, TablesActivity.class);
         intent.putExtra("content", content);
@@ -353,7 +351,7 @@ public class MainActivity extends AppCompatActivity
     }
     
     public void onNetworkCode(int networkCode) {
-        setProgressBarIndeterminateVisibility(false);
+        progressBar_.setVisibility(View.GONE);
     }
     
     @Override
@@ -382,6 +380,7 @@ public class MainActivity extends AppCompatActivity
         Toolbar myToolbar = (Toolbar) activity.findViewById(R.id.my_toolbar);
         activity.setSupportActionBar(myToolbar);
 
+        progressBar_ = (ProgressBar) findViewById(R.id.progress_spinner);
         boardView_ = (BoardView) activity.findViewById(R.id.board_view);
         topPlayerLabel_ = (TextView) activity.findViewById(R.id.top_player_label);
         bottomPlayerLabel_ = (TextView) activity.findViewById(R.id.bottom_player_label);
