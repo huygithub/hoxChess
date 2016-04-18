@@ -278,11 +278,6 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "Update board with new network Table info (I_TABLE)...");
         
         setAndShowTitle(tableInfo.tableId);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        } else {
-            Log.w(TAG, "updateBoardWithNewTableInfo: getSupportActionBar() = null. Do not set Display options!");
-        }
         invalidateOptionsMenu(); // Recreate the options menu
         boardView_.resetBoard();
     }
@@ -463,6 +458,7 @@ public class MainActivity extends AppCompatActivity
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
             getSupportActionBar().setTitle(getString(R.string.title_table, title));
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         } else {
             Log.w(TAG, "setAndShowTitle: getSupportActionBar() = null. Do not set Display options!");
         }
