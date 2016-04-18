@@ -14,3 +14,10 @@ The above commands will create the necessary .so files:
 ./app/src/main/libs/mips/libReferee.so
 ./app/src/main/libs/x86/libAI_MaxQi.so
 ./app/src/main/libs/x86/libReferee.so
+
+
+Icons in the project:
+=====================
+* Some icons were downloaded from https://design.google.com/icons/index.html#ic_menu
+
+////////////////////// END OF FILE //////////////////////////////////////////
