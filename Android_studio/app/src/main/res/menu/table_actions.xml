@@ -9,5 +9,13 @@
 
     <item android:id="@+id/action_reset_table"
           android:title="@string/action_reset" />
-    
+
+    <item android:id="@+id/action_close_table"
+          android:title="@string/action_close" />
+
+    <!-- This is hidden by default -->
+    <item android:id="@+id/action_new_table"
+          android:title="@string/action_new"
+          android:visible="false" />
+
 </menu>

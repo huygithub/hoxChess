@@ -84,12 +84,14 @@ public class NetworkTableController extends BaseTableController {
         if (isGameOver) {
             popup.getMenu().removeItem(R.id.action_offer_draw);
             popup.getMenu().removeItem(R.id.action_offer_resign);
+            popup.getMenu().removeItem(R.id.action_close_table);
         } else if (!amIPlaying) {
             popup.getMenu().removeItem(R.id.action_offer_draw);
             popup.getMenu().removeItem(R.id.action_offer_resign);
             popup.getMenu().removeItem(R.id.action_reset_table);
         }  else if (moveCount >= 2) { // game has started?
             popup.getMenu().removeItem(R.id.action_reset_table);
+            popup.getMenu().removeItem(R.id.action_close_table);
         } else {
             popup.getMenu().removeItem(R.id.action_offer_draw);
             popup.getMenu().removeItem(R.id.action_offer_resign);

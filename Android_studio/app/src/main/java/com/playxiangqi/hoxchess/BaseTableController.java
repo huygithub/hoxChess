@@ -129,6 +129,14 @@ public class BaseTableController implements BoardView.BoardEventListener {
                         handleRequestToResetTable();
                         return true;
 
+                    case R.id.action_close_table:
+                        handleRequestToCloseCurrentTable();
+                        return true;
+
+                    case R.id.action_new_table:
+                        handleRequestToOpenNewTable();
+                        return true;
+
                     default:
                         return true;
                 }

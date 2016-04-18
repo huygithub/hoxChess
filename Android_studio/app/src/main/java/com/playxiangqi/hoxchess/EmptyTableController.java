@@ -58,6 +58,8 @@ public class EmptyTableController extends BaseTableController {
         popup.getMenu().removeItem(R.id.action_offer_draw);
         popup.getMenu().removeItem(R.id.action_offer_resign);
         popup.getMenu().removeItem(R.id.action_reset_table);
+        popup.getMenu().removeItem(R.id.action_close_table);
+        popup.getMenu().findItem(R.id.action_new_table).setVisible(true);
 
         if (popup.getMenu().size() == 0) {
             Log.i(TAG, "(on 'Reset' button click) No need to show popup menu!");
