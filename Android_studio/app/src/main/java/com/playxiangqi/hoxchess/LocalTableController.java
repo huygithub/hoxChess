@@ -23,6 +23,7 @@ import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -176,6 +177,9 @@ public class LocalTableController extends BaseTableController {
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
             mainActivity.openNewPracticeTable();
+            Snackbar.make(mainActivity.findViewById(R.id.board_view), R.string.action_reset,
+                    Snackbar.LENGTH_SHORT)
+                    .show();
         }
     }
 

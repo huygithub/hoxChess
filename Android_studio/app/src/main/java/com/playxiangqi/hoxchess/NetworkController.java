@@ -29,9 +29,9 @@ import com.playxiangqi.hoxchess.Enums.TableType;
 
 import android.os.Handler;
 import android.os.Message;
+import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
 public class NetworkController implements NetworkPlayer.NetworkEventListener,
                                     ChatBubbleActivity.MessageListener {
@@ -188,34 +188,34 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
 
     public void handleNetworkCode(int networkCode) {
         Log.d(TAG, "On Network code: " + networkCode);
+        MainActivity mainActivity = mainActivity_.get();
         switch (networkCode) {
             case NetworkPlayer.NETWORK_CODE_CONNECTED:
-                Toast.makeText(HoxApp.getApp(),
-                        HoxApp.getApp().getString(R.string.msg_connection_established),
-                        Toast.LENGTH_LONG).show();
+                if (mainActivity != null) {
+                    mainActivity.showBriefMessage(R.string.msg_connection_established, Snackbar.LENGTH_SHORT);
+                }
                 break;
 
             case NetworkPlayer.NETWORK_CODE_UNRESOLVED_ADDRESS:
-                Toast.makeText(HoxApp.getApp(),
-                        "Failed to connect to the game server (UnresolvedAddressException)!",
-                        Toast.LENGTH_LONG).show();
+                if (mainActivity != null) {
+                    mainActivity.showBriefMessage(R.string.msg_connection_failed_unresolved_address_exception, Snackbar.LENGTH_SHORT);
+                }
                 break;
 
             case NetworkPlayer.NETWORK_CODE_IO_EXCEPTION:
-                this.handleNetworkError();
+                handleNetworkError();
                 break;
 
             case NetworkPlayer.NETWORK_CODE_DISCONNECTED:
-                Toast.makeText(HoxApp.getApp(),
-                        HoxApp.getApp().getString(R.string.msg_connection_disconnected),
-                        Toast.LENGTH_LONG).show();
+                if (mainActivity != null) {
+                    mainActivity.showBriefMessage(R.string.msg_connection_disconnected, Snackbar.LENGTH_SHORT);
+                }
                 break;
 
             default:
                 break;
         }
 
-        MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
             mainActivity.onNetworkCode(networkCode);
         }
@@ -227,10 +227,11 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
         isLoginOK_ = (code == 0);
 
         if (!isLoginOK_) {  // Error
-            Log.i(TAG, "Login failed. Code: [" + code + "], Error: [" + content + "]");
-            Toast.makeText(HoxApp.getApp().getApplicationContext(),
-                    getLocalizedLoginError(code), Toast.LENGTH_LONG).show();
-
+            Log.w(TAG, "Login failed. Code: [" + code + "], Error: [" + content + "]");
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.showBriefMessage(getLocalizedLoginError(code), Snackbar.LENGTH_LONG);
+            }
             networkPlayer_.disconnectFromServer();
             return;
         }
@@ -249,7 +250,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
             playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
             playerTracker_.syncUI();
 
-            networkPlayer_.sendRequest_LIST();
+            handleMyRequestToGetListOfTables();
 
             MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
@@ -484,8 +485,10 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
             return;
         }
 
-        Toast.makeText(HoxApp.getApp().getApplicationContext(),
-                pid + " offered to DRAW the game", Toast.LENGTH_LONG).show();
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.showGameMessage_DRAW(pid);
+        }
     }
 
     private void handleNetworkEvent_MSG(String content, String tableId) {
@@ -533,24 +536,27 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
         isLoginOK_ = false;
     }
 
-    public void handleNetworkError() {
+    private void handleNetworkError() {
         Log.d(TAG, "Handle network error...");
 
         // Attempt to login again if we are observing a network table.
         if (myTable_.isValid()) {
             closeCurrentNetworkTable();
             networkPlayer_.connectToServer();
-        } else {
-            Toast.makeText(HoxApp.getApp().getApplicationContext(),
-                    "An IOException exception while handling network messages!",
-                    Toast.LENGTH_LONG).show();
+        } else if (isLoginOK_) {
+            // NOTE: Only show this error while being logged in! Otherwise, login-related errors,
+            //       such as "Wrong password" message, may be suppressed.
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.showBriefMessage(R.string.msg_network_error_io_exception_exception, Snackbar.LENGTH_SHORT);
+            }
         }
     }
 
     public void handleRequestToSendMove(Position fromPos, Position toPos) {
         Log.i(TAG, "Send request to 'Send Move': " + fromPos + " => " + toPos);
         if (!isMyTableValid()) {
-            Log.w(TAG, "No current table. Ignore the request to 'Offer Resign' the current Table");
+            Log.w(TAG, "No current table. Ignore the request to 'Offer Move' the current Table");
             return;
         }
         final String move = "" + fromPos.column + fromPos.row + toPos.column + toPos.row;
@@ -706,6 +712,12 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
 
     public void handleMyRequestToGetListOfTables() {
         networkPlayer_.sendRequest_LIST();
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            Snackbar.make(mainActivity.findViewById(R.id.container), R.string.msg_get_list_tables,
+                    Snackbar.LENGTH_LONG)
+                    .show();
+        }
     }
 
     public void setLoginInfo(String pid, String password) {
@@ -749,14 +761,13 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
         return networkPlayer_.isOnline();
     }
 
-    private String getLocalizedLoginError(int code) {
-        final HoxApp context = HoxApp.getApp();
+    private int getLocalizedLoginError(int code) {
         switch (code)
         {
-            case 6: return context.getString(R.string.login_error_wrong_password);
-            case 7: return context.getString(R.string.login_error_wrong_username);
+            case 6: return R.string.login_error_wrong_password;
+            case 7: return R.string.login_error_wrong_username;
         }
-        return context.getString(R.string.login_error_general_error);
+        return R.string.login_error_general_error;
     }
 
 }

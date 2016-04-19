@@ -29,6 +29,7 @@ import android.app.Fragment;
 import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -348,7 +349,16 @@ public class MainActivity extends AppCompatActivity
     public void onNetworkCode(int networkCode) {
         progressBar_.setVisibility(View.GONE);
     }
-    
+
+    public void showBriefMessage(int resId, int duration) {
+        Snackbar.make(boardView_, resId, duration).show();
+    }
+
+    public void showGameMessage_DRAW(String pid) {
+        Snackbar.make(boardView_,
+                getString(R.string.msg_player_offered_draw, pid), Snackbar.LENGTH_LONG).show();
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == JOIN_TABLE_REQUEST) {
