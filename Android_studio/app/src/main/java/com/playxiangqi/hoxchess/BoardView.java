@@ -260,6 +260,19 @@ public class BoardView extends ImageView
             getLayoutParams().width = finalWidth;
             requestLayout();
         }
+        else if (finalWidth > finalHeight) {
+            // NOTE: This is a special case that I found: in Google Nexus 9,
+            //       Width is greater Height
+            //       e.g., from logcat: WxH = 1516 x 1462, ORIENTATION_PORTRAIT
+            //
+            // TODO: We should look at how to this entire function again!
+            //
+            final int cellSizeByHeight = (finalHeight - 2 * offset_) / 10;
+            finalWidth = (cellSizeByHeight * 9) + 2 * offset_;
+            Log.i(TAG, "adjustBoardParameters(): (by Height) Adjusted Width => " + finalWidth);
+            getLayoutParams().width = finalWidth;
+            requestLayout();
+        }
 
         final int boardWidth = Math.min(finalWidth, finalHeight);
         cellSize_ = (boardWidth - 2*offset_)/9;
