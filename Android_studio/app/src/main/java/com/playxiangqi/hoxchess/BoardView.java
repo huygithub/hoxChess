@@ -526,7 +526,7 @@ public class BoardView extends ImageView
         public Object evaluate(float fraction, Object startValue, Object endValue) {
             final PointF fromPoint = (PointF) startValue;
             final PointF toPoint = (PointF) endValue;
-            Log.v(TAG, "evaluate: fraction: " + fraction + ", " + fromPoint + " => " + toPoint);
+            //Log.v(TAG, "evaluate: fraction: " + fraction + ", " + fromPoint + " => " + toPoint);
 
             float startX = fromPoint.x;
             float endX = toPoint.x;
@@ -537,20 +537,20 @@ public class BoardView extends ImageView
             float finalY = startY + fraction * (endY - startY);
 
             final PointF finalPoint = new PointF(finalX, finalY);
-            Log.v(TAG, "evaluate: ... finalPoint = " + finalPoint);
+            //Log.v(TAG, "evaluate: ... finalPoint = " + finalPoint);
             return finalPoint;
         }
     }
 
     @Override
     public void onAnimationUpdate(ValueAnimator animation) {
-        Log.v(TAG, "onAnimationUpdate: animation.getAnimatedValue() = "
-                + animation.getAnimatedValue()
-                + ", repeatCount=" + animation.getRepeatCount());
+        //Log.v(TAG, "onAnimationUpdate: animation.getAnimatedValue() = "
+        //        + animation.getAnimatedValue()
+        //        + ", repeatCount=" + animation.getRepeatCount());
 
         Piece piece = (Piece) animator_.getTarget();
-        Log.v(TAG, "onAnimationUpdate: ...piece.getPreviousPointF() = " + piece.getPreviousPointF()
-                + ", pointF=" + piece.getPointF());
+        //Log.v(TAG, "onAnimationUpdate: ...piece.getPreviousPointF() = " + piece.getPreviousPointF()
+        //        + ", pointF=" + piece.getPointF());
 
         final int padding = 5; // To make sure the area around the piece getting re-drawn.
 
@@ -655,10 +655,10 @@ public class BoardView extends ImageView
     }
 
     private void onLocalMoveMade(Position fromPos, Position toPos, Piece capture, int gameStatus) {
-        Log.d(TAG, " on Local move = " + fromPos + " => " + toPos);
+        Log.d(TAG, "On Local move = " + fromPos + " => " + toPos);
         
         addMoveToHistory(fromPos, toPos, capture);
-        didMoveOccur(fromPos, toPos, capture, gameStatus);
+        didMoveOccur(capture, gameStatus, true);
         if (boardEventListener_ != null) {
             boardEventListener_.onLocalMove(fromPos, toPos);
         }
@@ -698,7 +698,7 @@ public class BoardView extends ImageView
                     fromPiece.setIsAnimated(false);
                     recentPiece_ = fromPiece;
                     addMoveToHistory(fromPos, toPos, capture);
-                    didMoveOccur(fromPos, toPos, capture, status);
+                    didMoveOccur(capture, status, true);
                     BoardView.this.invalidate();
                 }
             };
@@ -709,7 +709,7 @@ public class BoardView extends ImageView
             fromPiece.setPosition(toPos);
             recentPiece_ = fromPiece;
             addMoveToHistory(fromPos, toPos, capture);
-            didMoveOccur(fromPos, toPos, capture, status);
+            didMoveOccur(capture, status, false);
         }
     }
 
@@ -760,13 +760,13 @@ public class BoardView extends ImageView
      */
     private Piece getPieceAtViewPosition(Position position) {
         for (Piece piece : redPieces_) {
-            if (piece.isCaptured() == false && Position.equals(piece.getPosition(), position)) {
+            if (!piece.isCaptured() && Position.equals(piece.getPosition(), position)) {
                 return piece;
             }
         }
         
         for (Piece piece : blackPieces_) {
-            if (piece.isCaptured() == false && Position.equals(piece.getPosition(), position)) {
+            if (!piece.isCaptured() && Position.equals(piece.getPosition(), position)) {
                 return piece;
             }
         }
@@ -774,8 +774,8 @@ public class BoardView extends ImageView
         return null;
     }
     
-    private void didMoveOccur(Position fromPos, Position toPos, Piece capture, int status) {
-        Log.d(TAG, "A move just occurred. game 's status = " + status);
+    private void didMoveOccur(Piece capture, int status, boolean playSound) {
+        Log.d(TAG, "A move just occurred. game-status:" + status + ", playSound:" + playSound);
         
         gameStatus_ = status;
         
@@ -788,6 +788,10 @@ public class BoardView extends ImageView
         
         if (capture != null) {
             captureStack_.add(capture);
+        }
+
+        if (playSound) {
+            SoundManager.getInstance().playSound(SoundManager.SOUND_MOVE);
         }
     }
     

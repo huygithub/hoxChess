@@ -49,8 +49,7 @@ import android.widget.TextView;
 /**
  * The main (entry-point) activity.
  */
-public class MainActivity extends AppCompatActivity
-                        implements BoardView.BoardEventListener {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
@@ -369,16 +368,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onLocalMove(Position fromPos, Position toPos) {
-        tableController_.onLocalMove(fromPos, toPos);
-    }
-
-    @Override
-    public boolean isMyTurn() {
-        return tableController_.isMyTurn();
-    }
-
     private void onBoardViewCreated(final MainActivity activity) {
         Log.d(TAG, "onBoardViewCreated...");
 
@@ -456,6 +445,8 @@ public class MainActivity extends AppCompatActivity
         if (HoxApp.getApp().isMyNetworkTableValid()) {
             setAndShowTitle(HoxApp.getApp().getMyNetworkTableId());
         }
+
+        SoundManager.getInstance().initialize(activity);
     }
     
     private void onBoardViewResume(MainActivity activity) {

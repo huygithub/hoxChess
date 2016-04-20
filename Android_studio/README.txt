@@ -26,8 +26,16 @@ For example,
 
 These SVG files were exported to PNG file to create the images for pieces.
 
+
 Icons in the project:
 =====================
 * Some icons were downloaded from https://design.google.com/icons/index.html#ic_menu
+
+
+Sound files:
+============
+* The sound files (.wav) were imported from the iOS app "hoxChess", which is also an open source one.
+* They were then converted to "AAC audio file" (.m4a) using built-in app Mac OS X 10.11.4 "iTunes",
+  under the menu item "iTunes | File | Create New Version | Create AAC version".
 
 ////////////////////// END OF FILE //////////////////////////////////////////
