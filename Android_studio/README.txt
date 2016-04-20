@@ -16,6 +16,16 @@ The above commands will create the necessary .so files:
 ./app/src/main/libs/x86/libReferee.so
 
 
+Images for pieces:
+==================
+They were downloaded as SVG files from: https://en.wikipedia.org/wiki/Xiangqi
+Licence: Public Domain
+
+For example,
+  https://commons.wikimedia.org/wiki/File:Xiangqi_General_(Trad).svg
+
+These SVG files were exported to PNG file to create the images for pieces.
+
 Icons in the project:
 =====================
 * Some icons were downloaded from https://design.google.com/icons/index.html#ic_menu
