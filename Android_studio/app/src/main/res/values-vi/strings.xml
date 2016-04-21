@@ -94,5 +94,6 @@
     <string name="msg_player_offered_draw">%1$s xin huề</string>
     <string name="msg_connection_failed_unresolved_address_exception">Không thể kết nối đến máy chủ (UnresolvedAddressException)!</string>
     <string name="msg_network_error_io_exception_exception">Mạng bị lỗi trong khi xử lý tin nhắn!</string>
+    <string name="settings_sound_enabled_label">Âm thanh</string>
 
 </resources>

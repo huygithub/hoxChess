@@ -94,5 +94,6 @@
     <string name="msg_player_offered_draw">%1$s 提供绘制游戏</string>
     <string name="msg_connection_failed_unresolved_address_exception">未能连接到游戏服务器 (UnresolvedAddressException)!</string>
     <string name="msg_network_error_io_exception_exception">错误在处理网络消息！</string>
+    <string name="settings_sound_enabled_label">声音</string>
 
 </resources>

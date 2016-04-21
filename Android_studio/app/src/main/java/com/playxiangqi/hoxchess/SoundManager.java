@@ -46,7 +46,7 @@ public class SoundManager {
     private boolean initialized_ = false;
     private final SoundPool soundPool_;
     private final SparseIntArray soundMap_= new SparseIntArray();
-    private boolean muted_ = false;
+    private boolean soundEnabled_ = true;
 
     /**
      * Singleton API to return the instance.
@@ -88,15 +88,17 @@ public class SoundManager {
         if (initialized_) {
             Log.i(TAG, "The sound manager has already initialized. Do nothing.");
         } else {
-            Log.i(TAG, "Initialize the sound manager...");
-            addSound(context, SOUND_MOVE);
-            addSound(context, SOUND_CAPTURE);
+            soundEnabled_ = SettingsActivity.getSoundEnabledFlag(context);
+            Log.i(TAG, "Initialize the sound manager: soundEnabled:" + soundEnabled_);
+            if (soundEnabled_) {
+                allAllSupportedSounds(context);
+            }
             initialized_ = true;
         }
     }
 
     public void playSound(int soundType) {
-        if (muted_) return;
+        if (!soundEnabled_) return;
 
         final int soundId = soundMap_.get(soundType, -1 /* valueIfKeyNotFound */);
         if (soundId != -1) { // found?
@@ -112,20 +114,28 @@ public class SoundManager {
         }
     }
 
-    public boolean isMuted() {
-        return muted_;
+    public void setSoundEnabled(Context context, boolean enabled) {
+        Log.d(TAG, "Set sound: " + soundEnabled_ + " => " + enabled);
+        if (soundEnabled_ != enabled) {
+            soundEnabled_ = enabled;
+            // Add all sounds if we have not done so during initialization.
+            if (soundEnabled_ && initialized_) {
+                allAllSupportedSounds(context);
+            }
+        }
     }
-
-    public void setMuted(boolean muted) {
-        muted_ = muted;
-    }
-
 
     // ***************************************************************
     //
     //              Private APIs
     //
     // ***************************************************************
+
+    private void allAllSupportedSounds(Context context) {
+        Log.d(TAG, "Add all supported sounds...");
+        addSound(context, SOUND_MOVE);
+        addSound(context, SOUND_CAPTURE);
+    }
 
     private void addSound(Context context, int soundResId) {
         final int soundId = soundPool_.load(context, soundResId, 1 /* priority */);

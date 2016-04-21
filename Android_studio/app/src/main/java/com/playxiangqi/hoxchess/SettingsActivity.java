@@ -1,5 +1,5 @@
 /**
- *  Copyright 2015 Huy Phan <huyphan@playxiangqi.com>
+ *  Copyright 2016 Huy Phan <huyphan@playxiangqi.com>
  * 
  *  This file is part of HOXChess.
  * 
@@ -18,6 +18,7 @@
  */
 package com.playxiangqi.hoxchess;
 
+import android.preference.CheckBoxPreference;
 import android.text.TextUtils;
 import android.app.Activity;
 import android.content.Context;
@@ -35,6 +36,7 @@ public class SettingsActivity extends Activity {
     private static final String TAG = "SettingsActivity";
     
     private static final String KEY_PREF_AI_LEVEL = "pref_key_ai_level";
+    private static final String KEY_PREF_SOUND_ENABLED = "pref_key_sound_enabled";
     private static final String KEY_PREF_ACCOUNT_LOGIN = "pref_key_playxiangqi_login_with_account";
     private static final String KEY_PREF_ACCOUNT_USERNAME = "pref_key_playxiangqi_username";
     private static final String KEY_PREF_ACCOUNT_PASSWORD = "pref_key_playxiangqi_password";
@@ -57,6 +59,13 @@ public class SettingsActivity extends Activity {
                 context.getString(R.string.AILevel_default)));       
         Log.d(TAG, ".... Got AI Level: " +  aiLevel);
         return aiLevel;
+    }
+
+    public static boolean getSoundEnabledFlag(Context context) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean soundEnabled = sharedPreferences.getBoolean(KEY_PREF_SOUND_ENABLED, true);
+        Log.d(TAG, ".... Got Sound enabled: " +  soundEnabled);
+        return soundEnabled;
     }
 
     public static boolean getLoginWithAccountFlag(Context context) {
@@ -139,6 +148,10 @@ public class SettingsActivity extends Activity {
               int aiLevel = Integer.parseInt(aiPref.getValue());
               HoxApp.getApp().onAILevelChanged(aiLevel);
               
+          } else if (key.equals(KEY_PREF_SOUND_ENABLED)) {
+              CheckBoxPreference soundPref = (CheckBoxPreference) pref;
+              SoundManager.getInstance().setSoundEnabled(getActivity(), soundPref.isChecked());
+
           } else if (key.equals(KEY_PREF_ACCOUNT_USERNAME)) {
               String pid = sharedPreferences.getString(key, "");
               pref.setSummary(pid);

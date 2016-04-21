@@ -37,7 +37,7 @@
     <string name="ai_label_easy">AI (Easy)</string>
     <string name="ai_label_medium">AI (Medium)</string>
     <string name="ai_label_difficult">AI (Difficult)</string>
-    
+
     <string name="playxiangqi_account">PlayXiangqi Account</string>
     <string name="playxiangqi_login_with_account">Login with Account</string>
     <string name="playxiangqi_username">Username</string>
@@ -94,5 +94,6 @@
     <string name="msg_network_error_io_exception_exception">IOException exception while handling network messages!</string>
     <string name="msg_get_list_tables">Get list of tables...</string>
     <string name="msg_player_offered_draw">%1$s offered to DRAW the game</string>
+    <string name="settings_sound_enabled_label">Sound</string>
 
 </resources>

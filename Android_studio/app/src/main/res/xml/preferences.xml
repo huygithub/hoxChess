@@ -1,23 +1,28 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-	<ListPreference
-		 android:key="pref_key_ai_level"
-		 android:title="@string/ai_level"
-		 android:summary="@string/level_easy"
-		 android:dialogTitle="@string/ai_level"
-		 android:entries="@array/AILevel_entries"
-		 android:entryValues="@array/AILevel_values"
-		 android:defaultValue="@string/AILevel_default" />
+    <ListPreference
+        android:key="pref_key_ai_level"
+        android:title="@string/ai_level"
+        android:summary="@string/level_easy"
+        android:dialogTitle="@string/ai_level"
+        android:entries="@array/AILevel_entries"
+        android:entryValues="@array/AILevel_values"
+        android:defaultValue="@string/AILevel_default" />
 
-	<!-- PlayXiangqi account -->
+    <CheckBoxPreference
+        android:key="pref_key_sound_enabled"
+        android:title="@string/settings_sound_enabled_label"
+        android:defaultValue="true" />
+
+    <!-- PlayXiangqi account -->
     <PreferenceCategory 
         android:title="@string/playxiangqi_account"
         android:key="pref_key_playxiangqi_account">
-        
-	    <CheckBoxPreference
-	        android:key="pref_key_playxiangqi_login_with_account"
-	        android:title="@string/playxiangqi_login_with_account"
-	        android:defaultValue="false" />
+
+        <CheckBoxPreference
+            android:key="pref_key_playxiangqi_login_with_account"
+            android:title="@string/playxiangqi_login_with_account"
+            android:defaultValue="false" />
         
         <EditTextPreference 
             android:key="pref_key_playxiangqi_username"
@@ -46,9 +51,9 @@
         <Preference android:title="@string/version"
                     android:summary="@string/copyright" >
             <intent
-	             android:action="android.intent.action.VIEW"
-	             android:targetPackage="com.playxiangqi.hoxchess"
-	             android:targetClass="com.playxiangqi.hoxchess.AboutActivity" /> 
+                android:action="android.intent.action.VIEW"
+                android:targetPackage="com.playxiangqi.hoxchess"
+                android:targetClass="com.playxiangqi.hoxchess.AboutActivity" />
         </Preference>
         
     </PreferenceCategory>
