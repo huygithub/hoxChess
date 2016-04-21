@@ -34,6 +34,7 @@ public class SoundManager {
 
     private static final String TAG = "SoundManager";
     private static final int MAX_STREAMS = 2;
+    private static final int MY_STREAM_TYPE = AudioManager.STREAM_MUSIC;
 
     // Sound resource IDs.
     public static final int SOUND_MOVE = R.raw.move;
@@ -64,7 +65,7 @@ public class SoundManager {
     @SuppressWarnings("deprecation")
     public SoundManager() {
         Log.v(TAG, "[CONSTRUCTOR]: ...");
-        soundPool_ = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, 0 /* srcQuality */);
+        soundPool_ = new SoundPool(MAX_STREAMS, MY_STREAM_TYPE, 0 /* srcQuality */);
 
         soundPool_.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
             @Override
@@ -123,6 +124,10 @@ public class SoundManager {
                 allAllSupportedSounds(context);
             }
         }
+    }
+
+    public int getStreamType() {
+        return MY_STREAM_TYPE;
     }
 
     // ***************************************************************

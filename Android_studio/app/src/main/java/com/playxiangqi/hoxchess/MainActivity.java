@@ -101,7 +101,12 @@ public class MainActivity extends AppCompatActivity {
                     .add(R.id.container, placeholderFragment_)
                     .commit();
         }
-        
+
+        // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
+        // Reference:
+        //    http://developer.android.com/training/managing-audio/volume-playback.html
+        setVolumeControlStream(SoundManager.getInstance().getStreamType());
+
         HoxApp.getApp().registerMainActivity(this);
     }
 
