@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:id="@+id/group1">
+        <item
+            android:id="@+id/action_play_online"
+            android:icon="@drawable/ic_action_web_site"
+            android:title="@string/action_play_online" />
+    </group>
+
+    <item android:title="@string/version">
+        <menu>
+            <item
+                android:id="@+id/action_settings"
+                android:icon="@drawable/ic_settings_white"
+                android:title="@string/action_settings" />
+            <item
+                android:id="@+id/action_about"
+                android:icon="@drawable/ic_help_white"
+                android:title="@string/about_title" />
+        </menu>
+    </item>
+
+    <!--
+    <group android:id="@+id/group2">
+        <item
+            android:id="@+id/action_settings"
+            android:icon="@drawable/ic_settings_white"
+            android:title="@string/action_settings" />
+        <item
+            android:id="@+id/action_about"
+            android:icon="@drawable/ic_help_white"
+            android:title="@string/about_title" />
+    </group>
+    -->
+
+    <!--
+    <item android:title="Communicate">
+        <menu>
+            <item
+                android:id="@+id/nav_share"
+                android:icon="@drawable/ic_action_web_site"
+                android:title="Share" />
+            <item
+                android:id="@+id/nav_send"
+                android:icon="@drawable/ic_action_rotate_right"
+                android:title="Send" />
+        </menu>
+    </item>
+    -->
+
+</menu>

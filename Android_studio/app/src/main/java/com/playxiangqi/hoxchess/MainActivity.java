@@ -27,10 +27,15 @@ import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.app.Fragment;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -49,14 +54,18 @@ import android.widget.TextView;
 /**
  * The main (entry-point) activity.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
 
     private static final String STATE_IS_BLACK_ON_TOP = "isBlackOnTop";
 
     private static final int JOIN_TABLE_REQUEST = 1;  // The request code
-    
+
+    private DrawerLayout drawerLayout_;
+    private ActionBarDrawerToggle drawerToggle_;
+
     private Fragment placeholderFragment_;
     private ProgressBar progressBar_;
     private BoardView boardView_;
@@ -87,12 +96,27 @@ public class MainActivity extends AppCompatActivity {
         
         setContentView(R.layout.activity_main);
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(toolbar);
+
+        drawerLayout_ = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerToggle_ = new ActionBarDrawerToggle(
+                this, drawerLayout_, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout_.addDrawerListener(drawerToggle_);
+        drawerToggle_.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        drawerToggle_.setDrawerIndicatorEnabled(true);
+
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
         } else {
             Log.w(TAG, "onCreate: getSupportActionBar() = null. Do not set Display options!");
         }
-        
+
         Log.d(TAG, "onCreate: savedInstanceState = " + savedInstanceState + ".");
         placeholderFragment_ = new PlaceholderFragment();
         
@@ -108,6 +132,41 @@ public class MainActivity extends AppCompatActivity {
         setVolumeControlStream(SoundManager.getInstance().getStreamType());
 
         HoxApp.getApp().registerMainActivity(this);
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        Log.d(TAG, "onPostCreate");
+        drawerToggle_.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        drawerToggle_.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_play_online:
+                progressBar_.setVisibility(View.VISIBLE);
+                HoxApp.getApp().handlePlayOnlineClicked();
+                break;
+            case R.id.action_settings:
+                openSettingsView();
+                break;
+            case R.id.action_about:
+                Intent intent = new Intent(this, AboutActivity.class);
+                startActivity(intent);
+                break;
+            default:
+                break;
+        }
+
+        drawerLayout_.closeDrawer(GravityCompat.START);
+        return true;
     }
 
     @Override
@@ -215,6 +274,15 @@ public class MainActivity extends AppCompatActivity {
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d(TAG, "(ActionBar) onOptionsItemSelected");
+
+        // Pass the event to ActionBarDrawerToggle, if it returns
+        // true, then it has handled the app icon touch event
+        if (drawerToggle_.onOptionsItemSelected(item)) {
+            return true;
+        }
+        // Handle your other action bar items...
+
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
@@ -318,7 +386,6 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Clear the table. Make it an empty one.");
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         } else {
             Log.w(TAG, "clearTable: getSupportActionBar() = null. Do not set Display options!");
         }
@@ -375,9 +442,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void onBoardViewCreated(final MainActivity activity) {
         Log.d(TAG, "onBoardViewCreated...");
-
-        Toolbar myToolbar = (Toolbar) activity.findViewById(R.id.my_toolbar);
-        activity.setSupportActionBar(myToolbar);
 
         progressBar_ = (ProgressBar) findViewById(R.id.progress_spinner);
         boardView_ = (BoardView) activity.findViewById(R.id.board_view);
@@ -464,7 +528,6 @@ public class MainActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
             getSupportActionBar().setTitle(getString(R.string.title_table, title));
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         } else {
             Log.w(TAG, "setAndShowTitle: getSupportActionBar() = null. Do not set Display options!");
         }

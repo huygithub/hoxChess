@@ -53,6 +53,11 @@ public class BoardView extends ImageView
     
     private static final int offset_ = 20; // of row/column labels in pixels
 
+    // NOTE After many tries of using addOnPreDrawListener() and addOnGlobalLayoutListener,
+    //     I still end up relying onDraw() => drawBoard() to adjust the two dimensions.
+    private int finalWidth_ = 0;
+    private int finalHeight_ = 0;
+
     // The sizes of Cell and Piece will be adjusted at runtime based on the board 's dimension.
     private int cellSize_;
     private int pieceSize_ = 64;  // (in pixels) Note: It should be an even number.
@@ -171,7 +176,9 @@ public class BoardView extends ImageView
         noticePaint_.setTextSize(40.0f);
         
         createPieces();
-        
+
+        // Note: We can also use addOnGlobalLayoutListener instead of addOnPreDrawListener()
+        //      but I have not seen any difference between using one vs. another.
         final ViewTreeObserver vto = getViewTreeObserver();
         vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             public boolean onPreDraw() {
@@ -253,9 +260,9 @@ public class BoardView extends ImageView
                 + ", " + Utils.orientationToString(configuration));
 
         if (configuration == Configuration.ORIENTATION_LANDSCAPE) {
-            final int EXTRA_MARGIN = 20;
-            finalWidth = (int) ((finalHeight / 9.0) * 8) - EXTRA_MARGIN;
-            Log.i(TAG, "adjustBoardParameters(): (LANDSCAPE mode) Adjusted Width => " + finalWidth);
+            final int cellSizeByHeight = (finalHeight - 2 * offset_) / 10;
+            finalWidth = (cellSizeByHeight * 9) + 2 * offset_;
+            Log.i(TAG, "adjustBoardParameters(): (LANDSCAPE mode) WxH Adjusted Width => " + finalWidth);
 
             getLayoutParams().width = finalWidth;
             requestLayout();
@@ -269,10 +276,14 @@ public class BoardView extends ImageView
             //
             final int cellSizeByHeight = (finalHeight - 2 * offset_) / 10;
             finalWidth = (cellSizeByHeight * 9) + 2 * offset_;
-            Log.i(TAG, "adjustBoardParameters(): (by Height) Adjusted Width => " + finalWidth);
+            Log.i(TAG, "adjustBoardParameters(): (by Height) WxH Adjusted Width => " + finalWidth);
             getLayoutParams().width = finalWidth;
             requestLayout();
         }
+
+        // Save the dimensions so that we can later use in onDraw().
+        finalWidth_ = finalWidth;
+        finalHeight_ = finalHeight;
 
         final int boardWidth = Math.min(finalWidth, finalHeight);
         cellSize_ = (boardWidth - 2*offset_)/9;
@@ -288,6 +299,13 @@ public class BoardView extends ImageView
         final int boardW = getMeasuredWidth();
         final int boardH = getMeasuredHeight();
         Log.v(TAG, "drawBoard(): WxH = " + boardW + "x" + boardH + ". blackOnTop = " + isBlackOnTop_);
+
+        // NOTE: Because we still see this function reports different values for
+        //       the width and height, we have to manually adjust them here (again)!
+        if (boardW != finalWidth_ || boardH != finalHeight_) {
+            Log.d(TAG, "drawBoard(): WxH is different. Adjust parameters again... ");
+            adjustBoardParameters(boardW, boardH);
+        }
 
         for (int i = 0; i < 10; i++) { // Horizontal lines
             canvas.drawLine(startP_, startP_+i*cellSize_, startP_+8*cellSize_, startP_+i*cellSize_, linePaint_);

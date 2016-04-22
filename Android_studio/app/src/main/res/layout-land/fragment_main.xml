@@ -1,6 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -112,15 +111,6 @@
                   android:onClick="onReverseView" />
 
         </RelativeLayout>
-
-        <!-- Note: Add extra margin (left + right) to align with other views -->
-        <include
-            layout="@layout/toolbar_main"
-            android:layout_above="@id/control_container"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp" />
 
         <RelativeLayout
             android:orientation="horizontal"
