@@ -44,7 +44,7 @@
         
     </PreferenceCategory>
 
-    <!-- About -->
+    <!-- About
     <PreferenceCategory 
         android:title="@string/about_title">
         
@@ -57,5 +57,5 @@
         </Preference>
         
     </PreferenceCategory>
-    
+    -->
 </PreferenceScreen>

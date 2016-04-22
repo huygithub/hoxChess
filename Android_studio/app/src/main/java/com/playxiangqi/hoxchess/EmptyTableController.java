@@ -44,7 +44,6 @@ public class EmptyTableController extends BaseTableController {
 
     @Override
     public boolean onPrepareOptionsMenu(Context context, Menu menu) {
-        menu.findItem(R.id.action_logout).setVisible(HoxApp.getApp().isOnline());
         menu.findItem(R.id.action_new_table).setVisible(true);
         menu.findItem(R.id.action_close_table).setVisible(false);
         return true; // display the menu

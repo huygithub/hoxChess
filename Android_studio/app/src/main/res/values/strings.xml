@@ -97,5 +97,8 @@
     <string name="settings_sound_enabled_label">Sound</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="guest_account_name">Guest Account</string>
+    <string name="guest_id_default">Guest</string>
+    <string name="action_view_tables">View Tables</string>
 
 </resources>

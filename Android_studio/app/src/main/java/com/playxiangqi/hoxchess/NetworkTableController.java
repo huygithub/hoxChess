@@ -48,8 +48,6 @@ public class NetworkTableController extends BaseTableController {
     public boolean onPrepareOptionsMenu(Context context, Menu menu) {
         NetworkController networkController = HoxApp.getApp().getNetworkController();
 
-        menu.findItem(R.id.action_logout).setVisible(HoxApp.getApp().isOnline());
-
         final ColorEnum myColor = networkController.getMyColor();
         final boolean isGameOver = HoxApp.getApp().isGameOver();
         final int moveCount = HoxApp.getApp().getReferee().getMoveCount();

@@ -29,6 +29,7 @@ import android.app.Fragment;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -38,6 +39,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -99,16 +101,7 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(toolbar);
 
-        drawerLayout_ = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawerToggle_ = new ActionBarDrawerToggle(
-                this, drawerLayout_, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawerLayout_.addDrawerListener(drawerToggle_);
-        drawerToggle_.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        drawerToggle_.setDrawerIndicatorEnabled(true);
+        setupDrawer(toolbar);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -134,6 +127,85 @@ public class MainActivity extends AppCompatActivity
         HoxApp.getApp().registerMainActivity(this);
     }
 
+    private void setupDrawer(Toolbar toolbar) {
+        drawerLayout_ = (DrawerLayout) findViewById(R.id.drawer_layout);
+
+        drawerToggle_ = new ActionBarDrawerToggle(this, drawerLayout_, toolbar,
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
+
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                handleEvent_onDrawerOpened(drawerView);
+            }
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                Log.d(TAG, "onDrawerClosed");
+                //getSupportActionBar().setTitle(mActivityTitle);
+                //invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+        };
+
+        drawerLayout_.addDrawerListener(drawerToggle_);
+        drawerToggle_.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        View headerView = navigationView.getHeaderView(0);
+        headerView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "Navigation header view: onClick");
+                openSettingsView();
+                drawerLayout_.closeDrawer(GravityCompat.START);
+            }
+        });
+
+        drawerToggle_.setDrawerIndicatorEnabled(true);
+    }
+
+    private void handleEvent_onDrawerOpened(View drawerView) {
+        Log.d(TAG, "Handle event: onDrawerOpened");
+
+        // Update header items.
+        TextView playerNameView = (TextView) drawerView.findViewById(R.id.textview_player_name);
+        if (playerNameView == null) { // Sanity check. This should not happen!
+            Log.e(TAG, "onDrawerOpened: Player Name TextView not found!!!");
+            return;
+        }
+        TextView playerIdView = (TextView) drawerView.findViewById(R.id.textview_player_id);
+        if (playerIdView == null) { // Sanity check. This should not happen!
+            Log.e(TAG, "onDrawerOpened: Player ID TextView not found!!!");
+            return;
+        }
+
+        String playerName;
+        String playerID;
+
+        if (SettingsActivity.getLoginWithAccountFlag(this)) {
+            playerName = getString(R.string.playxiangqi_account);
+            playerID = SettingsActivity.getAccountPid(this);
+        } else { // Login as Guest
+            playerName = getString(R.string.guest_account_name);
+            playerID = HoxApp.getApp().getMyPid(); // currentGuestId
+            if (TextUtils.isEmpty(playerID)) {
+                playerID = getString(R.string.guest_id_default);
+            }
+        }
+        playerNameView.setText(playerName);
+        playerIdView.setText(playerID);
+
+        // Update sub-header items.
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        MenuItem logoutItem = navigationView.getMenu().findItem(R.id.action_logout);
+        if (logoutItem != null) {
+            logoutItem.setVisible(HoxApp.getApp().isOnline());
+        }
+    }
+
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
@@ -157,9 +229,17 @@ public class MainActivity extends AppCompatActivity
             case R.id.action_settings:
                 openSettingsView();
                 break;
-            case R.id.action_about:
+            case R.id.action_about: {
                 Intent intent = new Intent(this, AboutActivity.class);
                 startActivity(intent);
+                break;
+            }
+            case R.id.action_www_playxiangqi: {
+                openWebsiteToServer();
+                break;
+            }
+            case R.id.action_logout:
+                tableController_.handleLogoutFromNetwork();
                 break;
             default:
                 break;
@@ -315,6 +395,24 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "Open 'Settings' view...");
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
+    }
+
+    private void openWebsiteToServer() {
+        final String url = Enums.HC_URL_SERVER;
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+
+        // Note: To avoid being crashed if there is no application that can handle this
+        //  implicit intent, verify that the intent will resolve to an activity.
+        //    + resolveActivity() returns null if none are registered.
+        //
+        // Reference:
+        //    http://developer.android.com/guide/components/intents-filters.html#ExampleSend
+        //
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            Log.w(TAG, "There is no activity that can visit this URL : " + url);
+        }
     }
 
     private void openChatView() {

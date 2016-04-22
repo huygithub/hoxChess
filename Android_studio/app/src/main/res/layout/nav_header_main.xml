@@ -19,16 +19,17 @@
         android:src="@drawable/ic_launcher" />
 
     <TextView
+        android:id="@+id/textview_player_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
-        android:text="@string/playxiangqi_account"
+        android:text="@string/guest_account_name"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/textview_player_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/playxiangqi_website" />
+        android:text="@string/guest_id_default" />
 
 </LinearLayout>
