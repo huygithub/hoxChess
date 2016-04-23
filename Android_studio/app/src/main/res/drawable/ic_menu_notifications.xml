@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/ic_notification"
+        android:drawable="@drawable/ic_chat_notification"
+        android:gravity="center" />
+
+    <!-- set a place holder Drawable so android:drawable isn't null
+
+       See: BadgeDrawable
+       Also, http://www.jmhend.me/layerdrawable-menuitems
+        http://stackoverflow.com/questions/18156477/how-to-make-an-icon-in-the-action-bar-with-the-number-of-notification
+     -->
+    <item
+        android:id="@+id/ic_badge"
+        android:drawable="@drawable/ic_chat_notification" />
+</layer-list>

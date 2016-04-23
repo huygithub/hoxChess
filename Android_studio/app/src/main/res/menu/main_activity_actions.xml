@@ -18,15 +18,9 @@
           app:showAsAction="always" />
     
     <!--  Notification item -->
-    <item android:id="@+id/badge"
+    <item android:id="@+id/action_notifications"
           android:title="@string/notifications"
-          app:actionLayout="@layout/msg_update_count"
-          android:icon="@drawable/shape_notification"
-          app:showAsAction="always">
-    </item>
-    <!--
-    <item android:id="@+id/action_settings"
-          android:title="@string/action_settings"
-          app:showAsAction="never" />
-    -->
+          android:icon="@drawable/ic_menu_notifications"
+          app:showAsAction="always" />
+
 </menu>

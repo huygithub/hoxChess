@@ -28,7 +28,7 @@ import com.playxiangqi.hoxchess.Piece.Move;
 import android.app.Fragment;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -77,7 +77,9 @@ public class MainActivity extends AppCompatActivity
     private Button bottomPlayerButton_;
 
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
-    
+
+    // TODO: We should persist this counter somewhere else because it is lost when the
+    //       device is rotated, for example.
     private int notifCount_ = 0;
 
     private BaseTableController tableController_ = new BaseTableController();
@@ -321,27 +323,14 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "(ActionBar) onCreateOptionsMenu");
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_activity_actions, menu);
-        
-        // Set up the new badge.
+
+        // Set up the notification item.
         // Reference:
-        //  http://stackoverflow.com/questions/17696486/actionbar-notification-count-icon-like-google-have
-        //
-        View countView = menu.findItem(R.id.badge).getActionView();
-        Button countButton = (Button) countView.findViewById(R.id.notif_count);
-        countButton.setText(String.valueOf(notifCount_));
+        //  http://stackoverflow.com/questions/18156477/how-to-make-an-icon-in-the-action-bar-with-the-number-of-notification
+        MenuItem item = menu.findItem(R.id.action_notifications);
+        LayerDrawable icon = (LayerDrawable) item.getIcon();
+        BadgeDrawable.setBadgeCount(this, icon, notifCount_);
 
-        GradientDrawable notiBackgroundShape = (GradientDrawable) countButton.getBackground();
-        int notiColor = (notifCount_ > 0 ? R.color.noti_shape_bg_new : R.color.noti_shape_bg_zero);
-        notiBackgroundShape.setColor(getResources().getColor(notiColor));
-
-        countButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                notifCount_ = 0;
-                invalidateOptionsMenu();
-                openChatView();
-            }
-        });
-        
         return super.onCreateOptionsMenu(menu);
     }
     
@@ -383,8 +372,11 @@ public class MainActivity extends AppCompatActivity
             case R.id.action_logout:
                 tableController_.handleLogoutFromNetwork();
                 return true;
-            case R.id.action_settings:
-                openSettingsView();
+            //case R.id.action_settings:
+            //    openSettingsView();
+            //    return true;
+            case R.id.action_notifications:
+                openChatView();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -419,6 +411,9 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "Open 'Chat' view...");
         Intent intent = new Intent(this, ChatBubbleActivity.class);
         startActivity(intent);
+
+        notifCount_ = 0;
+        invalidateOptionsMenu();
     }
     
     private void reverseView() {
