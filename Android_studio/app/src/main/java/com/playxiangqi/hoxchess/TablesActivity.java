@@ -23,15 +23,17 @@ import java.util.HashMap;
 import java.util.List;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class TablesActivity extends Activity {
 
@@ -58,7 +60,7 @@ public class TablesActivity extends Activity {
         }
         
         final StableArrayAdapter adapter = new StableArrayAdapter(this,
-                android.R.layout.simple_list_item_1, listItems);
+                R.layout.listview_item_table, listItems);
         tablesListView_.setAdapter(adapter);
         
         tablesListView_.setOnItemClickListener(new OnItemClickListener() {
@@ -81,10 +83,10 @@ public class TablesActivity extends Activity {
     
     private void parseListContent(String listContent) {
         //Log.d(TAG, "Parse LIST 's content: [" + listContent + "]");
-        
+
         final String[] entries = listContent.split("\n");
         for (String entry : entries) {
-            Log.d(TAG, ">>> ..... entry [" + entry + "].");
+            //Log.d(TAG, ">>> ..... entry [" + entry + "].");
             TableInfo tableInfo = new TableInfo(entry);
             tables_.add(tableInfo);
         }
@@ -92,23 +94,34 @@ public class TablesActivity extends Activity {
     }
 
     /**
-     * An array adapter
+     * The custom adapter for our list view.
      */
-    private static class StableArrayAdapter extends ArrayAdapter<TableInfo> {
-        private HashMap<TableInfo, Integer> mIdMap = new HashMap<TableInfo, Integer>();
+    private static class StableArrayAdapter extends BaseAdapter {
+        private final Activity activity_;
+        private final int resourceId_;
+        private final HashMap<Integer, TableInfo> mIdMap_ = new HashMap<Integer, TableInfo>();
 
-        public StableArrayAdapter(Context context, int textViewResourceId, List<TableInfo> objects) {
-            super(context, textViewResourceId, objects);
+        public StableArrayAdapter(Activity context, int textViewResourceId, List<TableInfo> objects) {
+            activity_ = context;
+            resourceId_ = textViewResourceId;
             for (int i = 0; i < objects.size(); ++i) {
-                mIdMap.put(objects.get(i), i);
+                mIdMap_.put(Integer.valueOf(i), objects.get(i));
             }
         }
 
         @Override
+        public int getCount() {
+            return mIdMap_.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mIdMap_.get(Integer.valueOf(position));
+        }
+
+        @Override
         public long getItemId(int position) {
-            TableInfo item = getItem(position);
-            Log.d(TAG, ">>> ..... (getItemId) position: " + position + " => [" + item + "]");
-            return mIdMap.get(item);
+            return position;
         }
 
         @Override
@@ -116,6 +129,39 @@ public class TablesActivity extends Activity {
             return true;
         }
 
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder holder;
+            if (convertView == null) {
+                LayoutInflater layoutInflater = activity_.getLayoutInflater();
+                convertView = layoutInflater.inflate(resourceId_, null);
+                holder = new ViewHolder();
+                holder.tableIdView = (TextView) convertView.findViewById(R.id.table_id);
+                holder.playersInfoView = (TextView) convertView.findViewById(R.id.players_info);
+                holder.gameInfoView = (TextView) convertView.findViewById(R.id.game_info);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
+
+            final TableInfo tableInfo = (TableInfo) getItem(Integer.valueOf(position));
+            holder.tableIdView.setText(tableInfo.tableId);
+            holder.playersInfoView.setText(
+                    String.format("%s vs. %s", tableInfo.getRedInfo(), tableInfo.getBlackInfo()));
+            holder.gameInfoView.setText(tableInfo.itimes);
+
+            return convertView;
+        }
+
+    }
+
+    /**
+     * The view holder for our custom adapter.
+     */
+    private static class ViewHolder {
+        public TextView tableIdView;
+        public TextView playersInfoView;
+        public TextView gameInfoView;
     }
     
 }

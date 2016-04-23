@@ -3,5 +3,8 @@
     
     <!--<color name="noti_shape_bg_zero">#777777</color>-->
     <!--<color name="noti_shape_bg_new">#CC0001</color>-->
-    
+
+    <!-- A light Holo shade of blue -->
+    <color name="table_item_table_id_color">#ff33b5e5</color>
+
 </resources>

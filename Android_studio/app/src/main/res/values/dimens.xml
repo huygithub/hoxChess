@@ -11,4 +11,7 @@
     <!-- BadgeDrawable -->
     <dimen name="badge_text_size">10dp</dimen>
 
+    <dimen name="table_item_players_info_text_size">16dp</dimen>
+    <dimen name="table_item_game_info_text_size">12dp</dimen>
+
 </resources>

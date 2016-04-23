@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="5dp"
+    android:paddingBottom="5dp">
+
+    <TextView
+        android:id="@+id/table_id"
+        android:layout_width="20dip"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginRight="10dip"
+        android:layout_centerVertical="true"
+        android:textColor="@color/table_item_table_id_color"
+        tools:text="12" />
+
+    <TextView
+        android:id="@+id/players_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/table_id"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:gravity="center_vertical"
+        android:textSize="@dimen/table_item_players_info_text_size"
+        tools:text="Player1 vs. Player2" />
+
+    <TextView
+        android:id="@+id/game_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/table_id"
+        android:layout_below="@id/players_info"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:textSize="@dimen/table_item_game_info_text_size"
+        tools:text="1500/300/30" />
+
+</RelativeLayout>
