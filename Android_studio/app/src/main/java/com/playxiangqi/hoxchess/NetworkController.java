@@ -503,27 +503,33 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
         }
         final String message = components[1];
 
-        if (TextUtils.isEmpty(tableId) ||
-                !myTable_.hasId(tableId)) { // not the table I am interested in?
-            Log.w(TAG, "Ignore a MSG from sender: " + sender);
-            return;
+        // NOTE: There are 2 types of messages:
+        //   (1) For table messages, both "tid" and "pid" are present.
+        //   (2) For private messages, "tid" is missing.
+        //
+
+        String newMessage;
+
+        if (TextUtils.isEmpty(tableId)) { // TODO: a private message. Need to improve...
+            newMessage = "(PRIVATE) " + sender + ": " + message;
+        } else if (myTable_.hasId(tableId)) { // a "table" message?
+            newMessage = sender + ": " + message;
+        } else {
+            Log.w(TAG, "I am no longer in table: " + tableId + ". Ignore MSG from : " + sender);
+            return; // Do nothing.
         }
 
-        final String newMessage = sender + ": " + message;
         ChatMessage chatMsg = new ChatMessage(true, newMessage);
         newMessages_.add(chatMsg);
-
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity == null) {
-            Log.w(TAG, "The main activity is NULL. Ignore this E_END event.");
-            return;
-        }
 
         ChatBubbleActivity chatActivity = chatActivity_.get();
         if (chatActivity != null) {
             chatActivity.onMessageReceived(chatMsg);
         } else {
-            mainActivity.onMessageReceived(sender, message);
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.onMessageReceived(sender, newMessage);
+            }
         }
     }
 
