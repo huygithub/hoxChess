@@ -183,6 +183,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
             handleNetworkEvent_DRAW(content);
         } else if ("MSG".equals(op)) {
             handleNetworkEvent_MSG(content, tableId);
+        } else if ("INVITE".equals(op)) {
+            handleNetworkEvent_INVITE(content, tableId);
         }
     }
 
@@ -522,6 +524,39 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
             chatActivity.onMessageReceived(chatMsg);
         } else {
             mainActivity.onMessageReceived(sender, message);
+        }
+    }
+
+    private void handleNetworkEvent_INVITE(String content, String tableId) {
+        Log.d(TAG, "Handle event (INVITE): ENTER.");
+        final String[] components = content.split(";");
+        final String sender = components[0];
+        final String senderRating = components[1];
+        final String invitedPlayer = components[2]; // // The invited player
+
+        final String myPid = HoxApp.getApp().getMyPid();
+        if (!myPid.equals(invitedPlayer)) { // Am I invited?
+            Log.w(TAG, "I am not the invited player:" + invitedPlayer
+                    + ". Ignore this INVITE request from sender: " + sender);
+            return;
+        }
+
+        final String tableIdString = (TextUtils.isEmpty(tableId) ? "?" : tableId);
+        final String inviteString = "From [" + sender + " (" + senderRating + ")]"
+                + " @ [" + tableIdString + "]";
+        final String newMessage = "*INVITE: " + inviteString;
+
+        ChatMessage chatMsg = new ChatMessage(true, newMessage);
+        newMessages_.add(chatMsg);
+
+        ChatBubbleActivity chatActivity = chatActivity_.get();
+        if (chatActivity != null) {
+            chatActivity.onMessageReceived(chatMsg);
+        } else {
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.onMessageReceived(sender, newMessage);
+            }
         }
     }
 
