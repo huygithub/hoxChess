@@ -8,36 +8,28 @@
     android:paddingBottom="5dp">
 
     <TextView
-        android:id="@+id/table_id"
-        android:layout_width="20dip"
+        android:id="@+id/player_id"
+        android:layout_width="@dimen/player_item_player_id_text_width"
         android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
         android:layout_marginRight="10dip"
         android:layout_centerVertical="true"
+        android:singleLine="true"
+        android:ellipsize="end"
         android:textColor="@color/table_item_table_id_color"
-        tools:text="12" />
+        tools:text="cool_player" />
 
     <TextView
-        android:id="@+id/players_info"
+        android:id="@+id/player_rating"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/table_id"
+        android:layout_height="match_parent"
+        android:layout_toRightOf="@id/player_id"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:gravity="center_vertical"
-        android:textSize="@dimen/table_item_players_info_text_size"
-        tools:text="Player1 vs. Player2" />
-
-    <TextView
-        android:id="@+id/game_info"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/table_id"
-        android:layout_below="@id/players_info"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:textSize="@dimen/table_item_game_info_text_size"
-        tools:text="1500/300/30" />
+        android:layout_centerVertical="true"
+        tools:text="1500" />
 
 </RelativeLayout>

@@ -141,15 +141,14 @@ public class HoxApp extends Application {
                 referee_.getMoveCount() > 1 );
     }
 
-    public void handlePlayOnlineClicked() {
-        Log.d(TAG, "Action 'Play Online' clicked...");
-        if ( !networkController_.isOnline() || !networkController_.isLoginOK() ) {
-            loadPreferences_Account(); // to get pid_ and password_
-            networkController_.setLoginInfo(pid_,  password_);
-            networkController_.connectToServer();
-        } else {
-            networkController_.handleMyRequestToGetListOfTables();
-        }
+    public boolean isOnlineAndLoginOK() {
+        return (networkController_.isOnline() && networkController_.isLoginOK());
     }
-    
+
+    public void loginServer() {
+        loadPreferences_Account(); // to get pid_ and password_
+        networkController_.setLoginInfo(pid_,  password_);
+        networkController_.connectToServer();
+    }
+
 }

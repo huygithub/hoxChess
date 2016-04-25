@@ -11,7 +11,12 @@
     <!-- BadgeDrawable -->
     <dimen name="badge_text_size">10dp</dimen>
 
+    <!-- List of Tables view -->
     <dimen name="table_item_players_info_text_size">16dp</dimen>
     <dimen name="table_item_game_info_text_size">12dp</dimen>
+
+    <!-- List of Players view -->
+    <dimen name="player_list_view_header_height">40dip</dimen>
+    <dimen name="player_item_player_id_text_width">120dip</dimen>
 
 </resources>

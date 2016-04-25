@@ -99,6 +99,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="guest_account_name">Guest Account</string>
     <string name="guest_id_default">Guest</string>
-    <string name="action_view_tables">View Tables</string>
+    <string name="action_view_tables">Tables</string>
+    <string name="action_view_players">Players</string>
 
 </resources>

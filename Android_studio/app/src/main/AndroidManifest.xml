@@ -39,7 +39,16 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.playxiangqi.hoxchess.MainActivity" />
         </activity>
-       
+
+        <activity
+            android:name=".PlayersActivity"
+            android:label="@string/action_view_players"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.playxiangqi.hoxchess.MainActivity" />
+        </activity>
+
         <activity
             android:name=".ChatBubbleActivity"
             android:label="@string/title_activity_chat"

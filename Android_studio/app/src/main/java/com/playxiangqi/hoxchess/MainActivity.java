@@ -63,7 +63,9 @@ public class MainActivity extends AppCompatActivity
 
     private static final String STATE_IS_BLACK_ON_TOP = "isBlackOnTop";
 
-    private static final int JOIN_TABLE_REQUEST = 1;  // The request code
+    // The request codes
+    private static final int JOIN_TABLE_REQUEST = 1;
+    private static final int VIEW_PLAYERS_REQUEST = 2;
 
     private DrawerLayout drawerLayout_;
     private ActionBarDrawerToggle drawerToggle_;
@@ -77,6 +79,9 @@ public class MainActivity extends AppCompatActivity
     private Button bottomPlayerButton_;
 
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
+
+    private boolean isWaitingForTables = false;
+    private boolean isWaitingForPlayers = false;
 
     // TODO: We should persist this counter somewhere else because it is lost when the
     //       device is rotated, for example.
@@ -225,8 +230,10 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_play_online:
-                progressBar_.setVisibility(View.VISIBLE);
-                HoxApp.getApp().handlePlayOnlineClicked();
+                onPlayOnlineClicked();
+                break;
+            case R.id.action_view_players:
+                onViewPlayersClicked();
                 break;
             case R.id.action_settings:
                 openSettingsView();
@@ -366,8 +373,7 @@ public class MainActivity extends AppCompatActivity
                 tableController_.handleRequestToCloseCurrentTable();
                 return true;
             case R.id.action_play_online:
-                progressBar_.setVisibility(View.VISIBLE);
-                HoxApp.getApp().handlePlayOnlineClicked();
+                onPlayOnlineClicked();
                 return true;
             case R.id.action_logout:
                 tableController_.handleLogoutFromNetwork();
@@ -424,15 +430,59 @@ public class MainActivity extends AppCompatActivity
         HoxApp.getApp().getTimeTracker().reverseView();
         HoxApp.getApp().getPlayerTracker().reverseView();
     }
-    
+
+    private void askNetworkControllerForTableList() {
+        Snackbar.make(this.findViewById(R.id.container), R.string.msg_get_list_tables,
+                Snackbar.LENGTH_LONG)
+                .show();
+        HoxApp.getApp().getNetworkController().sendRequestForTableList();
+    }
+
+    private void onPlayOnlineClicked() {
+        Log.d(TAG, "On PlayOnline clicked...");
+        progressBar_.setVisibility(View.VISIBLE);
+
+        if (HoxApp.getApp().isOnlineAndLoginOK()) {
+            askNetworkControllerForTableList();
+        } else {
+            isWaitingForTables = true;
+            HoxApp.getApp().loginServer();
+        }
+    }
+
+    private void onViewPlayersClicked() {
+        Log.d(TAG, "On ViewPlayers clicked...");
+        progressBar_.setVisibility(View.VISIBLE);
+
+        if (HoxApp.getApp().isOnlineAndLoginOK()) {
+            if (PlayerManager.getInstance().isLoaded()) {
+                startActivityToListPlayers();
+            } else {
+                isWaitingForPlayers = true;
+            }
+        } else {
+            isWaitingForPlayers = true;
+            HoxApp.getApp().loginServer();
+        }
+    }
+
     public void startActivityToListTables(String content) {
-        Log.d(TAG, "Start activity (LIST): ENTER.");
+        Log.d(TAG, "Start activity (TABLES): ENTER.");
 
         progressBar_.setVisibility(View.GONE);
         
         Intent intent = new Intent(this, TablesActivity.class);
         intent.putExtra("content", content);
         startActivityForResult(intent, JOIN_TABLE_REQUEST);
+    }
+
+    public void startActivityToListPlayers() {
+        Log.d(TAG, "Start activity (PLAYERS): ENTER.");
+
+        progressBar_.setVisibility(View.GONE);
+
+        Intent intent = new Intent(this, PlayersActivity.class);
+        startActivityForResult(intent, VIEW_PLAYERS_REQUEST);
     }
 
     public void updateBoardWithNewAIMove(Position fromPos, Position toPos) {
@@ -518,6 +568,22 @@ public class MainActivity extends AppCompatActivity
         Snackbar.make(boardView_, resId, duration).show();
     }
 
+    public void onLoginSuccess() {
+        Log.d(TAG, "On Login Success...");
+        if (isWaitingForTables) {
+            isWaitingForTables = false;
+            askNetworkControllerForTableList();
+        }
+    }
+
+    public void onPlayerListLoaded() {
+        Log.d(TAG, "On Player-List loaded...");
+        if (isWaitingForPlayers) {
+            isWaitingForPlayers = false;
+            startActivityToListPlayers();
+        }
+    }
+
     public void showGameMessage_DRAW(String pid) {
         Snackbar.make(boardView_,
                 getString(R.string.msg_player_offered_draw, pid), Snackbar.LENGTH_LONG).show();
@@ -530,6 +596,8 @@ public class MainActivity extends AppCompatActivity
                 final String tableId = data.getStringExtra("tid");
                 tableController_.handleTableSelection(tableId);
             }
+        } else if (requestCode == VIEW_PLAYERS_REQUEST) {
+            Log.i(TAG, "onActivityResult: (View Players request) Do nothing.");
         }
     }
 

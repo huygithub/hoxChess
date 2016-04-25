@@ -185,6 +185,10 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
             handleNetworkEvent_MSG(content, tableId);
         } else if ("INVITE".equals(op)) {
             handleNetworkEvent_INVITE(content, tableId);
+        } else if ("I_PLAYERS".equals(op)) {
+            handleNetworkEvent_I_PLAYERS(content);
+        } else if ("LOGOUT".equals(op)) {
+            handleNetworkEvent_LOGOUT(content);
         }
     }
 
@@ -252,14 +256,18 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
             playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
             playerTracker_.syncUI();
 
-            handleMyRequestToGetListOfTables();
-
             MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
                 mainActivity.clearTable();
                 mainActivity.setTableController(TableType.TABLE_TYPE_EMPTY);
+
+                mainActivity.onLoginSuccess();
             }
+        } else { // Other player 's LOGIN?
+            Log.d(TAG, "Received other player LOGIN info [" + pid + " " + rating + "].");
         }
+
+        PlayerManager.getInstance().addPlayer(new PlayerInfo(pid, rating));
     }
 
     private void handleNetworkEvent_LIST(String content) {
@@ -566,6 +574,35 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
         }
     }
 
+    private void handleNetworkEvent_I_PLAYERS(String content) {
+        Log.d(TAG, "Handle event (I_PLAYERS): ENTER.");
+        PlayerManager.getInstance().clear();
+
+        final String[] entries = content.split("\n");
+        for (String entry : entries) {
+            final String[] components = entry.split(";");
+            final String pid = components[0];
+            final String rating = components[1];
+            //Log.d(TAG, "... [" + pid + ", " + rating + "]");
+
+            PlayerInfo playerInfo = new PlayerInfo(pid, rating);
+            PlayerManager.getInstance().addPlayer(playerInfo);
+        }
+
+        PlayerManager.getInstance().setLoaded();
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.onPlayerListLoaded();
+        }
+    }
+
+    private void handleNetworkEvent_LOGOUT(String content) {
+        Log.d(TAG, "Handle event (LOGOUT): ENTER.");
+        final String pid = content;
+        PlayerManager.getInstance().removePlayer(pid);
+    }
+
     public void logoutFromNetwork() {
         Log.d(TAG, "Logout from network...");
 
@@ -751,14 +788,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
         }
     }
 
-    public void handleMyRequestToGetListOfTables() {
+    public void sendRequestForTableList() {
         networkPlayer_.sendRequest_LIST();
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            Snackbar.make(mainActivity.findViewById(R.id.container), R.string.msg_get_list_tables,
-                    Snackbar.LENGTH_LONG)
-                    .show();
-        }
     }
 
     public void setLoginInfo(String pid, String password) {
