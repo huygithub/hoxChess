@@ -101,5 +101,10 @@
     <string name="guest_id_default">Guest</string>
     <string name="action_view_tables">Tables</string>
     <string name="action_view_players">Players</string>
+    <string name="label_player_id">Player ID</string>
+    <string name="label_player_rating">Rating</string>
+    <string name="label_table">Table</string>
+    <string name="action_join_table">Join Table</string>
+    <string name="action_invite_to_play">Invite</string>
 
 </resources>

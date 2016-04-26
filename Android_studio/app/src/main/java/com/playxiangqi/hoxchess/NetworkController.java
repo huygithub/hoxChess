@@ -274,7 +274,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
         Log.d(TAG, "Handle event (LIST): ENTER.");
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
-            mainActivity.startActivityToListTables(content);
+            mainActivity.onTableListReceived(content);
         }
     }
 
@@ -786,6 +786,11 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
         else {
             Log.w(TAG, "Either offline or not playing. Ignore this 'open new table request'.");
         }
+    }
+
+    public void handleRequestToInvite(String invitee) {
+        Log.i(TAG, "Send request to 'Invite'...");
+        networkPlayer_.sendRequest_INVITE(invitee, myTable_.tableId);
     }
 
     public void sendRequestForTableList() {

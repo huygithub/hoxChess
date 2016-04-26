@@ -23,14 +23,18 @@ import java.util.HashMap;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 public class PlayersActivity extends Activity {
@@ -56,15 +60,9 @@ public class PlayersActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 PlayerInfo itemValue = (PlayerInfo) playersListView_.getItemAtPosition(position);
-                
                 Log.d(TAG, "Position:" + position + " pid: " + itemValue.pid
                         + ", ListItem: " + itemValue);
-                
-                // Return the player-ID.
-                Intent result = new Intent();
-                result.putExtra("pid", itemValue.pid);
-                setResult(Activity.RESULT_OK, result);
-                finish();
+                // Do nothing currently!
             }
         });
         
@@ -119,6 +117,11 @@ public class PlayersActivity extends Activity {
                 holder = new ViewHolder();
                 holder.playerIdView = (TextView) convertView.findViewById(R.id.player_id);
                 holder.playerRatingView = (TextView) convertView.findViewById(R.id.player_rating);
+                holder.tableIdView = (TextView) convertView.findViewById(R.id.table_id);
+                holder.menuImageView = (ImageView) convertView.findViewById(R.id.player_action_menu);
+
+                holder.menuImageView.setOnClickListener(new ContextMenuOnClickListener(activity_));
+
                 convertView.setTag(holder);
             } else {
                 holder = (ViewHolder) convertView.getTag();
@@ -127,6 +130,11 @@ public class PlayersActivity extends Activity {
             final PlayerInfo playerInfo = (PlayerInfo) getItem(Integer.valueOf(position));
             holder.playerIdView.setText(playerInfo.pid);
             holder.playerRatingView.setText(playerInfo.rating);
+
+            final String playerTable = TableManager.getInstance().findTableOfPlayer(playerInfo.pid);
+            holder.tableIdView.setText(TextUtils.isEmpty(playerTable) ? "" : playerTable);
+
+            holder.menuImageView.setTag(holder);
 
             return convertView;
         }
@@ -139,6 +147,62 @@ public class PlayersActivity extends Activity {
     private static class ViewHolder {
         public TextView playerIdView;
         public TextView playerRatingView;
+        public TextView tableIdView;
+        public ImageView menuImageView;
     }
-    
+
+    private static class ContextMenuOnClickListener implements View.OnClickListener {
+
+        private final Activity activity_;
+
+        ContextMenuOnClickListener(Activity activity) {
+            activity_ = activity;
+        }
+
+        @Override
+        public void onClick(View view) {
+            ViewHolder holder = (ViewHolder) view.getTag();
+            final String playerId = holder.playerIdView.getText().toString();
+            final String tableId = holder.tableIdView.getText().toString();
+            Log.d(TAG, "(OnClickListener): playerId:" + playerId + ", tableId:" + tableId);
+
+            PopupMenu popup = new PopupMenu(view.getContext(), view);
+            popup.getMenuInflater().inflate(R.menu.players_activity_actions, popup.getMenu());
+
+            if (TextUtils.isEmpty(tableId)) {
+                popup.getMenu().removeItem(R.id.action_join_table);
+            } else {
+                popup.getMenu().removeItem(R.id.action_invite_to_play);
+            }
+
+            if (popup.getMenu().size() == 0) {
+                Log.i(TAG, "(OnClickListener): No need to show popup menu!");
+                return;
+            }
+
+            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                public boolean onMenuItemClick(MenuItem item) {
+                    switch (item.getItemId()) {
+                        case R.id.action_join_table:
+                            HoxApp.getApp().getNetworkController().handleTableSelection(tableId);
+                            break;
+                        case R.id.action_invite_to_play:
+                            HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
+                            break;
+                        default:
+                            return true;
+                    }
+
+                    Intent result = new Intent();
+                    result.putExtra("pid", playerId); // NOTE: Not used currently!
+                    activity_.setResult(Activity.RESULT_OK, result);
+                    activity_.finish();
+                    return true;
+                }
+            });
+
+            popup.show();
+
+        }
+    }
 }

@@ -18,7 +18,6 @@
  */
 package com.playxiangqi.hoxchess;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -40,7 +39,6 @@ public class TablesActivity extends Activity {
     private static final String TAG = "TablesActivity";
     
     private ListView tablesListView_;
-    private List<TableInfo> tables_ = new ArrayList<TableInfo>();
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,19 +46,10 @@ public class TablesActivity extends Activity {
         setContentView(R.layout.activity_tables);
         
         Log.d(TAG, "onCreate:");
-        
         tablesListView_ = (ListView)findViewById(R.id.list_tables);
         
-        String listContent = getIntent().getExtras().getString("content");
-        parseListContent(listContent);
-        
-        final ArrayList<TableInfo> listItems = new ArrayList<TableInfo>();
-        for (TableInfo table : tables_) {
-            listItems.add(table);
-        }
-        
         final StableArrayAdapter adapter = new StableArrayAdapter(this,
-                R.layout.listview_item_table, listItems);
+                R.layout.listview_item_table);
         tablesListView_.setAdapter(adapter);
         
         tablesListView_.setOnItemClickListener(new OnItemClickListener() {
@@ -80,18 +69,6 @@ public class TablesActivity extends Activity {
         });
         
     }
-    
-    private void parseListContent(String listContent) {
-        //Log.d(TAG, "Parse LIST 's content: [" + listContent + "]");
-
-        final String[] entries = listContent.split("\n");
-        for (String entry : entries) {
-            //Log.d(TAG, ">>> ..... entry [" + entry + "].");
-            TableInfo tableInfo = new TableInfo(entry);
-            tables_.add(tableInfo);
-        }
-        Log.d(TAG, ">>> Number of tables = " + tables_.size() + ".");
-    }
 
     /**
      * The custom adapter for our list view.
@@ -101,11 +78,12 @@ public class TablesActivity extends Activity {
         private final int resourceId_;
         private final HashMap<Integer, TableInfo> mIdMap_ = new HashMap<Integer, TableInfo>();
 
-        public StableArrayAdapter(Activity context, int textViewResourceId, List<TableInfo> objects) {
+        public StableArrayAdapter(Activity context, int textViewResourceId) {
             activity_ = context;
             resourceId_ = textViewResourceId;
-            for (int i = 0; i < objects.size(); ++i) {
-                mIdMap_.put(Integer.valueOf(i), objects.get(i));
+            final List<TableInfo> tables = TableManager.getInstance().getTables();
+            for (int i = 0; i < tables.size(); ++i) {
+                mIdMap_.put(Integer.valueOf(i), tables.get(i));
             }
         }
 

@@ -4,6 +4,9 @@
     <dimen name="activity_horizontal_margin">5dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
+    <!-- Default list padding, per the Android Design guidelines. -->
+    <dimen name="list_horizontal_padding">16dp</dimen>
+
     <!-- Navigation Drawer -->
     <dimen name="nav_header_vertical_spacing">16dp</dimen>
     <dimen name="nav_header_height">160dp</dimen>
@@ -18,5 +21,7 @@
     <!-- List of Players view -->
     <dimen name="player_list_view_header_height">40dip</dimen>
     <dimen name="player_item_player_id_text_width">120dip</dimen>
+    <dimen name="player_item_player_rating_text_width">80dip</dimen>
+    <dimen name="player_list_view_item_height">40dip</dimen>
 
 </resources>

@@ -214,7 +214,13 @@ class NetworkPlayer extends Thread {
         String request = "op=NEW&pid=" + pid_ + "&itimes=" + itimes;
         handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
-    
+
+    public void sendRequest_INVITE(String invitee, String tableId) {
+        Log.d(TAG, "Send 'INVITE' request to server...");
+        String request = "op=INVITE&pid=" + pid_ + "&oid=" + invitee + "&tid=" + tableId;
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
+    }
+
     private void handleConnectToServer() throws IOException {
         Log.i(TAG, "Handle 'Connect to server'...");
         

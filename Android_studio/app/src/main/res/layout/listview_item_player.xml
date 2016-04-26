@@ -10,12 +10,12 @@
     <TextView
         android:id="@+id/player_id"
         android:layout_width="@dimen/player_item_player_id_text_width"
-        android:layout_height="match_parent"
+        android:layout_height="@dimen/player_list_view_item_height"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
         android:layout_marginRight="10dip"
-        android:layout_centerVertical="true"
+        android:gravity="center_vertical"
         android:singleLine="true"
         android:ellipsize="end"
         android:textColor="@color/table_item_table_id_color"
@@ -23,13 +23,33 @@
 
     <TextView
         android:id="@+id/player_rating"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="@dimen/player_item_player_rating_text_width"
+        android:layout_height="@dimen/player_list_view_item_height"
         android:layout_toRightOf="@id/player_id"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:gravity="center_vertical"
+        tools:text="1500" />
+
+    <ImageView
+        android:id="@+id/player_action_menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
-        android:layout_centerVertical="true"
-        tools:text="1500" />
+        android:gravity="center_vertical"
+        android:src="@drawable/ic_more_vert_white" />
+
+    <TextView
+        android:id="@+id/table_id"
+        android:layout_width="@dimen/player_item_player_rating_text_width"
+        android:layout_height="@dimen/player_list_view_item_height"
+        android:layout_toRightOf="@id/player_rating"
+        android:layout_toLeftOf="@id/player_action_menu"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:gravity="center_vertical"
+        tools:text="12" />
 
 </RelativeLayout>

@@ -65,7 +65,6 @@ public class MainActivity extends AppCompatActivity
 
     // The request codes
     private static final int JOIN_TABLE_REQUEST = 1;
-    private static final int VIEW_PLAYERS_REQUEST = 2;
 
     private DrawerLayout drawerLayout_;
     private ActionBarDrawerToggle drawerToggle_;
@@ -441,11 +440,11 @@ public class MainActivity extends AppCompatActivity
     private void onPlayOnlineClicked() {
         Log.d(TAG, "On PlayOnline clicked...");
         progressBar_.setVisibility(View.VISIBLE);
+        isWaitingForTables = true;
 
         if (HoxApp.getApp().isOnlineAndLoginOK()) {
             askNetworkControllerForTableList();
         } else {
-            isWaitingForTables = true;
             HoxApp.getApp().loginServer();
         }
     }
@@ -454,25 +453,22 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "On ViewPlayers clicked...");
         progressBar_.setVisibility(View.VISIBLE);
 
+        isWaitingForPlayers = true;
+        isWaitingForTables = true; // Need tables info as well.
+
         if (HoxApp.getApp().isOnlineAndLoginOK()) {
-            if (PlayerManager.getInstance().isLoaded()) {
-                startActivityToListPlayers();
-            } else {
-                isWaitingForPlayers = true;
-            }
+            askNetworkControllerForTableList();
         } else {
-            isWaitingForPlayers = true;
             HoxApp.getApp().loginServer();
         }
     }
 
-    public void startActivityToListTables(String content) {
+    private void startActivityToListTables() {
         Log.d(TAG, "Start activity (TABLES): ENTER.");
 
         progressBar_.setVisibility(View.GONE);
         
         Intent intent = new Intent(this, TablesActivity.class);
-        intent.putExtra("content", content);
         startActivityForResult(intent, JOIN_TABLE_REQUEST);
     }
 
@@ -482,7 +478,7 @@ public class MainActivity extends AppCompatActivity
         progressBar_.setVisibility(View.GONE);
 
         Intent intent = new Intent(this, PlayersActivity.class);
-        startActivityForResult(intent, VIEW_PLAYERS_REQUEST);
+        startActivity(intent);
     }
 
     public void updateBoardWithNewAIMove(Position fromPos, Position toPos) {
@@ -571,16 +567,36 @@ public class MainActivity extends AppCompatActivity
     public void onLoginSuccess() {
         Log.d(TAG, "On Login Success...");
         if (isWaitingForTables) {
-            isWaitingForTables = false;
             askNetworkControllerForTableList();
+        }
+    }
+
+    public void onTableListReceived(String content) {
+        Log.d(TAG, "On Table-List received...");
+
+        TableManager.getInstance().setListContent(content);
+
+        if (isWaitingForTables) {
+            if (isWaitingForPlayers) {
+                if (PlayerManager.getInstance().isLoaded()) {
+                    isWaitingForTables = false;
+                    isWaitingForPlayers = false;
+                    startActivityToListPlayers();
+                }
+            } else {
+                isWaitingForTables = false;
+                startActivityToListTables();
+            }
         }
     }
 
     public void onPlayerListLoaded() {
         Log.d(TAG, "On Player-List loaded...");
         if (isWaitingForPlayers) {
-            isWaitingForPlayers = false;
-            startActivityToListPlayers();
+            if (!isWaitingForTables) {
+                isWaitingForPlayers = false;
+                startActivityToListPlayers();
+            }
         }
     }
 
@@ -596,8 +612,6 @@ public class MainActivity extends AppCompatActivity
                 final String tableId = data.getStringExtra("tid");
                 tableController_.handleTableSelection(tableId);
             }
-        } else if (requestCode == VIEW_PLAYERS_REQUEST) {
-            Log.i(TAG, "onActivityResult: (View Players request) Do nothing.");
         }
     }
 
