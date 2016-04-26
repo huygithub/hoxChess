@@ -34,23 +34,27 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class TablesActivity extends Activity {
+public class TablesActivity extends Activity
+                implements PlayerManager.EventListener {
 
     private static final String TAG = "TablesActivity";
-    
+
+    private View inProgressView_;
     private ListView tablesListView_;
+
+    private TablesAdapter adapter_;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tables);
-        
         Log.d(TAG, "onCreate:");
+
+        inProgressView_ = findViewById(R.id.inProgressLayout);
         tablesListView_ = (ListView)findViewById(R.id.list_tables);
         
-        final StableArrayAdapter adapter = new StableArrayAdapter(this,
-                R.layout.listview_item_table);
-        tablesListView_.setAdapter(adapter);
+        adapter_ = new TablesAdapter(this, R.layout.listview_item_table);
+        tablesListView_.setAdapter(adapter_);
         
         tablesListView_.setOnItemClickListener(new OnItemClickListener() {
             @Override
@@ -70,21 +74,71 @@ public class TablesActivity extends Activity {
         
     }
 
+    @Override
+    public void onPlayersLoaded() {
+        Log.d(TAG, "onPlayersLoaded: Do nothing.");
+    }
+
+    @Override
+    public void onTablesLoaded() {
+        Log.d(TAG, "onTablesLoaded:");
+
+        List<TableInfo> tables = PlayerManager.getInstance().getTables();
+        Log.d(TAG, "onTablesLoaded: # of tables = " + tables.size());
+
+        refreshListViewIfNeeded();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume:");
+        if (!refreshListViewIfNeeded()) {
+            PlayerManager.getInstance().addListener(this);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause:");
+        PlayerManager.getInstance().removeListener(this);
+    }
+
+    private boolean refreshListViewIfNeeded() {
+        if (!PlayerManager.getInstance().areTablesLoaded()) {
+            Log.d(TAG, "refreshListViewIfNeeded: The table LIST is not yet loaded.");
+            return false;
+        }
+
+        if (inProgressView_.getVisibility() != View.GONE) {
+            inProgressView_.setVisibility(View.GONE);
+            tablesListView_.setVisibility(View.VISIBLE);
+        }
+        adapter_.refreshTables();
+        return true;
+    }
+
     /**
      * The custom adapter for our list view.
      */
-    private static class StableArrayAdapter extends BaseAdapter {
+    private static class TablesAdapter extends BaseAdapter {
         private final Activity activity_;
         private final int resourceId_;
         private final HashMap<Integer, TableInfo> mIdMap_ = new HashMap<Integer, TableInfo>();
 
-        public StableArrayAdapter(Activity context, int textViewResourceId) {
+        public TablesAdapter(Activity context, int textViewResourceId) {
             activity_ = context;
             resourceId_ = textViewResourceId;
-            final List<TableInfo> tables = TableManager.getInstance().getTables();
+        }
+
+        public void refreshTables() {
+            mIdMap_.clear();
+            final List<TableInfo> tables = PlayerManager.getInstance().getTables();
             for (int i = 0; i < tables.size(); ++i) {
                 mIdMap_.put(Integer.valueOf(i), tables.get(i));
             }
+            notifyDataSetChanged();
         }
 
         @Override

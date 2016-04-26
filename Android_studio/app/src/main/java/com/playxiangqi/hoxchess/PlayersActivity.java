@@ -37,24 +37,27 @@ import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
-public class PlayersActivity extends Activity {
+public class PlayersActivity extends Activity
+                implements PlayerManager.EventListener {
 
     private static final String TAG = "PlayersActivity";
-    
+
+    private View inProgressView_;
     private ListView playersListView_;
+
+    private PlayersAdapter adapter_;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_players);
-        
         Log.d(TAG, "onCreate:");
-        
+
+        inProgressView_ = findViewById(R.id.inProgressLayout);
         playersListView_ = (ListView)findViewById(R.id.list_players);
-        
-        final StableArrayAdapter adapter = new StableArrayAdapter(this,
-                R.layout.listview_item_player);
-        playersListView_.setAdapter(adapter);
+
+        adapter_ = new PlayersAdapter(this, R.layout.listview_item_player);
+        playersListView_.setAdapter(adapter_);
 
         playersListView_.setOnItemClickListener(new OnItemClickListener() {
             @Override
@@ -68,24 +71,80 @@ public class PlayersActivity extends Activity {
         
     }
 
+    @Override
+    public void onPlayersLoaded() {
+        Log.d(TAG, "onPlayersLoaded:");
+
+        HashMap<String, PlayerInfo> players = PlayerManager.getInstance().getPlayers();
+        Log.d(TAG, "onPlayersLoaded: # of players = " + players.size());
+
+        refreshPlayersIfNeeded();
+    }
+
+    @Override
+    public void onTablesLoaded() {
+        Log.d(TAG, "onTablesLoaded:");
+
+        HashMap<String, PlayerInfo> players = PlayerManager.getInstance().getPlayers();
+        Log.d(TAG, "onTablesLoaded: # of players = " + players.size());
+
+        refreshPlayersIfNeeded();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume:");
+        if (!refreshPlayersIfNeeded()) {
+            PlayerManager.getInstance().addListener(this);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause:");
+        PlayerManager.getInstance().removeListener(this);
+    }
+
+    private boolean refreshPlayersIfNeeded() {
+        if (!PlayerManager.getInstance().arePlayersLoaded() ||
+                !PlayerManager.getInstance().areTablesLoaded()) {
+            Log.d(TAG, "refreshPlayersIfNeeded: Either player or table LIST is not yet loaded.");
+            return false;
+        }
+
+        if (inProgressView_.getVisibility() != View.GONE) {
+            inProgressView_.setVisibility(View.GONE);
+            playersListView_.setVisibility(View.VISIBLE);
+        }
+        adapter_.refreshPlayers();
+        return true;
+    }
+
     /**
      * The custom adapter for our list view.
      */
-    private static class StableArrayAdapter extends BaseAdapter {
+    private static class PlayersAdapter extends BaseAdapter {
         private final Activity activity_;
         private final int resourceId_;
         private final HashMap<Integer, PlayerInfo> mIdMap_ = new HashMap<Integer, PlayerInfo>();
 
-        public StableArrayAdapter(Activity context, int textViewResourceId) {
+        public PlayersAdapter(Activity context, int textViewResourceId) {
             activity_ = context;
             resourceId_ = textViewResourceId;
+        }
 
+        public void refreshPlayers() {
+            mIdMap_.clear();
             HashMap<String, PlayerInfo> players = PlayerManager.getInstance().getPlayers();
             int position = 0;
             for (HashMap.Entry<String, PlayerInfo> entry : players.entrySet()) {
                 mIdMap_.put(Integer.valueOf(position), entry.getValue());
                 ++position;
             }
+
+            notifyDataSetChanged();
         }
 
         @Override
@@ -131,7 +190,7 @@ public class PlayersActivity extends Activity {
             holder.playerIdView.setText(playerInfo.pid);
             holder.playerRatingView.setText(playerInfo.rating);
 
-            final String playerTable = TableManager.getInstance().findTableOfPlayer(playerInfo.pid);
+            final String playerTable = PlayerManager.getInstance().findTableOfPlayer(playerInfo.pid);
             holder.tableIdView.setText(TextUtils.isEmpty(playerTable) ? "" : playerTable);
 
             holder.menuImageView.setTag(holder);

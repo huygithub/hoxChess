@@ -12,7 +12,7 @@
           android:icon="@drawable/ic_action_close_tables"
           app:showAsAction="ifRoom" />
 
-    <item android:id="@+id/action_play_online"
+    <item android:id="@+id/action_view_tables"
           android:icon="@drawable/ic_action_tables"
           android:title="@string/action_view_tables"
           app:showAsAction="always" />

@@ -378,13 +378,13 @@ class NetworkPlayer extends Thread {
     }
     
     private void readIncomingData() throws IOException {
-        Log.i(TAG, "READ (data): Enter. inData_ 's length = " + inData_.length());
+        Log.v(TAG, "READ (data): Enter. inData_ 's length = " + inData_.length());
         
         ByteBuffer buf = ByteBuffer.allocate(1024);
         
         while (true) {
             int bytesRead = socketChannel_.read(buf); // read into buffer.
-            Log.d(TAG, "READ (data): ... bytesRead = " + bytesRead);
+            Log.v(TAG, "READ (data): ... bytesRead = " + bytesRead);
             if (bytesRead == -1) {
                 //
                 // NOTE: It appears that we at least should handle the (-1) return value:
@@ -405,7 +405,7 @@ class NetworkPlayer extends Thread {
             buf.clear(); // make buffer ready for writing
         }
         
-        Log.i(TAG, "READ (data): End. inData_ 's length = " + inData_.length());
+        Log.v(TAG, "READ (data): End. inData_ 's length = " + inData_.length());
     }
     
     private void processIncomingData() {

@@ -272,10 +272,15 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
 
     private void handleNetworkEvent_LIST(String content) {
         Log.d(TAG, "Handle event (LIST): ENTER.");
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.onTableListReceived(content);
+
+        List<TableInfo> tables = new ArrayList<TableInfo>();
+        final String[] entries = content.split("\n");
+        for (String entry : entries) {
+            TableInfo tableInfo = new TableInfo(entry);
+            tables.add(tableInfo);
         }
+
+        PlayerManager.getInstance().setTables(tables);
     }
 
     private void handleNetworkEvent_I_TABLE(String content) {
@@ -576,25 +581,19 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
 
     private void handleNetworkEvent_I_PLAYERS(String content) {
         Log.d(TAG, "Handle event (I_PLAYERS): ENTER.");
-        PlayerManager.getInstance().clear();
 
         final String[] entries = content.split("\n");
+        List<PlayerInfo> players = new ArrayList<PlayerInfo>();
         for (String entry : entries) {
             final String[] components = entry.split(";");
             final String pid = components[0];
             final String rating = components[1];
-            //Log.d(TAG, "... [" + pid + ", " + rating + "]");
 
             PlayerInfo playerInfo = new PlayerInfo(pid, rating);
-            PlayerManager.getInstance().addPlayer(playerInfo);
+            players.add(playerInfo);
         }
 
-        PlayerManager.getInstance().setLoaded();
-
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.onPlayerListLoaded();
-        }
+        PlayerManager.getInstance().setInitialPlayers(players);
     }
 
     private void handleNetworkEvent_LOGOUT(String content) {

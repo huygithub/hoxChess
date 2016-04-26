@@ -20,7 +20,11 @@ package com.playxiangqi.hoxchess;
 
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This class manages the list of ALL online players
@@ -35,7 +39,29 @@ public class PlayerManager {
 
     // Member variables...
     private HashMap<String, PlayerInfo> players_ = new HashMap<String, PlayerInfo>();
-    private boolean isLoaded_ = false; // already loaded with the initial list of players?
+    private boolean playersLoaded_ = false; // already loaded with the initial list of players?
+
+    private List<TableInfo> tables_ = new ArrayList<TableInfo>();
+    private boolean tablesLoaded_ = false; // already loaded with the new list of tables?
+
+    // *************************************************************************************
+    public interface EventListener {
+        void onPlayersLoaded();
+        void onTablesLoaded();
+    }
+    private Set<EventListener> listeners_ = new HashSet<EventListener>();
+
+    public void addListener(EventListener listener) {
+        listeners_.add(listener);
+        Log.d(TAG, "addListener: listeners-size:" + listeners_.size());
+    }
+
+    public void removeListener(EventListener listener) {
+        listeners_.remove(listener);
+        Log.d(TAG, "removeListener: listeners-size:" + listeners_.size());
+    }
+
+    // *************************************************************************************
 
     /**
      * Singleton API to return the instance.
@@ -60,8 +86,17 @@ public class PlayerManager {
     //
     // ***************************************************************
 
-    public void clear() {
-        players_.clear();
+    public void clearTables() {
+        tables_.clear();
+        tablesLoaded_ = false;
+    }
+
+    public boolean areTablesLoaded() {
+        return tablesLoaded_;
+    }
+
+    public List<TableInfo> getTables() {
+        return tables_;
     }
 
     public int size() {
@@ -72,6 +107,30 @@ public class PlayerManager {
         return players_;
     }
 
+    public void setInitialPlayers(List<PlayerInfo> players) {
+        players_.clear();
+        for (PlayerInfo playerInfo : players) {
+            players_.put(playerInfo.pid, playerInfo);
+        }
+        playersLoaded_ = true;
+
+        Log.d(TAG, "setInitialPlayers: just loaded. Notify listeners-size:" + listeners_.size());
+        for (EventListener listener : listeners_) {
+            listener.onPlayersLoaded();
+        }
+    }
+
+    public void setTables(List<TableInfo> tables) {
+        tables_.clear();
+        tables_.addAll(tables);
+        tablesLoaded_ = true;
+
+        Log.d(TAG, "setTables: just loaded. Notify listeners-size:" + listeners_.size());
+        for (EventListener listener : listeners_) {
+            listener.onTablesLoaded();
+        }
+    }
+
     public void addPlayer(PlayerInfo playerInfo) {
         players_.put(playerInfo.pid, playerInfo);
     }
@@ -80,12 +139,17 @@ public class PlayerManager {
         players_.remove(pid);
     }
 
-    public boolean isLoaded() {
-        return isLoaded_;
+    public boolean arePlayersLoaded() {
+        return playersLoaded_;
     }
 
-    public void setLoaded() {
-        isLoaded_ = true;
+    public String findTableOfPlayer(String pid) {
+        for (TableInfo table : tables_) {
+            if (pid.equals(table.redId) || pid.equals(table.blackId)) {
+                return table.tableId;
+            }
+        }
+        return null;
     }
 
     // ***************************************************************

@@ -80,7 +80,6 @@ public class MainActivity extends AppCompatActivity
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
 
     private boolean isWaitingForTables = false;
-    private boolean isWaitingForPlayers = false;
 
     // TODO: We should persist this counter somewhere else because it is lost when the
     //       device is rotated, for example.
@@ -228,8 +227,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_play_online:
-                onPlayOnlineClicked();
+            case R.id.action_view_tables:
+                onViewTablesClicked();
                 break;
             case R.id.action_view_players:
                 onViewPlayersClicked();
@@ -371,8 +370,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.action_close_table:
                 tableController_.handleRequestToCloseCurrentTable();
                 return true;
-            case R.id.action_play_online:
-                onPlayOnlineClicked();
+            case R.id.action_view_tables:
+                onViewTablesClicked();
                 return true;
             case R.id.action_logout:
                 tableController_.handleLogoutFromNetwork();
@@ -431,42 +430,48 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void askNetworkControllerForTableList() {
-        Snackbar.make(this.findViewById(R.id.container), R.string.msg_get_list_tables,
-                Snackbar.LENGTH_LONG)
-                .show();
+        //Snackbar.make(this.findViewById(R.id.container), R.string.msg_get_list_tables,
+        //        Snackbar.LENGTH_SHORT)
+        //        .show();
         HoxApp.getApp().getNetworkController().sendRequestForTableList();
     }
 
-    private void onPlayOnlineClicked() {
-        Log.d(TAG, "On PlayOnline clicked...");
-        progressBar_.setVisibility(View.VISIBLE);
-        isWaitingForTables = true;
+    private void onViewTablesClicked() {
+        Log.d(TAG, "On ViewTables clicked...");
+        //progressBar_.setVisibility(View.VISIBLE);
+
+        PlayerManager.getInstance().clearTables(); // will get a new list
 
         if (HoxApp.getApp().isOnlineAndLoginOK()) {
             askNetworkControllerForTableList();
         } else {
+            isWaitingForTables = true;
             HoxApp.getApp().loginServer();
         }
+
+        startActivityToListTables();
     }
 
     private void onViewPlayersClicked() {
         Log.d(TAG, "On ViewPlayers clicked...");
-        progressBar_.setVisibility(View.VISIBLE);
+        //progressBar_.setVisibility(View.VISIBLE);
 
-        isWaitingForPlayers = true;
-        isWaitingForTables = true; // Need tables info as well.
+        PlayerManager.getInstance().clearTables(); // will get a new list
 
         if (HoxApp.getApp().isOnlineAndLoginOK()) {
             askNetworkControllerForTableList();
         } else {
+            isWaitingForTables = true; // Need tables info as well.
             HoxApp.getApp().loginServer();
         }
+
+        startActivityToListPlayers();
     }
 
     private void startActivityToListTables() {
         Log.d(TAG, "Start activity (TABLES): ENTER.");
 
-        progressBar_.setVisibility(View.GONE);
+        //progressBar_.setVisibility(View.GONE);
         
         Intent intent = new Intent(this, TablesActivity.class);
         startActivityForResult(intent, JOIN_TABLE_REQUEST);
@@ -475,7 +480,7 @@ public class MainActivity extends AppCompatActivity
     public void startActivityToListPlayers() {
         Log.d(TAG, "Start activity (PLAYERS): ENTER.");
 
-        progressBar_.setVisibility(View.GONE);
+        //progressBar_.setVisibility(View.GONE);
 
         Intent intent = new Intent(this, PlayersActivity.class);
         startActivity(intent);
@@ -557,7 +562,7 @@ public class MainActivity extends AppCompatActivity
     }
     
     public void onNetworkCode(int networkCode) {
-        progressBar_.setVisibility(View.GONE);
+        //progressBar_.setVisibility(View.GONE);
     }
 
     public void showBriefMessage(int resId, int duration) {
@@ -567,36 +572,8 @@ public class MainActivity extends AppCompatActivity
     public void onLoginSuccess() {
         Log.d(TAG, "On Login Success...");
         if (isWaitingForTables) {
+            isWaitingForTables = false;
             askNetworkControllerForTableList();
-        }
-    }
-
-    public void onTableListReceived(String content) {
-        Log.d(TAG, "On Table-List received...");
-
-        TableManager.getInstance().setListContent(content);
-
-        if (isWaitingForTables) {
-            if (isWaitingForPlayers) {
-                if (PlayerManager.getInstance().isLoaded()) {
-                    isWaitingForTables = false;
-                    isWaitingForPlayers = false;
-                    startActivityToListPlayers();
-                }
-            } else {
-                isWaitingForTables = false;
-                startActivityToListTables();
-            }
-        }
-    }
-
-    public void onPlayerListLoaded() {
-        Log.d(TAG, "On Player-List loaded...");
-        if (isWaitingForPlayers) {
-            if (!isWaitingForTables) {
-                isWaitingForPlayers = false;
-                startActivityToListPlayers();
-            }
         }
     }
 
