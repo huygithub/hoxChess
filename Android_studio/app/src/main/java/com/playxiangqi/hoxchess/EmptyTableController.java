@@ -38,6 +38,14 @@ public class EmptyTableController extends BaseTableController {
     }
 
     @Override
+    public void setTableTitle() {
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.setAndShowTitle(null);
+        }
+    }
+
+    @Override
     public boolean handleBackPressed() {
         return false;
     }
@@ -87,8 +95,8 @@ public class EmptyTableController extends BaseTableController {
             timeTracker.reset();
             MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
-                mainActivity.openNewPracticeTable();
                 mainActivity.setTableController(TableType.TABLE_TYPE_LOCAL);
+                mainActivity.openNewPracticeTable();
                 mainActivity.invalidateOptionsMenu(); // Recreate the options menu
             }
         }

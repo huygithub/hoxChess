@@ -92,6 +92,14 @@ public class LocalTableController extends BaseTableController {
     }
 
     @Override
+    public void setTableTitle() {
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.setAndShowTitle("AI");
+        }
+    }
+
+    @Override
     public boolean handleBackPressed() {
         return false;
     }

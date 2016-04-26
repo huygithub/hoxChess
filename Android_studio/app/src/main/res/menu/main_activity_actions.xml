@@ -10,13 +10,18 @@
     <item android:id="@+id/action_close_table"
           android:title="@string/action_close"
           android:icon="@drawable/ic_action_close_tables"
-          app:showAsAction="ifRoom" />
+          app:showAsAction="always" />
 
     <item android:id="@+id/action_view_tables"
           android:icon="@drawable/ic_action_tables"
           android:title="@string/action_view_tables"
           app:showAsAction="always" />
-    
+
+    <item android:id="@+id/action_view_players"
+          android:icon="@drawable/ic_group_white"
+          android:title="@string/action_view_players"
+          app:showAsAction="always" />
+
     <!--  Notification item -->
     <item android:id="@+id/action_notifications"
           android:title="@string/notifications"

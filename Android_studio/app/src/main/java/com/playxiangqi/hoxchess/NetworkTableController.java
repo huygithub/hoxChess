@@ -38,6 +38,15 @@ public class NetworkTableController extends BaseTableController {
     }
 
     @Override
+    public void setTableTitle() {
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            NetworkController networkController = HoxApp.getApp().getNetworkController();
+            mainActivity.setAndShowTitle(networkController.getMyTableId());
+        }
+    }
+
+    @Override
     public boolean handleBackPressed() {
         NetworkController networkController = HoxApp.getApp().getNetworkController();
         networkController.handleRequestToCloseCurrentTable();

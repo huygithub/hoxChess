@@ -57,6 +57,9 @@ public class BaseTableController implements BoardView.BoardEventListener {
     //
     // ***************************************************************
 
+    public void setTableTitle() {
+    }
+
     public boolean handleBackPressed() {
         return false;
     }

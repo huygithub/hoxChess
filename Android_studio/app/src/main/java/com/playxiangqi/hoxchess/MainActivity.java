@@ -373,12 +373,9 @@ public class MainActivity extends AppCompatActivity
             case R.id.action_view_tables:
                 onViewTablesClicked();
                 return true;
-            case R.id.action_logout:
-                tableController_.handleLogoutFromNetwork();
+            case R.id.action_view_players:
+                onViewPlayersClicked();
                 return true;
-            //case R.id.action_settings:
-            //    openSettingsView();
-            //    return true;
             case R.id.action_notifications:
                 openChatView();
                 return true;
@@ -515,6 +512,7 @@ public class MainActivity extends AppCompatActivity
     public void openNewPracticeTable() {
         Log.d(TAG, "Open a new practice table");
         boardView_.resetBoard();
+        tableController_.setTableTitle();
     }
     
     public void updateBoardWithNewMove(String move) {
@@ -663,9 +661,7 @@ public class MainActivity extends AppCompatActivity
         boardView_.invalidate();
         
         // Set table Id.
-        if (HoxApp.getApp().isMyNetworkTableValid()) {
-            setAndShowTitle(HoxApp.getApp().getMyNetworkTableId());
-        }
+        tableController_.setTableTitle();
 
         SoundManager.getInstance().initialize(activity);
     }
@@ -676,12 +672,14 @@ public class MainActivity extends AppCompatActivity
         playerTracker.syncUI(); // Among things to be updated is AI Level.
     }
     
-    private void setAndShowTitle(String title) {
-        if (getSupportActionBar() != null) {
+    public void setAndShowTitle(String title) {
+        if (getSupportActionBar() == null) {
+            Log.w(TAG, "setAndShowTitle: getSupportActionBar() = null. Do not set Display options!");
+        } else if (TextUtils.isEmpty(title)) {
+            getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
+        } else {
             getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
             getSupportActionBar().setTitle(getString(R.string.title_table, title));
-        } else {
-            Log.w(TAG, "setAndShowTitle: getSupportActionBar() = null. Do not set Display options!");
         }
     }
     
