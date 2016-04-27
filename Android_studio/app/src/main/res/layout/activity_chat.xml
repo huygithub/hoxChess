@@ -35,7 +35,8 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_toLeftOf="@+id/buttonSend" />
+            android:layout_toLeftOf="@+id/buttonSend"
+            android:hint="@string/chat_edit_text_hint" />
 
         <Button
             android:layout_width="wrap_content"

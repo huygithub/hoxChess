@@ -37,6 +37,13 @@ public class ChatBubbleActivity extends Activity {
     }
     // ------------------------------------------------
 
+    private NetworkController.EventListener networkEventListener_ = new  NetworkController.EventListener() {
+        @Override
+        public void onMessageReceived(ChatMessage chatMsg) {
+            chatArrayAdapter.add(chatMsg);
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,6 +90,20 @@ public class ChatBubbleActivity extends Activity {
         
         syncWithNewMessages();
         HoxApp.getApp().registerChatActivity(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        HoxApp.getApp().getNetworkController().addListener(networkEventListener_);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+        HoxApp.getApp().getNetworkController().removeListener(networkEventListener_);
     }
 
     @Override

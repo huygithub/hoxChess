@@ -57,7 +57,8 @@ import android.widget.TextView;
  * The main (entry-point) activity.
  */
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener,
+                NetworkController.EventListener {
 
     private static final String TAG = "MainActivity";
 
@@ -116,12 +117,17 @@ public class MainActivity extends AppCompatActivity
         }
 
         Log.d(TAG, "onCreate: savedInstanceState = " + savedInstanceState + ".");
-        placeholderFragment_ = new PlaceholderFragment();
-        
+
         if (savedInstanceState == null) {
+            placeholderFragment_ = new PlaceholderFragment();
+            Log.d(TAG, "onCreate: (NEW): Created board-fragment = " + placeholderFragment_);
+
             getFragmentManager().beginTransaction()
-                    .add(R.id.container, placeholderFragment_)
+                    .add(R.id.container, placeholderFragment_, "board")
                     .commit();
+        } else {
+            placeholderFragment_ = getFragmentManager().findFragmentByTag("board");
+            Log.d(TAG, "onCreate: (savedInstanceState): Found board-fragment = " + placeholderFragment_);
         }
 
         // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
@@ -260,6 +266,7 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
+        HoxApp.getApp().getNetworkController().addListener(this);
         adjustScreenOnFlagBasedOnGameStatus();
     }
 
@@ -290,6 +297,7 @@ public class MainActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
+        HoxApp.getApp().getNetworkController().removeListener(this);
         adjustScreenOnFlagBasedOnGameStatus();
     }
 
@@ -553,8 +561,8 @@ public class MainActivity extends AppCompatActivity
         boardView_.resetBoard();
     }
 
-    public void onMessageReceived(String sender, String message) {
-        Log.d(TAG, "On new message from: " + sender + " = [" + message + "]");
+    public void onMessageReceived(ChatMessage chatMsg) {
+        Log.d(TAG, "On new message: [" + chatMsg.message + "]");
         notifCount_++;
         invalidateOptionsMenu(); // Recreate the options menu
     }
@@ -747,7 +755,7 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void onResume () {
-            super.onDestroy();
+            super.onResume();
             Log.i(TAG, "onResume...");
             MainActivity activity = (MainActivity) getActivity();
             activity.onBoardViewResume(activity);

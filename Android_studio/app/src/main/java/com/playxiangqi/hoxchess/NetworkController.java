@@ -21,7 +21,9 @@ package com.playxiangqi.hoxchess;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.GameStatus;
@@ -45,7 +47,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
     // (Not yet supported) private String myRating_ = "0";
     
     private WeakReference<MainActivity> mainActivity_ = new WeakReference<MainActivity>(null);
-    private WeakReference<ChatBubbleActivity> chatActivity_ = new WeakReference<ChatBubbleActivity>(null);
     private TableInfo myTable_ = new TableInfo();
     private ColorEnum myColor_ = ColorEnum.COLOR_UNKNOWN;
     
@@ -55,6 +56,24 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
     private TablePlayerTracker playerTracker_ = new TablePlayerTracker(TableType.TABLE_TYPE_LOCAL);
     
     private List<ChatMessage> newMessages_ = new ArrayList<ChatMessage>();
+
+    // *************************************************************************************
+    public interface EventListener {
+        void onMessageReceived(ChatMessage chatMsg);
+    }
+    private Set<EventListener> listeners_ = new HashSet<EventListener>();
+
+    public void addListener(EventListener listener) {
+        listeners_.add(listener);
+        Log.d(TAG, "addListener: listeners-size:" + listeners_.size());
+    }
+
+    public void removeListener(EventListener listener) {
+        listeners_.remove(listener);
+        Log.d(TAG, "removeListener: listeners-size:" + listeners_.size());
+    }
+
+    // *************************************************************************************
 
     /**
      * Constructor
@@ -125,10 +144,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
 
     public void setMainActivity(MainActivity activity) {
         mainActivity_ = new WeakReference<MainActivity>(activity);
-    }
-
-    public void setChatActivity(ChatBubbleActivity activity) {
-        chatActivity_ = new WeakReference<ChatBubbleActivity>(activity);
     }
 
     public boolean isLoginOK() { return isLoginOK_; }
@@ -535,14 +550,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
         ChatMessage chatMsg = new ChatMessage(true, newMessage);
         newMessages_.add(chatMsg);
 
-        ChatBubbleActivity chatActivity = chatActivity_.get();
-        if (chatActivity != null) {
-            chatActivity.onMessageReceived(chatMsg);
-        } else {
-            MainActivity mainActivity = mainActivity_.get();
-            if (mainActivity != null) {
-                mainActivity.onMessageReceived(sender, newMessage);
-            }
+        for (EventListener listener : listeners_) {
+            listener.onMessageReceived(chatMsg);
         }
     }
 
@@ -568,14 +577,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
         ChatMessage chatMsg = new ChatMessage(true, newMessage);
         newMessages_.add(chatMsg);
 
-        ChatBubbleActivity chatActivity = chatActivity_.get();
-        if (chatActivity != null) {
-            chatActivity.onMessageReceived(chatMsg);
-        } else {
-            MainActivity mainActivity = mainActivity_.get();
-            if (mainActivity != null) {
-                mainActivity.onMessageReceived(sender, newMessage);
-            }
+        for (EventListener listener : listeners_) {
+            listener.onMessageReceived(chatMsg);
         }
     }
 

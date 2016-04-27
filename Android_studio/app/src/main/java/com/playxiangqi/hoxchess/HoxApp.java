@@ -117,7 +117,6 @@ public class HoxApp extends Application {
     }
 
     public void registerChatActivity(ChatBubbleActivity activity) {
-        networkController_.setChatActivity(activity);
         if (activity != null) {
             activity.setMessageListener(networkController_);
         }

@@ -106,5 +106,6 @@
     <string name="label_table">Table</string>
     <string name="action_join_table">Join Table</string>
     <string name="action_invite_to_play">Invite</string>
+    <string name="chat_edit_text_hint">Write a message</string>
 
 </resources>

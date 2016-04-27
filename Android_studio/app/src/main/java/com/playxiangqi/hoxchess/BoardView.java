@@ -293,7 +293,7 @@ public class BoardView extends ImageView
         Log.d(TAG, "adjustBoardParameters(): cellSize_:" + cellSize_ + ", pieceSize_:" + pieceSize_
                 + ", startP_:" + startP_);
     }
-    
+
     private void drawBoard(Canvas canvas, int bgColor_UNUSED, int lineColor_UNUSED) {
         // The empty board
         final int boardW = getMeasuredWidth();
