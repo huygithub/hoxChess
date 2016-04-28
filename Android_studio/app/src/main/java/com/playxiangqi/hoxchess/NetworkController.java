@@ -35,8 +35,7 @@ import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.Log;
 
-public class NetworkController implements NetworkPlayer.NetworkEventListener,
-                                    ChatBubbleActivity.MessageListener {
+public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
     private static final String TAG = "NetworkController";
     
@@ -104,7 +103,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
                 messageHandler_.obtainMessage(MSG_NETWORK_CODE, networkCode) );
     }
 
-    @Override
     public void onLocalMessage(ChatMessage chatMsg) {
         handleLocalMessage(chatMsg);
     }

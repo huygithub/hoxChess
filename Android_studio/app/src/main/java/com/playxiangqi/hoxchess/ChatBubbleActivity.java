@@ -1,160 +1,114 @@
 /**
- * http://javapapers.com/android/android-chat-bubble/
+ *  Copyright 2016 Huy Phan <huyphan@playxiangqi.com>
+ *
+ *  This file is part of HOXChess.
+ *
+ *  HOXChess is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  HOXChess is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with HOXChess.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package com.playxiangqi.hoxchess;
 
 import java.util.List;
 
-import android.app.Activity;
-import android.database.DataSetObserver;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.View.OnKeyListener;
-import android.widget.AbsListView;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
 
-public class ChatBubbleActivity extends Activity {
+public class ChatBubbleActivity extends AppCompatActivity {
+
     private static final String TAG = "ChatBubbleActivity";
 
-    private ChatArrayAdapter chatArrayAdapter;
-    private ListView listView;
-    private EditText chatText;
-    private Button buttonSend;
-    private View inputLayout;
-
-    // ------------------------------------------------
-    public interface MessageListener {
-        void onLocalMessage(ChatMessage chatMsg);
-    }
-    private MessageListener messageListener_;
-
-    public void setMessageListener(MessageListener listener) {
-        messageListener_ = listener;
-    }
-    // ------------------------------------------------
-
-    private MessageManager.EventListener messageEventListener_ = new  MessageManager.EventListener() {
-        @Override
-        public void onMessageReceived(MessageInfo messageInfo) {
-            displayMessage(messageInfo);
-        }
-    };
+    private Fragment notificationFragment_;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
         Log.d(TAG, "onCreate: savedInstanceState = " + savedInstanceState + ".");
-        setContentView(R.layout.activity_chat);
+        setContentView(R.layout.activity_notifications);
 
-        buttonSend = (Button) findViewById(R.id.buttonSend);
-        listView = (ListView) findViewById(R.id.listView);
-        listView.setEmptyView(findViewById(R.id.emptyView));
+        if (savedInstanceState == null) {
+            notificationFragment_ = new NotificationFragment();
+            Log.d(TAG, "onCreate: (NEW): Created notification-fragment = " + notificationFragment_);
 
-        inputLayout = findViewById(R.id.input_layout);
-        
-        chatArrayAdapter = new ChatArrayAdapter(getApplicationContext(), R.layout.activity_chat_singlemessage);
-        listView.setAdapter(chatArrayAdapter);
-
-        chatText = (EditText) findViewById(R.id.chatText);
-        chatText.setOnKeyListener(new OnKeyListener() {
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
-                    return sendChatMessage();
-                }
-                return false;
-            }
-        });
-        buttonSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View arg0) {
-                sendChatMessage();
-            }
-        });
-
-        listView.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
-        listView.setAdapter(chatArrayAdapter);
-
-        //to scroll the list view to bottom on data change
-        chatArrayAdapter.registerDataSetObserver(new DataSetObserver() {
-            @Override
-            public void onChanged() {
-                super.onChanged();
-                listView.setSelection(chatArrayAdapter.getCount() - 1);
-            }
-        });
-        
-        syncWithNewMessages();
-        HoxApp.getApp().registerChatActivity(this);
-
-        inputLayout.setVisibility(View.GONE);
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.container, notificationFragment_, "notifications")
+                    .commit();
+        } else {
+            notificationFragment_ = getSupportFragmentManager().findFragmentByTag("notifications");
+            Log.d(TAG, "onCreate: (savedInstanceState): Found notification-fragment = " + notificationFragment_);
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
-        MessageManager.getInstance().addListener(messageEventListener_);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
-        MessageManager.getInstance().removeListener(messageEventListener_);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
-        HoxApp.getApp().registerChatActivity(null);
     }
-    
-    private void syncWithNewMessages() {
-        List<MessageInfo> newMessages = MessageManager.getInstance().getMessages();
-        Log.d(TAG, "Sync with new messages: # of new messages = " + newMessages.size());
 
-        for (MessageInfo messageInfo : newMessages) {
-            displayMessage(messageInfo);
+    /**
+     * The fragment that handles notifications.
+     */
+    public static class NotificationFragment extends ChatFragment {
+        private static final String TAG = "NotificationFragment";
+
+        public NotificationFragment() {
+            Log.d(TAG, "[CONSTRUCTOR]");
+
+            inputEnabled_ = false;
         }
 
-        MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY);
-        MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE);
-    }
-
-    private void displayMessage(MessageInfo messageInfo) {
-        switch (messageInfo.type) {
-            case MESSAGE_TYPE_INVITE_TO_PLAY: // fall through
-            case MESSAGE_TYPE_CHAT_PRIVATE:
-                ChatMessage chatMsg = new ChatMessage(true, messageInfo.getFormattedString());
-                chatArrayAdapter.add(chatMsg);
-                break;
-            default:
-                //Log.d(TAG, "Ignore other message-type = " + messageInfo.type);
-                break;
+        @Override
+        protected ChatMessage processMessage(MessageInfo messageInfo) {
+            switch (messageInfo.type) {
+                case MESSAGE_TYPE_INVITE_TO_PLAY: // fall through
+                case MESSAGE_TYPE_CHAT_PRIVATE:
+                    ChatMessage chatMsg = new ChatMessage(true, messageInfo.getFormattedString());
+                    return chatMsg;
+                default:
+                    return null;
+            }
         }
-    }
 
-//    public void onMessageReceived(ChatMessage chatMsg) {
-//        chatArrayAdapter.add(chatMsg);
-//    }
-    
-    private boolean sendChatMessage() {
-        final String msg =  chatText.getText().toString();
-        chatText.setText("");
-        
-        ChatMessage chatMsg = new ChatMessage(false, msg);
-        chatArrayAdapter.add(chatMsg);
+        @Override
+        protected void syncWithNewMessages() {
+            List<MessageInfo> newMessages = MessageManager.getInstance().getMessages();
+            Log.d(TAG, "Sync with new messages: # of new messages = " + newMessages.size());
 
-        if (messageListener_ != null) {
-            messageListener_.onLocalMessage(chatMsg);
+            for (MessageInfo messageInfo : newMessages) {
+                ChatMessage chatMsg = processMessage(messageInfo);
+                if (chatMsg != null) {
+                    addMessage(chatMsg);
+                }
+            }
+
+            MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY);
+            MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE);
         }
-        return true;
-    }
 
+    }
 }

@@ -1,3 +1,22 @@
+/**
+ *  Copyright 2016 Huy Phan <huyphan@playxiangqi.com>
+ *
+ *  This file is part of HOXChess.
+ *
+ *  HOXChess is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  HOXChess is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with HOXChess.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.playxiangqi.hoxchess;
 
 import android.content.Context;
@@ -16,17 +35,21 @@ import android.widget.ListView;
 
 import java.util.List;
 
+/**
+ * Reference:
+ *    http://javapapers.com/android/android-chat-bubble/
+ */
 public class ChatFragment extends Fragment implements MessageManager.EventListener {
 
     private static final String TAG = "ChatFragment";
 
-    // ---
     private ChatArrayAdapter chatArrayAdapter;
     private ListView listView;
     private EditText chatText;
     private Button buttonSend;
     private View inputLayout;
-    // ---
+
+    protected boolean inputEnabled_ = true;
 
     // ------------------------------------------------
     public interface MessageListener {
@@ -47,9 +70,15 @@ public class ChatFragment extends Fragment implements MessageManager.EventListen
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        MainActivity activity = (MainActivity) context;
-        if (activity != null) {
-            activity.registerChatFragment(this);
+        // TODO: We hack it to support both types of fragments: Chat and Notification.
+        if (context instanceof MainActivity) {
+            Log.d(TAG, "onAttach: context = MainActivity. Register self with the activity.");
+            MainActivity activity = (MainActivity) context;
+            if (activity != null) {
+                activity.registerChatFragment(this);
+            }
+        } else {
+            Log.d(TAG, "onAttach: context != MainActivity. Do not register.");
         }
     }
 
@@ -100,12 +129,7 @@ public class ChatFragment extends Fragment implements MessageManager.EventListen
         syncWithNewMessages();
         //HoxApp.getApp().registerChatActivity(this);
 
-        // Add some sample messages.
-        //chatArrayAdapter.add(new ChatMessage(true, "This is a Chat view for one Table only"));
-        //chatArrayAdapter.add(new ChatMessage(true, "Messages sent by players in the Table will be displayed here."));
-
-        // -----
-        inputLayout.setVisibility(View.VISIBLE);
+        inputLayout.setVisibility(inputEnabled_ ? View.VISIBLE : View.GONE);
 
         return view;
     }
@@ -158,32 +182,42 @@ public class ChatFragment extends Fragment implements MessageManager.EventListen
 
     // ----
 
-    private void syncWithNewMessages() {
+    protected void syncWithNewMessages() {
         List<MessageInfo> newMessages = MessageManager.getInstance().getMessages();
         Log.d(TAG, "Sync with new messages: # of new messages = " + newMessages.size());
 
         for (MessageInfo messageInfo : newMessages) {
-            displayMessage(messageInfo);
+            ChatMessage chatMsg = processMessage(messageInfo);
+            if (chatMsg != null) {
+                addMessage(chatMsg);
+            }
         }
 
         MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
     }
 
-    private void displayMessage(MessageInfo messageInfo) {
+    protected ChatMessage processMessage(MessageInfo messageInfo) {
         switch (messageInfo.type) {
             case MESSAGE_TYPE_CHAT_IN_TABLE: // fall through
                 ChatMessage chatMsg = new ChatMessage(true, messageInfo.getFormattedString());
-                chatArrayAdapter.add(chatMsg);
-                break;
+                return chatMsg;
             default:
-                //Log.d(TAG, "Ignore other message-type = " + messageInfo.type);
-                break;
+                return null;
+        }
+    }
+
+    protected void addMessage(ChatMessage chatMsg) {
+        if (chatMsg != null) {
+            chatArrayAdapter.add(chatMsg);
         }
     }
 
     @Override
     public void onMessageReceived(MessageInfo messageInfo) {
-        displayMessage(messageInfo);
+        ChatMessage chatMsg = processMessage(messageInfo);
+        if (chatMsg != null) {
+            addMessage(chatMsg);
+        }
     }
 
     public void clearAll() {
@@ -196,7 +230,7 @@ public class ChatFragment extends Fragment implements MessageManager.EventListen
         chatText.setText("");
 
         ChatMessage chatMsg = new ChatMessage(false, msg);
-        chatArrayAdapter.add(chatMsg);
+        addMessage(chatMsg);
 
         //if (messageListener_ != null) {
         //    messageListener_.onLocalMessage(chatMsg);

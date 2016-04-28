@@ -51,7 +51,8 @@
 
         <activity
             android:name=".ChatBubbleActivity"
-            android:label="@string/title_activity_chat"
+            android:label="@string/title_activity_notifications"
+            android:theme="@style/Theme.AppCompat.Light"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

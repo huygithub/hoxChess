@@ -18,8 +18,6 @@
  */
 package com.playxiangqi.hoxchess;
 
-import java.util.List;
-
 import com.playxiangqi.hoxchess.Enums.GameStatus;
 import com.playxiangqi.hoxchess.Enums.TableType;
 
@@ -113,12 +111,6 @@ public class HoxApp extends Application {
         networkController_.setMainActivity(activity);
         if (activity != null) {
             activity.setTableController(playerTracker_.getTableType());
-        }
-    }
-
-    public void registerChatActivity(ChatBubbleActivity activity) {
-        if (activity != null) {
-            activity.setMessageListener(networkController_);
         }
     }
 
