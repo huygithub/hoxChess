@@ -15,7 +15,7 @@ import android.widget.ListView;
 
 import java.util.List;
 
-public class ChatFragment extends Fragment implements NetworkController.EventListener {
+public class ChatFragment extends Fragment implements MessageManager.EventListener {
 
     private static final String TAG = "ChatFragment";
 
@@ -90,12 +90,10 @@ public class ChatFragment extends Fragment implements NetworkController.EventLis
         //HoxApp.getApp().registerChatActivity(this);
 
         // Add some sample messages.
-        chatArrayAdapter.add(new ChatMessage(true, "This is a Chat view"));
-        chatArrayAdapter.add(new ChatMessage(true, "It is also used for notifications"));
-        chatArrayAdapter.add(new ChatMessage(true, "Messages sent by players will be displayed here."));
+        chatArrayAdapter.add(new ChatMessage(true, "This is a Chat view for one Table only"));
+        chatArrayAdapter.add(new ChatMessage(true, "Messages sent by players in the Table will be displayed here."));
 
         // -----
-
         inputLayout.setVisibility(View.VISIBLE);
 
         return view;
@@ -118,7 +116,8 @@ public class ChatFragment extends Fragment implements NetworkController.EventLis
         //activity.onBoardViewResume(activity);
 
         //setMessageListener(HoxApp.getApp().getNetworkController());
-        HoxApp.getApp().getNetworkController().addListener(this);
+        //HoxApp.getApp().getNetworkController().addListener(this);
+        MessageManager.getInstance().addListener(this);
     }
 
     @Override
@@ -128,7 +127,8 @@ public class ChatFragment extends Fragment implements NetworkController.EventLis
         //MainActivity activity = (MainActivity) getActivity();
         //activity.onBoardViewResume(activity);
 
-        HoxApp.getApp().getNetworkController().removeListener(this);
+        //HoxApp.getApp().getNetworkController().removeListener(this);
+        MessageManager.getInstance().removeListener(this);
     }
 
     @Override
@@ -148,24 +148,36 @@ public class ChatFragment extends Fragment implements NetworkController.EventLis
     // ----
 
     private void syncWithNewMessages() {
-        Log.d(TAG, "Sync with new messages:...");
+        List<MessageInfo> newMessages = MessageManager.getInstance().getMessages();
+        Log.d(TAG, "Sync with new messages: # of new messages = " + newMessages.size());
 
-        List<ChatMessage> newMessages = HoxApp.getApp().getNewMessages();
-
-        Log.d(TAG, "... # of new messages = " + newMessages.size());
-        for (ChatMessage msg : newMessages) {
-            chatArrayAdapter.add(msg);
+        for (MessageInfo messageInfo : newMessages) {
+            displayMessage(messageInfo);
         }
 
-        //if (HoxApp.getApp().isMyNetworkTableValid()) {
-            inputLayout.setVisibility(View.VISIBLE);
-        //} else {
-        //    inputLayout.setVisibility(View.GONE);
-        //}
+        MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
     }
 
-    public void onMessageReceived(ChatMessage chatMsg) {
-        chatArrayAdapter.add(chatMsg);
+    private void displayMessage(MessageInfo messageInfo) {
+        switch (messageInfo.type) {
+            case MESSAGE_TYPE_CHAT_IN_TABLE: // fall through
+                ChatMessage chatMsg = new ChatMessage(true, messageInfo.getFormattedString());
+                chatArrayAdapter.add(chatMsg);
+                break;
+            default:
+                //Log.d(TAG, "Ignore other message-type = " + messageInfo.type);
+                break;
+        }
+    }
+
+    @Override
+    public void onMessageReceived(MessageInfo messageInfo) {
+        displayMessage(messageInfo);
+    }
+
+    public void clearAll() {
+        Log.d(TAG, "clearAll messages...");
+        chatArrayAdapter.clear();
     }
 
     private boolean sendChatMessage() {
@@ -179,7 +191,7 @@ public class ChatFragment extends Fragment implements NetworkController.EventLis
         //    messageListener_.onLocalMessage(chatMsg);
         //}
 
-        //HoxApp.getApp().getNetworkController().onLocalMessage(chatMsg);
+        HoxApp.getApp().getNetworkController().onLocalMessage(chatMsg);
 
         return true;
     }

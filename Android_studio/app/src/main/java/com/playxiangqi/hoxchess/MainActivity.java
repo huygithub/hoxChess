@@ -18,6 +18,7 @@
  */
 package com.playxiangqi.hoxchess;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
@@ -62,7 +63,7 @@ import android.widget.TextView;
  */
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-                NetworkController.EventListener {
+                MessageManager.EventListener {
 
     private static final String TAG = "MainActivity";
 
@@ -73,6 +74,7 @@ public class MainActivity extends AppCompatActivity
 
     private DrawerLayout drawerLayout_;
     private ActionBarDrawerToggle drawerToggle_;
+    private MainPagerAdapter pagerAdapter_;
 
     private Fragment placeholderFragment_;
     private ProgressBar progressBar_;
@@ -122,11 +124,9 @@ public class MainActivity extends AppCompatActivity
 
         Log.d(TAG, "onCreate: savedInstanceState = " + savedInstanceState + ".");
 
-        MainPagerAdapter mDemoCollectionPagerAdapter =
-                new MainPagerAdapter(this,
-                        getSupportFragmentManager());
+        pagerAdapter_ = new MainPagerAdapter(this, getSupportFragmentManager());
         ViewPager mViewPager = (ViewPager) findViewById(R.id.main_view_pager);
-        mViewPager.setAdapter(mDemoCollectionPagerAdapter);
+        mViewPager.setAdapter(pagerAdapter_);
 
 //        if (savedInstanceState == null) {
 //            placeholderFragment_ = new PlaceholderFragment();
@@ -276,7 +276,8 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
-        HoxApp.getApp().getNetworkController().addListener(this);
+        //HoxApp.getApp().getNetworkController().addListener(this);
+        MessageManager.getInstance().addListener(this);
         adjustScreenOnFlagBasedOnGameStatus();
     }
 
@@ -307,7 +308,8 @@ public class MainActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
-        HoxApp.getApp().getNetworkController().removeListener(this);
+        //HoxApp.getApp().getNetworkController().removeListener(this);
+        MessageManager.getInstance().removeListener(this);
         adjustScreenOnFlagBasedOnGameStatus();
     }
 
@@ -541,7 +543,10 @@ public class MainActivity extends AppCompatActivity
         int col2 = move.charAt(2) - '0';
         boardView_.makeMove(new Position(row1, col1), new Position(row2, col2), true);
     }
-    
+
+    /**
+     * Make the current table an EMPTY one.
+     */
     public void clearTable() {
         Log.d(TAG, "Clear the table. Make it an empty one.");
         if (getSupportActionBar() != null) {
@@ -551,6 +556,12 @@ public class MainActivity extends AppCompatActivity
         }
         invalidateOptionsMenu(); // Recreate the options menu
         boardView_.resetBoard();
+
+        ChatFragment chatFragment = pagerAdapter_.getChatFragment();
+        if (chatFragment != null) {
+            chatFragment.clearAll();
+        }
+
         adjustScreenOnFlagBasedOnGameStatus();
     }
     
@@ -571,12 +582,17 @@ public class MainActivity extends AppCompatActivity
         boardView_.resetBoard();
     }
 
-    public void onMessageReceived(ChatMessage chatMsg) {
-        Log.d(TAG, "On new message: [" + chatMsg.message + "]");
-        notifCount_++;
-        invalidateOptionsMenu(); // Recreate the options menu
+    @Override
+    public void onMessageReceived(MessageInfo messageInfo) {
+        Log.d(TAG, "On new message: [" + messageInfo + "]");
+        // Only interest in certain message-types.
+        if (messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY ||
+                messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE) {
+            notifCount_++;
+            invalidateOptionsMenu(); // Recreate the options menu
+        }
     }
-    
+
     public void onNetworkCode(int networkCode) {
         //progressBar_.setVisibility(View.GONE);
     }
@@ -788,7 +804,11 @@ public class MainActivity extends AppCompatActivity
      * The ViewPager adapter for the main page.
      */
     public static class MainPagerAdapter extends FragmentPagerAdapter {
-        Context context_;
+        private final Context context_;
+
+        // Keep a reference to fragments because I don't when they are destroyed or created.
+        private WeakReference<ChatFragment> chatFragment_ = new WeakReference<ChatFragment>(null);
+
         public MainPagerAdapter(Context context, FragmentManager fragmentManager) {
             super(fragmentManager);
             context_ = context;
@@ -803,7 +823,11 @@ public class MainActivity extends AppCompatActivity
         public Fragment getItem(int position) {
             switch (position) {
                 case 0: return new PlaceholderFragment();
-                case 1: return new ChatFragment();
+                case 1: {
+                    ChatFragment newFragment = new ChatFragment();
+                    chatFragment_ = new WeakReference<ChatFragment>(newFragment);
+                    return newFragment;
+                }
                 default: return new PlayersFragment();
             }
         }
@@ -827,6 +851,10 @@ public class MainActivity extends AppCompatActivity
                 case 1: return 0.9f;
                 default: return 1f;
             }
+        }
+
+        public ChatFragment getChatFragment() {
+            return chatFragment_.get();
         }
     }
 }

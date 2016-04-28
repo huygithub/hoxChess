@@ -133,7 +133,7 @@ public class HoxApp extends Application {
     public GameStatus getGameStatus() { return networkController_.getGameStatus(); }
     public boolean isMyNetworkTableValid() { return networkController_.isMyTableValid(); }
     public String getMyNetworkTableId() { return networkController_.getMyTableId(); }
-    public List<ChatMessage> getNewMessages() { return networkController_.getNewMessages(); }
+    //public List<ChatMessage> getNewMessages() { return networkController_.getNewMessages(); }
 
     public boolean isGameInProgress() {
         return ( !isGameOver() &&

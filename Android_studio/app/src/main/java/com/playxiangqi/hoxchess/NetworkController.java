@@ -55,7 +55,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
     private TableTimeTracker timeTracker_ = new TableTimeTracker();
     private TablePlayerTracker playerTracker_ = new TablePlayerTracker(TableType.TABLE_TYPE_LOCAL);
     
-    private List<ChatMessage> newMessages_ = new ArrayList<ChatMessage>();
+    //private List<ChatMessage> newMessages_ = new ArrayList<ChatMessage>();
 
     // *************************************************************************************
     public interface EventListener {
@@ -65,12 +65,10 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
 
     public void addListener(EventListener listener) {
         listeners_.add(listener);
-        Log.d(TAG, "addListener: listeners-size:" + listeners_.size());
     }
 
     public void removeListener(EventListener listener) {
         listeners_.remove(listener);
-        Log.d(TAG, "removeListener: listeners-size:" + listeners_.size());
     }
 
     // *************************************************************************************
@@ -108,7 +106,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
 
     @Override
     public void onLocalMessage(ChatMessage chatMsg) {
-        this.handleLocalMessage(chatMsg);
+        handleLocalMessage(chatMsg);
     }
 
     /**
@@ -151,7 +149,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
     public GameStatus getGameStatus() { return gameStatus_; }
     public boolean isMyTableValid() { return myTable_.isValid(); }
     public String getMyTableId() { return myTable_.tableId; }
-    public List<ChatMessage> getNewMessages() { return newMessages_; }
+    //public List<ChatMessage> getNewMessages() { return newMessages_; }
 
     /**
      * The main handler to handle ALL incoming network events.
@@ -398,7 +396,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
             myColor_ = ColorEnum.COLOR_UNKNOWN;
             gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
             timeTracker_.stop();
-            newMessages_.clear();
+            //newMessages_.clear();
             playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
             MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
@@ -547,12 +545,22 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
             return; // Do nothing.
         }
 
-        ChatMessage chatMsg = new ChatMessage(true, newMessage);
-        newMessages_.add(chatMsg);
+        //ChatMessage chatMsg = new ChatMessage(true, newMessage);
+        //newMessages_.add(chatMsg);
 
-        for (EventListener listener : listeners_) {
-            listener.onMessageReceived(chatMsg);
-        }
+        //for (EventListener listener : listeners_) {
+        //    listener.onMessageReceived(chatMsg);
+        //}
+
+        // ----
+        MessageInfo.MessageType msgType = (TextUtils.isEmpty(tableId)
+                ? MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE
+                :  MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
+        MessageInfo messageInfo = new MessageInfo(msgType, sender);
+        messageInfo.content = message;
+        messageInfo.tableId = tableId;
+        MessageManager.getInstance().addMessage(messageInfo);
+        // ----
     }
 
     private void handleNetworkEvent_INVITE(String content, String tableId) {
@@ -574,12 +582,20 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
                 + " @ [" + tableIdString + "]";
         final String newMessage = "*INVITE: " + inviteString;
 
-        ChatMessage chatMsg = new ChatMessage(true, newMessage);
-        newMessages_.add(chatMsg);
+        //ChatMessage chatMsg = new ChatMessage(true, newMessage);
+        //newMessages_.add(chatMsg);
 
-        for (EventListener listener : listeners_) {
-            listener.onMessageReceived(chatMsg);
-        }
+        //for (EventListener listener : listeners_) {
+        //    listener.onMessageReceived(chatMsg);
+        //}
+
+        // ----
+        MessageInfo messageInfo = new MessageInfo(
+                MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY,
+                sender);
+        messageInfo.tableId = tableIdString;
+        MessageManager.getInstance().addMessage(messageInfo);
+        // ----
     }
 
     private void handleNetworkEvent_I_PLAYERS(String content) {
@@ -694,13 +710,13 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
         networkPlayer_.sendRequest_JOIN(tableId, "None");
     }
 
-    public void handleLocalMessage(ChatMessage chatMsg) {
+    private void handleLocalMessage(ChatMessage chatMsg) {
         Log.d(TAG, "Handle local message: [" + chatMsg.message + "]");
         if (!isMyTableValid()) { // Not a network table?
             Log.i(TAG, "No network table. Ignore the local message.");
             return;
         }
-        newMessages_.add(chatMsg);
+        //newMessages_.add(chatMsg);
         networkPlayer_.sendRequest_MSG(myTable_.tableId, chatMsg.message);
     }
 
@@ -815,7 +831,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener,
             myColor_ = ColorEnum.COLOR_UNKNOWN;
             gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
             timeTracker_.stop();
-            newMessages_.clear();
+            //newMessages_.clear();
             MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
                 mainActivity.clearTable();

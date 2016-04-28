@@ -37,10 +37,10 @@ public class ChatBubbleActivity extends Activity {
     }
     // ------------------------------------------------
 
-    private NetworkController.EventListener networkEventListener_ = new  NetworkController.EventListener() {
+    private MessageManager.EventListener messageEventListener_ = new  MessageManager.EventListener() {
         @Override
-        public void onMessageReceived(ChatMessage chatMsg) {
-            chatArrayAdapter.add(chatMsg);
+        public void onMessageReceived(MessageInfo messageInfo) {
+            displayMessage(messageInfo);
         }
     };
 
@@ -90,20 +90,22 @@ public class ChatBubbleActivity extends Activity {
         
         syncWithNewMessages();
         HoxApp.getApp().registerChatActivity(this);
+
+        inputLayout.setVisibility(View.GONE);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
-        HoxApp.getApp().getNetworkController().addListener(networkEventListener_);
+        MessageManager.getInstance().addListener(messageEventListener_);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
-        HoxApp.getApp().getNetworkController().removeListener(networkEventListener_);
+        MessageManager.getInstance().removeListener(messageEventListener_);
     }
 
     @Override
@@ -114,25 +116,33 @@ public class ChatBubbleActivity extends Activity {
     }
     
     private void syncWithNewMessages() {
-        Log.d(TAG, "Sync with new messages:...");
-        
-        List<ChatMessage> newMessages = HoxApp.getApp().getNewMessages();
-        
-        Log.d(TAG, "... # of new messages = " + newMessages.size());
-        for (ChatMessage msg : newMessages) {
-            chatArrayAdapter.add(msg);
+        List<MessageInfo> newMessages = MessageManager.getInstance().getMessages();
+        Log.d(TAG, "Sync with new messages: # of new messages = " + newMessages.size());
+
+        for (MessageInfo messageInfo : newMessages) {
+            displayMessage(messageInfo);
         }
-        
-        if (HoxApp.getApp().isMyNetworkTableValid()) {
-            inputLayout.setVisibility(View.VISIBLE);
-        } else {
-            inputLayout.setVisibility(View.GONE);
+
+        MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY);
+        MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE);
+    }
+
+    private void displayMessage(MessageInfo messageInfo) {
+        switch (messageInfo.type) {
+            case MESSAGE_TYPE_INVITE_TO_PLAY: // fall through
+            case MESSAGE_TYPE_CHAT_PRIVATE:
+                ChatMessage chatMsg = new ChatMessage(true, messageInfo.getFormattedString());
+                chatArrayAdapter.add(chatMsg);
+                break;
+            default:
+                //Log.d(TAG, "Ignore other message-type = " + messageInfo.type);
+                break;
         }
     }
-    
-    public void onMessageReceived(ChatMessage chatMsg) {
-        chatArrayAdapter.add(chatMsg);
-    }
+
+//    public void onMessageReceived(ChatMessage chatMsg) {
+//        chatArrayAdapter.add(chatMsg);
+//    }
     
     private boolean sendChatMessage() {
         final String msg =  chatText.getText().toString();
