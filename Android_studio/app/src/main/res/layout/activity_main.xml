@@ -37,7 +37,7 @@
             </android.support.v7.widget.Toolbar>
 
         </android.support.design.widget.AppBarLayout>
-
+        <!--
         <FrameLayout
             android:id="@+id/container"
             android:layout_width="match_parent"
@@ -45,6 +45,23 @@
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             tools:context=".MainActivity"
             tools:ignore="MergeRootFrame" />
+        -->
+        <android.support.v4.view.ViewPager
+            android:id="@+id/main_view_pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <android.support.v4.view.PagerTitleStrip
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:background="@drawable/side_nav_bar"
+                android:textColor="#fff"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp" />
+            
+        </android.support.v4.view.ViewPager>
 
     </android.support.design.widget.CoordinatorLayout>
 

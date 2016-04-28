@@ -25,7 +25,7 @@ import com.playxiangqi.hoxchess.Enums.GameStatus;
 import com.playxiangqi.hoxchess.Enums.TableType;
 import com.playxiangqi.hoxchess.Piece.Move;
 
-import android.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.drawable.LayerDrawable;
@@ -33,7 +33,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -118,17 +122,23 @@ public class MainActivity extends AppCompatActivity
 
         Log.d(TAG, "onCreate: savedInstanceState = " + savedInstanceState + ".");
 
-        if (savedInstanceState == null) {
-            placeholderFragment_ = new PlaceholderFragment();
-            Log.d(TAG, "onCreate: (NEW): Created board-fragment = " + placeholderFragment_);
+        MainPagerAdapter mDemoCollectionPagerAdapter =
+                new MainPagerAdapter(this,
+                        getSupportFragmentManager());
+        ViewPager mViewPager = (ViewPager) findViewById(R.id.main_view_pager);
+        mViewPager.setAdapter(mDemoCollectionPagerAdapter);
 
-            getFragmentManager().beginTransaction()
-                    .add(R.id.container, placeholderFragment_, "board")
-                    .commit();
-        } else {
-            placeholderFragment_ = getFragmentManager().findFragmentByTag("board");
-            Log.d(TAG, "onCreate: (savedInstanceState): Found board-fragment = " + placeholderFragment_);
-        }
+//        if (savedInstanceState == null) {
+//            placeholderFragment_ = new PlaceholderFragment();
+//            Log.d(TAG, "onCreate: (NEW): Created board-fragment = " + placeholderFragment_);
+//
+//            getSupportFragmentManager().beginTransaction()
+//                    .add(R.id.container, placeholderFragment_, "board")
+//                    .commit();
+//        } else {
+//            placeholderFragment_ = getSupportFragmentManager().findFragmentByTag("board");
+//            Log.d(TAG, "onCreate: (savedInstanceState): Found board-fragment = " + placeholderFragment_);
+//        }
 
         // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
         // Reference:
@@ -771,6 +781,52 @@ public class MainActivity extends AppCompatActivity
         public void onDetach () {
             super.onDetach();
             Log.i(TAG, "onDetach...");
+        }
+    }
+
+    /**
+     * The ViewPager adapter for the main page.
+     */
+    public static class MainPagerAdapter extends FragmentPagerAdapter {
+        Context context_;
+        public MainPagerAdapter(Context context, FragmentManager fragmentManager) {
+            super(fragmentManager);
+            context_ = context;
+        }
+
+        @Override
+        public int getCount() {
+            return 3;
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            switch (position) {
+                case 0: return new PlaceholderFragment();
+                case 1: return new ChatFragment();
+                default: return new PlayersFragment();
+            }
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            switch (position) {
+                case 0: return context_.getString(R.string.label_table);
+                case 1: return context_.getString(R.string.title_activity_chat);
+                default: return context_.getString(R.string.action_view_players);
+            }
+        }
+
+        /**
+         * Reference: https://guides.codepath.com/android/ViewPager-with-FragmentPagerAdapter
+         */
+        @Override
+        public float getPageWidth (int position) {
+            switch (position) {
+                case 0: return 0.95f;
+                case 1: return 0.9f;
+                default: return 1f;
+            }
         }
     }
 }

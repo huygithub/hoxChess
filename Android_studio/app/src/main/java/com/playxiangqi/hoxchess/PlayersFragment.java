@@ -1,65 +1,65 @@
-/**
- *  Copyright 2016 Huy Phan <huyphan@playxiangqi.com>
- * 
- *  This file is part of HOXChess.
- * 
- *  HOXChess is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- * 
- *  HOXChess is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- * 
- *  You should have received a copy of the GNU General Public License
- *  along with HOXChess.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.playxiangqi.hoxchess;
 
-import java.util.HashMap;
-
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.database.DataSetObserver;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
-public class PlayersActivity extends Activity
-                implements PlayerManager.EventListener {
+import java.util.HashMap;
+import java.util.List;
 
-    private static final String TAG = "PlayersActivity";
+public class PlayersFragment extends Fragment {
+
+    private static final String TAG = "PlayersFragment";
+
+    //private Context context_;
 
     private View inProgressView_;
     private ListView playersListView_;
 
     private PlayersAdapter adapter_;
-    
+
+    public PlayersFragment() {
+        Log.d(TAG, "[CONSTRUCTOR]");
+    }
+
+//    @Override
+//    public void onAttach(Context context) {
+//        super.onAttach(context);
+//        context_ = context;
+//    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_players);
-        Log.d(TAG, "onCreate:");
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        Log.d(TAG, "onCreateView...");
+        final View view = inflater.inflate(R.layout.fragment_players_in_table, container, false);
 
-        inProgressView_ = findViewById(R.id.inProgressLayout);
-        playersListView_ = (ListView)findViewById(R.id.list_players);
+        inProgressView_ = view.findViewById(R.id.inProgressLayout);
+        playersListView_ = (ListView)view.findViewById(R.id.list_players);
 
-        adapter_ = new PlayersAdapter(this, R.layout.listview_item_player);
+        adapter_ = new PlayersAdapter(getActivity(), R.layout.listview_item_player);
         playersListView_.setAdapter(adapter_);
 
-        playersListView_.setOnItemClickListener(new OnItemClickListener() {
+        playersListView_.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 PlayerInfo itemValue = (PlayerInfo) playersListView_.getItemAtPosition(position);
@@ -69,42 +69,38 @@ public class PlayersActivity extends Activity
             }
         });
 
+        // Empty initially.
+        inProgressView_.setVisibility(View.GONE);
+        playersListView_.setVisibility(View.VISIBLE);
+
+        return view;
     }
 
     @Override
-    public void onPlayersLoaded() {
-        Log.d(TAG, "onPlayersLoaded:");
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Log.d(TAG, "onActivityCreated...");
 
-        HashMap<String, PlayerInfo> players = PlayerManager.getInstance().getPlayers();
-        Log.d(TAG, "onPlayersLoaded: # of players = " + players.size());
-
-        refreshPlayersIfNeeded();
+        //MainActivity activity = (MainActivity) getActivity();
+        //activity.onBoardViewCreated(activity);
     }
 
     @Override
-    public void onTablesLoaded() {
-        Log.d(TAG, "onTablesLoaded:");
-
-        HashMap<String, PlayerInfo> players = PlayerManager.getInstance().getPlayers();
-        Log.d(TAG, "onTablesLoaded: # of players = " + players.size());
-
-        refreshPlayersIfNeeded();
-    }
-
-    @Override
-    protected void onResume() {
+    public void onResume () {
         super.onResume();
-        Log.d(TAG, "onResume:");
+        Log.d(TAG, "onResume...");
+
         if (!refreshPlayersIfNeeded()) {
-            PlayerManager.getInstance().addListener(this);
+            //PlayerManager.getInstance().addListener(this);
         }
     }
 
     @Override
-    protected void onPause() {
+    public void onPause () {
         super.onPause();
-        Log.d(TAG, "onPause:");
-        PlayerManager.getInstance().removeListener(this);
+        Log.d(TAG, "onPause...");
+        //MainActivity activity = (MainActivity) getActivity();
+        //activity.onBoardViewResume(activity);
     }
 
     private boolean refreshPlayersIfNeeded() {
@@ -120,6 +116,19 @@ public class PlayersActivity extends Activity
         }
         adapter_.refreshPlayers();
         return true;
+    }
+
+    @Override
+    public void onDestroy () {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy...");
+        //HoxApp.getApp().registerChatActivity(null);
+    }
+
+    @Override
+    public void onDetach () {
+        super.onDetach();
+        Log.d(TAG, "onDetach...");
     }
 
     /**
@@ -212,10 +221,10 @@ public class PlayersActivity extends Activity
 
     private static class ContextMenuOnClickListener implements View.OnClickListener {
 
-        //private final Activity activity_;
+        private final Activity activity_;
 
         ContextMenuOnClickListener(Activity activity) {
-            //activity_ = activity;
+            activity_ = activity;
         }
 
         @Override
@@ -254,8 +263,8 @@ public class PlayersActivity extends Activity
 
                     Intent result = new Intent();
                     result.putExtra("pid", playerId); // NOTE: Not used currently!
-                    //activity_.setResult(Activity.RESULT_OK, result);
-                    //activity_.finish();
+                    activity_.setResult(Activity.RESULT_OK, result);
+                    activity_.finish();
                     return true;
                 }
             });
