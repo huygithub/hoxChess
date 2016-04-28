@@ -570,6 +570,8 @@ public class MainActivity extends AppCompatActivity
             Log.w(TAG, "clearTable: Did not find the chat fragment. Do nothing.");
         }
 
+        tableController_.onTableClear();
+
         adjustScreenOnFlagBasedOnGameStatus();
     }
     

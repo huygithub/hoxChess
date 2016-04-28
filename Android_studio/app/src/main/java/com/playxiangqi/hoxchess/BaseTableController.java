@@ -90,6 +90,9 @@ public class BaseTableController implements BoardView.BoardEventListener {
     public void handleLogoutFromNetwork() {
     }
 
+    public void onTableClear() {
+    }
+
     @Override
     public void onLocalMove(Position fromPos, Position toPos) {
     }

@@ -48,8 +48,7 @@ public class NetworkTableController extends BaseTableController {
 
     @Override
     public boolean handleBackPressed() {
-        NetworkController networkController = HoxApp.getApp().getNetworkController();
-        networkController.handleRequestToCloseCurrentTable();
+        handleRequestToCloseCurrentTable();
         return true;
     }
 
@@ -148,6 +147,10 @@ public class NetworkTableController extends BaseTableController {
     public void handleLogoutFromNetwork() {
         NetworkController networkController = HoxApp.getApp().getNetworkController();
         networkController.logoutFromNetwork();
+    }
+
+    public void onTableClear() {
+        MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
     }
 
     @Override
