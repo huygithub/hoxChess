@@ -1,5 +1,6 @@
 package com.playxiangqi.hoxchess;
 
+import android.content.Context;
 import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -40,6 +41,16 @@ public class ChatFragment extends Fragment implements MessageManager.EventListen
 
     public ChatFragment() {
         Log.d(TAG, "[CONSTRUCTOR]");
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        MainActivity activity = (MainActivity) context;
+        if (activity != null) {
+            activity.registerChatFragment(this);
+        }
     }
 
     @Override
@@ -90,8 +101,8 @@ public class ChatFragment extends Fragment implements MessageManager.EventListen
         //HoxApp.getApp().registerChatActivity(this);
 
         // Add some sample messages.
-        chatArrayAdapter.add(new ChatMessage(true, "This is a Chat view for one Table only"));
-        chatArrayAdapter.add(new ChatMessage(true, "Messages sent by players in the Table will be displayed here."));
+        //chatArrayAdapter.add(new ChatMessage(true, "This is a Chat view for one Table only"));
+        //chatArrayAdapter.add(new ChatMessage(true, "Messages sent by players in the Table will be displayed here."));
 
         // -----
         inputLayout.setVisibility(View.VISIBLE);

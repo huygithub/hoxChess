@@ -88,6 +88,12 @@ public class MainActivity extends AppCompatActivity
 
     private boolean isWaitingForTables = false;
 
+    // Keep a reference to fragments because I don't know when they are destroyed or created.
+    // Also, the way ViewPager handles fragments makes it hard to retain references to fragments.
+    // See:
+    //  http://stackoverflow.com/questions/19393076/how-to-properly-handle-screen-rotation-with-a-viewpager-and-nested-fragments
+    private WeakReference<ChatFragment> myChatFragment_ = new WeakReference<ChatFragment>(null);
+
     // TODO: We should persist this counter somewhere else because it is lost when the
     //       device is rotated, for example.
     private int notifCount_ = 0;
@@ -557,9 +563,11 @@ public class MainActivity extends AppCompatActivity
         invalidateOptionsMenu(); // Recreate the options menu
         boardView_.resetBoard();
 
-        ChatFragment chatFragment = pagerAdapter_.getChatFragment();
+        ChatFragment chatFragment = myChatFragment_.get();
         if (chatFragment != null) {
             chatFragment.clearAll();
+        } else {
+            Log.w(TAG, "clearTable: Did not find the chat fragment. Do nothing.");
         }
 
         adjustScreenOnFlagBasedOnGameStatus();
@@ -699,6 +707,11 @@ public class MainActivity extends AppCompatActivity
 
         SoundManager.getInstance().initialize(activity);
     }
+
+    public void registerChatFragment(final ChatFragment fragment) {
+        Log.d(TAG, "registerChatFragment: old:" + myChatFragment_.get() + " => new:" + fragment);
+        myChatFragment_ = new WeakReference<ChatFragment>(fragment);
+    }
     
     private void onBoardViewResume(MainActivity activity) {
         Log.d(TAG, "onBoardViewResume...");
@@ -806,9 +819,6 @@ public class MainActivity extends AppCompatActivity
     public static class MainPagerAdapter extends FragmentPagerAdapter {
         private final Context context_;
 
-        // Keep a reference to fragments because I don't when they are destroyed or created.
-        private WeakReference<ChatFragment> chatFragment_ = new WeakReference<ChatFragment>(null);
-
         public MainPagerAdapter(Context context, FragmentManager fragmentManager) {
             super(fragmentManager);
             context_ = context;
@@ -823,11 +833,7 @@ public class MainActivity extends AppCompatActivity
         public Fragment getItem(int position) {
             switch (position) {
                 case 0: return new PlaceholderFragment();
-                case 1: {
-                    ChatFragment newFragment = new ChatFragment();
-                    chatFragment_ = new WeakReference<ChatFragment>(newFragment);
-                    return newFragment;
-                }
+                case 1: return new ChatFragment();
                 default: return new PlayersFragment();
             }
         }
@@ -851,10 +857,6 @@ public class MainActivity extends AppCompatActivity
                 case 1: return 0.9f;
                 default: return 1f;
             }
-        }
-
-        public ChatFragment getChatFragment() {
-            return chatFragment_.get();
         }
     }
 }
