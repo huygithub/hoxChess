@@ -200,6 +200,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             handleNetworkEvent_I_PLAYERS(content);
         } else if ("LOGOUT".equals(op)) {
             handleNetworkEvent_LOGOUT(content);
+        } else if ("PLAYER_INFO".equals(op)) {
+            handleNetworkEvent_PLAYER_INFO(content);
         }
     }
 
@@ -625,6 +627,23 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         PlayerManager.getInstance().removePlayer(pid);
     }
 
+    private void handleNetworkEvent_PLAYER_INFO(String content) {
+        Log.d(TAG, "Handle event (PLAYER_INFO): ENTER.");
+        final String[] components = content.split(";");
+        final String pid = components[0];
+        final String rating = components[1];
+        final String wins = components[2];
+        final String draws = components[3];
+        final String losses = components[4];
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.showBriefMessage(
+                    mainActivity.getString(R.string.msg_player_record, pid, rating, wins, draws, losses),
+                    Snackbar.LENGTH_LONG);
+        }
+    }
+
     public void logoutFromNetwork() {
         Log.d(TAG, "Logout from network...");
 
@@ -813,6 +832,11 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     public void handleRequestToInvite(String invitee) {
         Log.i(TAG, "Send request to 'Invite'...");
         networkPlayer_.sendRequest_INVITE(invitee, myTable_.tableId);
+    }
+
+    public void handleRequestToGetPlayerInfo(String otherPID) {
+        Log.i(TAG, "Send request for 'Player Info'...");
+        networkPlayer_.sendRequest_PLAYER_INFO(otherPID);
     }
 
     public void sendRequestForTableList() {

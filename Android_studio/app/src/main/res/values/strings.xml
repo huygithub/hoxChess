@@ -108,5 +108,7 @@
     <string name="action_invite_to_play">Invite</string>
     <string name="chat_edit_text_hint">Write a message</string>
     <string name="title_activity_notifications">Notifications</string>
+    <string name="msg_player_record">*INFO: %1$s %2$s W%3$s D%4$s L%5$s</string>
+    <string name="action_get_player_info">Info</string>
 
 </resources>

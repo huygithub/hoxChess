@@ -58,13 +58,12 @@ public class PlayersFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        Log.d(TAG, "onAttach...");
 
         if (context instanceof MainActivity) {
             Log.d(TAG, "onAttach: context = MainActivity. Register self with the activity.");
             MainActivity activity = (MainActivity) context;
-            if (activity != null) {
-                activity.registerPlayersFragment(this);
-            }
+            activity.registerPlayersFragment(this);
         } else {
             Log.d(TAG, "onAttach: context != MainActivity. Do not register.");
         }
@@ -85,10 +84,10 @@ public class PlayersFragment extends Fragment {
         playersListView_.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                PlayerInfo itemValue = (PlayerInfo) playersListView_.getItemAtPosition(position);
-                Log.d(TAG, "Position:" + position + " pid: " + itemValue.pid
-                        + ", ListItem: " + itemValue);
-                // Do nothing currently!
+                PlayerInfo playerInfo = (PlayerInfo) playersListView_.getItemAtPosition(position);
+                Log.d(TAG, "Position:" + position + " pid: " + playerInfo.pid
+                        + ", ListItem: " + playerInfo);
+                HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
             }
         });
 
@@ -103,9 +102,6 @@ public class PlayersFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         Log.d(TAG, "onActivityCreated...");
-
-        //MainActivity activity = (MainActivity) getActivity();
-        //activity.onBoardViewCreated(activity);
     }
 
     @Override
@@ -122,8 +118,6 @@ public class PlayersFragment extends Fragment {
     public void onPause () {
         super.onPause();
         Log.d(TAG, "onPause...");
-        //MainActivity activity = (MainActivity) getActivity();
-        //activity.onBoardViewResume(activity);
     }
 
     public void clearAll() {
@@ -151,7 +145,6 @@ public class PlayersFragment extends Fragment {
     public void onDestroy () {
         super.onDestroy();
         Log.d(TAG, "onDestroy...");
-        //HoxApp.getApp().registerChatActivity(null);
     }
 
     @Override
@@ -315,9 +308,8 @@ public class PlayersFragment extends Fragment {
             PopupMenu popup = new PopupMenu(view.getContext(), view);
             popup.getMenuInflater().inflate(R.menu.players_activity_actions, popup.getMenu());
 
-            if (TextUtils.isEmpty(tableId)) {
-                popup.getMenu().removeItem(R.id.action_join_table);
-            } else {
+            popup.getMenu().removeItem(R.id.action_join_table);
+            if (!TextUtils.isEmpty(tableId)) {
                 popup.getMenu().removeItem(R.id.action_invite_to_play);
             }
 
@@ -335,14 +327,17 @@ public class PlayersFragment extends Fragment {
                         case R.id.action_invite_to_play:
                             HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
                             break;
+                        case R.id.action_get_player_info:
+                            HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerId);
+                            break;
                         default:
                             return true;
                     }
 
-                    Intent result = new Intent();
-                    result.putExtra("pid", playerId); // NOTE: Not used currently!
-                    activity_.setResult(Activity.RESULT_OK, result);
-                    activity_.finish();
+                    //Intent result = new Intent();
+                    //result.putExtra("pid", playerId); // NOTE: Not used currently!
+                    //activity_.setResult(Activity.RESULT_OK, result);
+                    //activity_.finish();
                     return true;
                 }
             });

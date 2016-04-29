@@ -221,6 +221,12 @@ class NetworkPlayer extends Thread {
         handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
 
+    public void sendRequest_PLAYER_INFO(String otherPID) {
+        Log.d(TAG, "Send 'PLAYER_INFO' request to server...");
+        String request = "op=PLAYER_INFO&pid=" + pid_ + "&oid=" + otherPID;
+        handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
+    }
+
     private void handleConnectToServer() throws IOException {
         Log.i(TAG, "Handle 'Connect to server'...");
         

@@ -233,6 +233,7 @@ public class PlayersActivity extends Activity
             } else {
                 popup.getMenu().removeItem(R.id.action_invite_to_play);
             }
+            popup.getMenu().removeItem(R.id.action_get_player_info);
 
             if (popup.getMenu().size() == 0) {
                 Log.i(TAG, "(OnClickListener): No need to show popup menu!");
@@ -248,12 +249,15 @@ public class PlayersActivity extends Activity
                         case R.id.action_invite_to_play:
                             HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
                             break;
+                        //case R.id.action_get_player_info:
+                        //    HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerId);
+                        //    break;
                         default:
                             return true;
                     }
 
-                    Intent result = new Intent();
-                    result.putExtra("pid", playerId); // NOTE: Not used currently!
+                    //Intent result = new Intent();
+                    //result.putExtra("pid", playerId); // NOTE: Not used currently!
                     //activity_.setResult(Activity.RESULT_OK, result);
                     //activity_.finish();
                     return true;

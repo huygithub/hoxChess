@@ -12,4 +12,9 @@
         android:title="@string/action_invite_to_play"
         app:showAsAction="always" />
 
+    <item
+        android:id="@+id/action_get_player_info"
+        android:title="@string/action_get_player_info"
+        app:showAsAction="always" />
+
 </menu>

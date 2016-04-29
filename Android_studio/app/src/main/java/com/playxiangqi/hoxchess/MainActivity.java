@@ -634,6 +634,10 @@ public class MainActivity extends AppCompatActivity
         Snackbar.make(boardView_, resId, duration).show();
     }
 
+    public void showBriefMessage(CharSequence text, int duration) {
+        Snackbar.make(boardView_, text, duration).show();
+    }
+
     public void onLoginSuccess() {
         Log.d(TAG, "On Login Success...");
         if (isWaitingForTables) {
