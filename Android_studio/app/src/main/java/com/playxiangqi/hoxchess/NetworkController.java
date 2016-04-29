@@ -51,8 +51,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     
     private GameStatus gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
     
-    private TableTimeTracker timeTracker_ = new TableTimeTracker();
-    private TablePlayerTracker playerTracker_ = new TablePlayerTracker(TableType.TABLE_TYPE_LOCAL);
+    private final TableTimeTracker timeTracker_;
+    private final TablePlayerTracker playerTracker_;
     
     //private List<ChatMessage> newMessages_ = new ArrayList<ChatMessage>();
 
@@ -321,6 +321,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         playerTracker_.setTableType(TableType.TABLE_TYPE_NETWORK);
         playerTracker_.setBlackInfo(myTable_.blackId, myTable_.blackRating);
         playerTracker_.setRedInfo(myTable_.redId, myTable_.redRating);
+        playerTracker_.setObservers(myTable_.observers);
         playerTracker_.syncUI();
 
         MainActivity mainActivity = mainActivity_.get();
@@ -387,6 +388,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         // Check if I just left the Table.
+        MainActivity mainActivity = mainActivity_.get();
         final String myPid = HoxApp.getApp().getMyPid();
         if (pid.equals(myPid)) {
             Log.i(TAG, "I just left my table: " + tableId);
@@ -395,8 +397,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
             timeTracker_.stop();
             //newMessages_.clear();
+            playerTracker_.clearAllPlayers();
             playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
-            MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
                 mainActivity.clearTable();
                 mainActivity.setTableController(TableType.TABLE_TYPE_EMPTY);
@@ -404,6 +406,9 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         // Other player left my table?
         } else {
             myTable_.onPlayerLeft(pid);
+            if (mainActivity != null) {
+                mainActivity.onPlayerLeave(pid);
+            }
         }
 
         playerTracker_.onPlayerLeave(pid);
@@ -444,6 +449,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
             mainActivity.onLocalPlayerJoined(myColor_);
+            mainActivity.onPlayerJoin(pid, rating, playerColor);
         }
 
         playerTracker_.onPlayerJoin(pid, rating, playerColor);

@@ -1,36 +1,50 @@
+/**
+ *  Copyright 2016 Huy Phan <huyphan@playxiangqi.com>
+ *
+ *  This file is part of HOXChess.
+ *
+ *  HOXChess is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  HOXChess is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with HOXChess.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.playxiangqi.hoxchess;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class PlayersFragment extends Fragment {
 
     private static final String TAG = "PlayersFragment";
-
-    //private Context context_;
 
     private View inProgressView_;
     private ListView playersListView_;
@@ -41,11 +55,20 @@ public class PlayersFragment extends Fragment {
         Log.d(TAG, "[CONSTRUCTOR]");
     }
 
-//    @Override
-//    public void onAttach(Context context) {
-//        super.onAttach(context);
-//        context_ = context;
-//    }
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        if (context instanceof MainActivity) {
+            Log.d(TAG, "onAttach: context = MainActivity. Register self with the activity.");
+            MainActivity activity = (MainActivity) context;
+            if (activity != null) {
+                activity.registerPlayersFragment(this);
+            }
+        } else {
+            Log.d(TAG, "onAttach: context != MainActivity. Do not register.");
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -103,13 +126,19 @@ public class PlayersFragment extends Fragment {
         //activity.onBoardViewResume(activity);
     }
 
-    private boolean refreshPlayersIfNeeded() {
-        if (!PlayerManager.getInstance().arePlayersLoaded() ||
-                !PlayerManager.getInstance().areTablesLoaded()) {
-            Log.d(TAG, "refreshPlayersIfNeeded: Either player or table LIST is not yet loaded.");
-            return false;
-        }
+    public void clearAll() {
+        adapter_.clearAll();
+    }
 
+    public void onPlayerJoin(String pid, String rating, Enums.ColorEnum playerColor) {
+        adapter_.addPlayer(pid, rating);
+    }
+
+    public void onPlayerLeave(String pid) {
+        adapter_.removePlayer(pid);
+    }
+
+    public boolean refreshPlayersIfNeeded() {
         if (inProgressView_.getVisibility() != View.GONE) {
             inProgressView_.setVisibility(View.GONE);
             playersListView_.setVisibility(View.VISIBLE);
@@ -137,7 +166,7 @@ public class PlayersFragment extends Fragment {
     private static class PlayersAdapter extends BaseAdapter {
         private final Activity activity_;
         private final int resourceId_;
-        private final HashMap<Integer, PlayerInfo> mIdMap_ = new HashMap<Integer, PlayerInfo>();
+        private final List<PlayerInfo> players_ = new ArrayList<PlayerInfo>();
 
         public PlayersAdapter(Activity context, int textViewResourceId) {
             activity_ = context;
@@ -145,25 +174,73 @@ public class PlayersFragment extends Fragment {
         }
 
         public void refreshPlayers() {
-            mIdMap_.clear();
-            HashMap<String, PlayerInfo> players = PlayerManager.getInstance().getPlayers();
-            int position = 0;
-            for (HashMap.Entry<String, PlayerInfo> entry : players.entrySet()) {
-                mIdMap_.put(Integer.valueOf(position), entry.getValue());
-                ++position;
+            players_.clear();
+
+            TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+
+            PlayerInfo redPlayer = playerTracker.getRedPlayer();
+            if (redPlayer.isValid()) {
+                players_.add(redPlayer);
+            }
+
+            PlayerInfo blackPlayer = playerTracker.getBlackPlayer();
+            if (blackPlayer.isValid()) {
+                players_.add(blackPlayer);
+            }
+
+            Map<String, PlayerInfo> observers = playerTracker.getObservers();
+            for (HashMap.Entry<String, PlayerInfo> entry : observers.entrySet()) {
+                players_.add(entry.getValue());
             }
 
             notifyDataSetChanged();
         }
 
+        public void clearAll() {
+            if (!players_.isEmpty()) {
+                players_.clear();
+                notifyDataSetChanged();
+            }
+        }
+
+        public void addPlayer(String pid, String rating) {
+            PlayerInfo foundPlayer = null;
+            for (PlayerInfo player : players_) {
+                if (player.hasPid(pid)) {
+                    foundPlayer = player;
+                    break;
+                }
+            }
+
+            if (foundPlayer != null) {
+                foundPlayer.rating = rating;
+            } else {
+                players_.add(new PlayerInfo(pid, rating));
+            }
+            notifyDataSetChanged();
+        }
+
+        public void removePlayer(String pid) {
+            Iterator<PlayerInfo> iterator = players_.iterator();
+            while (iterator.hasNext()) {
+                PlayerInfo player = iterator.next();
+                if (player.hasPid(pid)) {
+                    iterator.remove();
+                    notifyDataSetChanged();
+                    break;
+                }
+            }
+        }
+
         @Override
         public int getCount() {
-            return mIdMap_.size();
+            //Log.d(TAG, "getCount: count = " + players_.size());
+            return players_.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return mIdMap_.get(Integer.valueOf(position));
+            return players_.get(position);
         }
 
         @Override
@@ -178,6 +255,7 @@ public class PlayersFragment extends Fragment {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+            //Log.d(TAG, "getView: position = " + position + ", count = " + getCount());
             ViewHolder holder;
             if (convertView == null) {
                 LayoutInflater layoutInflater = activity_.getLayoutInflater();
@@ -195,7 +273,7 @@ public class PlayersFragment extends Fragment {
                 holder = (ViewHolder) convertView.getTag();
             }
 
-            final PlayerInfo playerInfo = (PlayerInfo) getItem(Integer.valueOf(position));
+            final PlayerInfo playerInfo = (PlayerInfo) getItem(position);
             holder.playerIdView.setText(playerInfo.pid);
             holder.playerRatingView.setText(playerInfo.rating);
 

@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity
     // See:
     //  http://stackoverflow.com/questions/19393076/how-to-properly-handle-screen-rotation-with-a-viewpager-and-nested-fragments
     private WeakReference<ChatFragment> myChatFragment_ = new WeakReference<ChatFragment>(null);
+    private WeakReference<PlayersFragment> myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
 
     // TODO: We should persist this counter somewhere else because it is lost when the
     //       device is rotated, for example.
@@ -520,6 +521,11 @@ public class MainActivity extends AppCompatActivity
         setAndShowTitle(tableInfo.tableId);
         invalidateOptionsMenu(); // Recreate the options menu
         boardView_.resetBoard();
+
+        PlayersFragment playersFragment = myPlayersFragment_.get();
+        if (playersFragment != null) {
+            playersFragment.refreshPlayersIfNeeded();
+        }
     }
 
     public void resetBoardWithNewMoves(String[] moves) {
@@ -566,8 +572,11 @@ public class MainActivity extends AppCompatActivity
         ChatFragment chatFragment = myChatFragment_.get();
         if (chatFragment != null) {
             chatFragment.clearAll();
-        } else {
-            Log.w(TAG, "clearTable: Did not find the chat fragment. Do nothing.");
+        }
+
+        PlayersFragment playersFragment = myPlayersFragment_.get();
+        if (playersFragment != null) {
+            playersFragment.clearAll();
         }
 
         tableController_.onTableClear();
@@ -582,7 +591,21 @@ public class MainActivity extends AppCompatActivity
             reverseView();
         }
     }
-    
+
+    public void onPlayerJoin(String pid, String rating, Enums.ColorEnum playerColor) {
+        PlayersFragment playersFragment = myPlayersFragment_.get();
+        if (playersFragment != null) {
+            playersFragment.onPlayerJoin(pid, rating, playerColor);
+        }
+    }
+
+    public void onPlayerLeave(String pid) {
+        PlayersFragment playersFragment = myPlayersFragment_.get();
+        if (playersFragment != null) {
+            playersFragment.onPlayerLeave(pid);
+        }
+    }
+
     public void onGameEnded(Enums.GameStatus gameStatus) {
         boardView_.onGameEnded(gameStatus);
         adjustScreenOnFlagBasedOnGameStatus();
@@ -714,7 +737,12 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "registerChatFragment: old:" + myChatFragment_.get() + " => new:" + fragment);
         myChatFragment_ = new WeakReference<ChatFragment>(fragment);
     }
-    
+
+    public void registerPlayersFragment(final PlayersFragment fragment) {
+        Log.d(TAG, "registerPlayersFragment: old:" + myPlayersFragment_.get() + " => new:" + fragment);
+        myPlayersFragment_ = new WeakReference<PlayersFragment>(fragment);
+    }
+
     private void onBoardViewResume(MainActivity activity) {
         Log.d(TAG, "onBoardViewResume...");
         TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();

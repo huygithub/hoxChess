@@ -18,6 +18,9 @@
  */
 package com.playxiangqi.hoxchess;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A table
  */
@@ -32,6 +35,7 @@ public class TableInfo {
     public String redRating;
     public String blackId;
     public String blackRating;
+    public List<String> observers = new ArrayList<String>();
     
     public TableInfo() {
         // empty
@@ -48,6 +52,9 @@ public class TableInfo {
         redRating = components[7];
         blackId = components[8];
         blackRating = components[9];
+        for (int i = 10; i < components.length; ++i) {
+            observers.add(components[i]);
+        }
     }
 
     public boolean isValid() {

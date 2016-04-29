@@ -26,6 +26,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * A table player tracker
  */
@@ -50,11 +54,12 @@ public class TablePlayerTracker {
     
     private PlayerInfo blackPlayer_ = new PlayerInfo();
     private PlayerInfo redPlayer_ = new PlayerInfo();
-    
+
     private SeatMode blackSeatMode_ = SeatMode.SEAT_MODE_NONE;
     private SeatMode redSeatMode_ = SeatMode.SEAT_MODE_NONE;
-    
-    
+
+    private final Map<String, PlayerInfo> observers_= new HashMap<String, PlayerInfo>();
+
     public TablePlayerTracker(TableType tableType) {
         tableType_ = tableType;
     }
@@ -98,7 +103,24 @@ public class TablePlayerTracker {
     public void setRedInfo(String pid, String rating) {
         redPlayer_ = new PlayerInfo(pid, rating);
     }
-    
+
+    public void setObservers(List<String> observers) {
+        observers_.clear();
+        for (String observer : observers) {
+            observers_.put(observer, new PlayerInfo(observer, "0"));
+        }
+    }
+
+    public void clearAllPlayers()  {
+        redPlayer_ = new PlayerInfo();
+        blackPlayer_ = new PlayerInfo();
+        observers_.clear();;
+    }
+
+    public PlayerInfo getRedPlayer() { return redPlayer_; }
+    public PlayerInfo getBlackPlayer() { return blackPlayer_; }
+    public Map<String, PlayerInfo> getObservers() { return observers_; }
+
     public boolean hasEnoughPlayers() {
         return blackPlayer_.isValid() && redPlayer_.isValid();
     }
