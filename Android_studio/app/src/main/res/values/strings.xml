@@ -110,5 +110,7 @@
     <string name="title_activity_notifications">Notifications</string>
     <string name="msg_player_record">*INFO: %1$s %2$s W%3$s D%4$s L%5$s</string>
     <string name="action_get_player_info">Info</string>
+    <string name="msg_player_info">%1$s (%2$s)</string>
+    <string name="action_send_personal_message">Send message</string>
 
 </resources>

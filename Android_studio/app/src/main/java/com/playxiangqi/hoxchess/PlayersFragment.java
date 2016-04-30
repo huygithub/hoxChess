@@ -20,8 +20,9 @@ package com.playxiangqi.hoxchess;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.BottomSheetDialog;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
@@ -87,7 +88,7 @@ public class PlayersFragment extends Fragment {
                 PlayerInfo playerInfo = (PlayerInfo) playersListView_.getItemAtPosition(position);
                 Log.d(TAG, "Position:" + position + " pid: " + playerInfo.pid
                         + ", ListItem: " + playerInfo);
-                HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
+                handlePlayerClickEvent(playerInfo);
             }
         });
 
@@ -96,6 +97,48 @@ public class PlayersFragment extends Fragment {
         playersListView_.setVisibility(View.VISIBLE);
 
         return view;
+    }
+
+    private void handlePlayerClickEvent(PlayerInfo playerInfo) {
+        HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
+        final MyBottomSheetDialog dialog = new MyBottomSheetDialog(getActivity(), playerInfo);
+        dialog.show();
+    }
+
+    private class MyBottomSheetDialog extends BottomSheetDialog {
+        public MyBottomSheetDialog(final Activity activity, PlayerInfo playerInfo) {
+            super(activity);
+
+            final String playerId = playerInfo.pid;
+            View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_player, null);
+            setContentView(sheetView);
+
+            TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
+            View sendMessageView = sheetView.findViewById(R.id.sheet_send_private_message);
+            View inviteView = sheetView.findViewById(R.id.sheet_invite_to_play);
+
+            playerInfoView.setText(
+                    getString(R.string.msg_player_info, playerId, playerInfo.rating));
+
+            sendMessageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (activity instanceof MainActivity) {
+                        ((MainActivity)activity).showBriefMessage("Not yet implement Send Personal Message",
+                                Snackbar.LENGTH_SHORT);
+                    }
+                    dismiss(); // this the dialog.
+                }
+            });
+
+            inviteView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
+                    dismiss(); // this the dialog.
+                }
+            });
+        }
     }
 
     @Override
@@ -111,6 +154,13 @@ public class PlayersFragment extends Fragment {
 
         if (!refreshPlayersIfNeeded()) {
             //PlayerManager.getInstance().addListener(this);
+        }
+
+        // FIXME: Hack
+        if (adapter_.getCount() == 0) {
+            if (HoxApp.getApp().getPlayerTracker().getTableType() != Enums.TableType.TABLE_TYPE_NETWORK) {
+                adapter_.addPlayer("AI", "1501");
+            }
         }
     }
 

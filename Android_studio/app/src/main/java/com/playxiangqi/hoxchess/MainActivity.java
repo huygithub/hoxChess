@@ -75,8 +75,9 @@ public class MainActivity extends AppCompatActivity
     private DrawerLayout drawerLayout_;
     private ActionBarDrawerToggle drawerToggle_;
     private MainPagerAdapter pagerAdapter_;
+    private ViewPager viewPager_;
 
-    private Fragment placeholderFragment_;
+    //private Fragment placeholderFragment_;
     private ProgressBar progressBar_;
     private BoardView boardView_;
     private TextView topPlayerLabel_;
@@ -132,8 +133,8 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "onCreate: savedInstanceState = " + savedInstanceState + ".");
 
         pagerAdapter_ = new MainPagerAdapter(this, getSupportFragmentManager());
-        ViewPager mViewPager = (ViewPager) findViewById(R.id.main_view_pager);
-        mViewPager.setAdapter(pagerAdapter_);
+        viewPager_ = (ViewPager) findViewById(R.id.main_view_pager);
+        viewPager_.setAdapter(pagerAdapter_);
 
 //        if (savedInstanceState == null) {
 //            placeholderFragment_ = new PlaceholderFragment();
@@ -631,11 +632,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void showBriefMessage(int resId, int duration) {
-        Snackbar.make(boardView_, resId, duration).show();
+        Snackbar.make(viewPager_, resId, duration).show();
     }
 
     public void showBriefMessage(CharSequence text, int duration) {
-        Snackbar.make(boardView_, text, duration).show();
+        Snackbar.make(viewPager_, text, duration).show();
     }
 
     public void onLoginSuccess() {
@@ -833,7 +834,13 @@ public class MainActivity extends AppCompatActivity
             MainActivity activity = (MainActivity) getActivity();
             activity.onBoardViewResume(activity);
         }
-        
+
+        @Override
+        public void onDestroyView () {
+            super.onDestroyView();
+            Log.i(TAG, "onDestroyView...");
+        }
+
         @Override
         public void onDestroy () {
             super.onDestroy();
@@ -887,8 +894,8 @@ public class MainActivity extends AppCompatActivity
         @Override
         public float getPageWidth (int position) {
             switch (position) {
-                case 0: return 0.95f;
-                case 1: return 0.9f;
+                case 0: return 1f; // 0.95f;
+                case 1: return 1f; // 0.9f;
                 default: return 1f;
             }
         }
