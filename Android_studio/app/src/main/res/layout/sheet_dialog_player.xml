@@ -22,14 +22,15 @@
         android:background="?android:attr/selectableItemBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/bottom_sheet_horizontal_margin"
+        android:layout_marginRight="@dimen/bottom_sheet_horizontal_margin"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_chat_notification"
-            android:background="@color/button_material_light" />
+            android:src="@drawable/ic_message_black" />
 
         <TextView
             android:layout_width="match_parent"
@@ -45,14 +46,15 @@
         android:background="?android:attr/selectableItemBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/bottom_sheet_horizontal_margin"
+        android:layout_marginRight="@dimen/bottom_sheet_horizontal_margin"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_action_web_site"
-            android:background="@color/button_material_light" />
+            android:src="@drawable/ic_mail_outline_black" />
 
         <TextView
             android:layout_width="match_parent"

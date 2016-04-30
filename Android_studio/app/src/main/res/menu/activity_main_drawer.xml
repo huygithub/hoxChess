@@ -12,7 +12,7 @@
             android:title="@string/action_view_players" />
         <item
             android:id="@+id/action_logout"
-            android:icon="@drawable/ic_action_logout"
+            android:icon="@drawable/ic_exit_to_app_black"
             android:title="@string/action_logout"
             android:visible="false" /> <!-- Hidden by default -->
     </group>

@@ -2,7 +2,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/ic_notification"
-        android:drawable="@drawable/ic_chat_notification"
+        android:drawable="@drawable/ic_notifications_none_white"
         android:gravity="center" />
 
     <!-- set a place holder Drawable so android:drawable isn't null
@@ -13,5 +13,5 @@
      -->
     <item
         android:id="@+id/ic_badge"
-        android:drawable="@drawable/ic_chat_notification" />
+        android:drawable="@drawable/ic_notifications_none_white" />
 </layer-list>
