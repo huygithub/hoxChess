@@ -11,20 +11,20 @@
 
     <com.playxiangqi.hoxchess.BoardView
         android:id="@+id/board_view"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:minWidth="400dip"
+        android:layout_weight="1"
         android:contentDescription="@string/board_alt" />
 
     <RelativeLayout
         android:orientation="vertical"
-        android:layout_width="wrap_content"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_marginLeft="5dp" >
 
         <RelativeLayout
             android:orientation="horizontal"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true" >
 
@@ -68,7 +68,7 @@
         <RelativeLayout
             android:id="@+id/control_container"
             android:orientation="horizontal"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true" >
 
@@ -114,7 +114,7 @@
 
         <RelativeLayout
             android:orientation="horizontal"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:gravity="left" >

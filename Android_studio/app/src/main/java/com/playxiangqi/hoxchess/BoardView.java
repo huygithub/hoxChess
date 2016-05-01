@@ -259,34 +259,37 @@ public class BoardView extends ImageView
         Log.i(TAG, "adjustBoardParameters():WxH = " + finalWidth + " x " + finalHeight
                 + ", " + Utils.orientationToString(configuration));
 
-        if (configuration == Configuration.ORIENTATION_LANDSCAPE) {
-            final int cellSizeByHeight = (finalHeight - 2 * offset_) / 10;
-            finalWidth = (cellSizeByHeight * 9) + 2 * offset_;
-            Log.i(TAG, "adjustBoardParameters(): (LANDSCAPE mode) WxH Adjusted Width => " + finalWidth);
+        final int cellSizeByHeight = (finalHeight - 2 * offset_) / 10;
+        final int cellSizeByWidth = (finalWidth - 2 * offset_) / 9;
+        final int proposedCellSize = Math.min(cellSizeByHeight, cellSizeByWidth);
 
-            getLayoutParams().width = finalWidth;
-            requestLayout();
-        }
-        else if (finalWidth > finalHeight) {
-            // NOTE: This is a special case that I found: in Google Nexus 9,
-            //       Width is greater Height
-            //       e.g., from logcat: WxH = 1516 x 1462, ORIENTATION_PORTRAIT
-            //
-            // TODO: We should look at how to this entire function again!
-            //
-            final int cellSizeByHeight = (finalHeight - 2 * offset_) / 10;
-            finalWidth = (cellSizeByHeight * 9) + 2 * offset_;
-            Log.i(TAG, "adjustBoardParameters(): (by Height) WxH Adjusted Width => " + finalWidth);
-            getLayoutParams().width = finalWidth;
-            requestLayout();
-        }
+//        if (configuration == Configuration.ORIENTATION_LANDSCAPE) {
+//            //finalWidth = (cellSizeByHeight * 9) + 2 * offset_;
+//            //Log.i(TAG, "adjustBoardParameters(): (LANDSCAPE mode) WxH Adjusted Width => " + finalWidth);
+//
+//            //getLayoutParams().width = finalWidth;
+//            //requestLayout();
+//        }
+//        else if (finalWidth > finalHeight) {
+//            // NOTE: This is a special case that I found: in Google Nexus 9,
+//            //       Width is greater Height
+//            //       e.g., from logcat: WxH = 1516 x 1462, ORIENTATION_PORTRAIT
+//            //
+//            // TODO: We should look at how to this entire function again!
+//            //
+//            final int cellSizeByHeight = (finalHeight - 2 * offset_) / 10;
+//            finalWidth = (cellSizeByHeight * 9) + 2 * offset_;
+//            Log.i(TAG, "adjustBoardParameters(): (by Height) WxH Adjusted Width => " + finalWidth);
+//            getLayoutParams().width = finalWidth;
+//            requestLayout();
+//        }
 
         // Save the dimensions so that we can later use in onDraw().
         finalWidth_ = finalWidth;
         finalHeight_ = finalHeight;
 
-        final int boardWidth = Math.min(finalWidth, finalHeight);
-        cellSize_ = (boardWidth - 2*offset_)/9;
+        //final int boardWidth = Math.min(finalWidth, finalHeight);
+        cellSize_ = proposedCellSize; //(boardWidth - 2*offset_)/9;
         pieceSize_ = (int) (cellSize_ * 0.8f);
         if ((pieceSize_ % 2) == 1) { --pieceSize_; } // Make it an event number.
         startP_ = offset_ + cellSize_ / 2;
