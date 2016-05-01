@@ -16,20 +16,20 @@
     <string name="board_alt">Board</string>
     <string name="title_activity_tables">Tables</string>
     <string name="title_activity_chat">Chat</string>
-        
+
     <string-array name="AILevel_entries">
-	    <item>Easy</item>
-	    <item>Medium</item>
-	    <item>Difficult</item>
+        <item>Easy</item>
+        <item>Medium</item>
+        <item>Difficult</item>
     </string-array>
-    
+
     <string-array name="AILevel_values">
         <item>0</item>
         <item>1</item>
         <item>2</item>
     </string-array>
     <string name="AILevel_default">1</string>
-    
+
     <string name="ai_level">AI Level</string>
     <string name="level_easy">Easy</string>
     <string name="level_medium">Medium</string>
@@ -56,18 +56,18 @@
 
     <string name="game_over_text">Game Over</string>
     <string name="replay_text">Replay %1$d / %2$d</string>
-    
+
     <string name="button_play_black">Play BLACK</string>
     <string name="button_play_red">Play RED</string>
-    
+
     <string name="label_game_time_zero">00:00</string>
     <string name="label_move_time_zero">0:00</string>
-    
+
     <string name="title_table">#%1$s</string>
     <string name="notifications">Show Notifications</string>
     <string name="chat_button_send">Send</string>
     <string name="chat_empty_text">No message</string>
-    
+
     <string name="about_title">About</string>
     <string name="version">Version 1.2</string>
     <string name="copyright">Copyright \u00A9 2016 PlayXiangqi</string>

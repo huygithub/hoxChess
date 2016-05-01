@@ -7,7 +7,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".MainActivity$PlaceholderFragment" >
+    tools:context=".BoardFragment" >
 
     <com.playxiangqi.hoxchess.BoardView
         android:id="@+id/board_view"
@@ -43,8 +43,7 @@
                 android:layout_toRightOf="@id/top_player_label"
                 android:text="@string/button_play_black"
                 android:textSize="12sp"
-                android:minHeight="0dp"
-                android:onClick="onTopButtonClick" />
+                android:minHeight="0dp" />
 
             <TextView
                 android:id="@+id/top_move_time"
@@ -79,7 +78,6 @@
                   android:layout_alignParentLeft="true"
                   android:contentDescription="@string/replay_prev"
                   android:src="@drawable/ic_action_previous_item"
-                  android:onClick="onReplayPrevious"
                   android:longClickable="true" />
 
             <ImageButton
@@ -89,7 +87,6 @@
                   android:layout_toRightOf="@id/replay_previous"
                   android:contentDescription="@string/replay_next"
                   android:src="@drawable/ic_action_next_item"
-                  android:onClick="onReplayNext"
                   android:longClickable="true" />
 
             <ImageButton
@@ -98,8 +95,7 @@
                   android:layout_height="wrap_content"
                   android:layout_alignParentRight="true"
                   android:contentDescription="@string/action_reset"
-                  android:src="@drawable/ic_action_menu_white"
-                  android:onClick="onResetTable" />
+                  android:src="@drawable/ic_action_menu_white" />
 
             <ImageButton
                   android:id="@+id/reverse_view"
@@ -107,8 +103,7 @@
                   android:layout_height="wrap_content"
                   android:layout_toLeftOf="@id/action_reset"
                   android:contentDescription="@string/action_reverse_view"
-                  android:src="@drawable/ic_action_shuffle"
-                  android:onClick="onReverseView" />
+                  android:src="@drawable/ic_action_shuffle" />
 
         </RelativeLayout>
 
@@ -134,8 +129,7 @@
                 android:layout_toRightOf="@id/bottom_player_label"
                 android:text="@string/button_play_red"
                 android:textSize="12sp"
-                android:minHeight="0dp"
-                android:onClick="onBottomButtonClick" />
+                android:minHeight="0dp" />
 
             <TextView
                 android:id="@+id/bottom_move_time"

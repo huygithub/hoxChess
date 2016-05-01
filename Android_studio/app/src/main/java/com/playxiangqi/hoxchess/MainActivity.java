@@ -63,11 +63,12 @@ import android.widget.TextView;
  */
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-                MessageManager.EventListener {
+                MessageManager.EventListener,
+                BoardFragment.OnFragmentInteractionListener {
 
     private static final String TAG = "MainActivity";
 
-    private static final String STATE_IS_BLACK_ON_TOP = "isBlackOnTop";
+    //private static final String STATE_IS_BLACK_ON_TOP = "isBlackOnTop";
 
     // The request codes
     private static final int JOIN_TABLE_REQUEST = 1;
@@ -78,14 +79,14 @@ public class MainActivity extends AppCompatActivity
     private ViewPager viewPager_;
 
     //private Fragment placeholderFragment_;
-    private ProgressBar progressBar_;
-    private BoardView boardView_;
-    private TextView topPlayerLabel_;
-    private TextView bottomPlayerLabel_;
-    private Button topPlayerButton_;
-    private Button bottomPlayerButton_;
+    //private ProgressBar progressBar_;
+//    private BoardView boardView_;
+//    private TextView topPlayerLabel_;
+//    private TextView bottomPlayerLabel_;
+//    private Button topPlayerButton_;
+//    private Button bottomPlayerButton_;
 
-    private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
+    //private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
 
     private boolean isWaitingForTables = false;
 
@@ -93,6 +94,7 @@ public class MainActivity extends AppCompatActivity
     // Also, the way ViewPager handles fragments makes it hard to retain references to fragments.
     // See:
     //  http://stackoverflow.com/questions/19393076/how-to-properly-handle-screen-rotation-with-a-viewpager-and-nested-fragments
+    private WeakReference<BoardFragment> myBoardFragment_ = new WeakReference<BoardFragment>(null);
     private WeakReference<ChatFragment> myChatFragment_ = new WeakReference<ChatFragment>(null);
     private WeakReference<PlayersFragment> myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
 
@@ -107,8 +109,9 @@ public class MainActivity extends AppCompatActivity
         tableController_.setMainActivity(this);
 
         // Note: Set the listener again even though we already do in onBoardViewCreated !!!
-        if (boardView_ != null) {
-            boardView_.setBoardEventListener(tableController_);
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.setBoardEventListener(tableController_);
         }
     }
 
@@ -152,6 +155,8 @@ public class MainActivity extends AppCompatActivity
         // Reference:
         //    http://developer.android.com/training/managing-audio/volume-playback.html
         setVolumeControlStream(SoundManager.getInstance().getStreamType());
+
+        SoundManager.getInstance().initialize(this);
 
         HoxApp.getApp().registerMainActivity(this);
     }
@@ -293,7 +298,7 @@ public class MainActivity extends AppCompatActivity
     public void onSaveInstanceState(Bundle savedInstanceState) {
         Log.d(TAG, "onSaveInstanceState");
         // Save the table's current game state
-        savedInstanceState.putBoolean(STATE_IS_BLACK_ON_TOP, isBlackOnTop_);
+        //savedInstanceState.putBoolean(STATE_IS_BLACK_ON_TOP, isBlackOnTop_);
 
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
@@ -306,10 +311,10 @@ public class MainActivity extends AppCompatActivity
         super.onRestoreInstanceState(savedInstanceState);
 
         // Restore state members from saved instance
-        boolean isBlackOnTop = savedInstanceState.getBoolean(STATE_IS_BLACK_ON_TOP, true);
-        if (!isBlackOnTop) {
-            reverseView();
-        }
+//        boolean isBlackOnTop = savedInstanceState.getBoolean(STATE_IS_BLACK_ON_TOP, true);
+//        if (!isBlackOnTop) {
+//            reverseView();
+//        }
     }
 
     @Override
@@ -445,14 +450,15 @@ public class MainActivity extends AppCompatActivity
         invalidateOptionsMenu();
     }
     
-    private void reverseView() {
-        Log.d(TAG, "Reverse view...");
-        isBlackOnTop_ = !isBlackOnTop_;
-        boardView_.reverseView();
-
-        HoxApp.getApp().getTimeTracker().reverseView();
-        HoxApp.getApp().getPlayerTracker().reverseView();
-    }
+//    private void reverseView() {
+//        Log.d(TAG, "Reverse view...");
+//        isBlackOnTop_ = !isBlackOnTop_;
+//
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.reverseView();
+//        }
+//    }
 
     private void askNetworkControllerForTableList() {
         //Snackbar.make(this.findViewById(R.id.container), R.string.msg_get_list_tables,
@@ -513,7 +519,10 @@ public class MainActivity extends AppCompatActivity
 
     public void updateBoardWithNewAIMove(Position fromPos, Position toPos) {
         Log.d(TAG, "Update board with a new AI move = " + fromPos + " => " + toPos);
-        boardView_.makeMove(fromPos, toPos, true);
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.makeMove(fromPos, toPos, true);
+        }
     }
     
     public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
@@ -521,7 +530,11 @@ public class MainActivity extends AppCompatActivity
         
         setAndShowTitle(tableInfo.tableId);
         invalidateOptionsMenu(); // Recreate the options menu
-        boardView_.resetBoard();
+
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.resetBoard();
+        }
 
         PlayersFragment playersFragment = myPlayersFragment_.get();
         if (playersFragment != null) {
@@ -530,21 +543,20 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void resetBoardWithNewMoves(String[] moves) {
-        Log.d(TAG, "Reset board with new (MOVES): length = " + moves.length);
-        for (String move : moves) {
-            int row1 = move.charAt(1) - '0';
-            int col1 = move.charAt(0) - '0';
-            int row2 = move.charAt(3) - '0';
-            int col2 = move.charAt(2) - '0';
-            boardView_.makeMove(new Position(row1, col1), new Position(row2, col2), false);
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.resetBoardWithNewMoves(moves);
         }
-        boardView_.invalidate();
+
         adjustScreenOnFlagBasedOnGameStatus();
     }
 
     public void openNewPracticeTable() {
         Log.d(TAG, "Open a new practice table");
-        boardView_.resetBoard();
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.resetBoard();
+        }
         tableController_.setTableTitle();
     }
     
@@ -554,7 +566,11 @@ public class MainActivity extends AppCompatActivity
         int col1 = move.charAt(0) - '0';
         int row2 = move.charAt(3) - '0';
         int col2 = move.charAt(2) - '0';
-        boardView_.makeMove(new Position(row1, col1), new Position(row2, col2), true);
+
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.makeMove(new Position(row1, col1), new Position(row2, col2), true);
+        }
     }
 
     /**
@@ -568,7 +584,11 @@ public class MainActivity extends AppCompatActivity
             Log.w(TAG, "clearTable: getSupportActionBar() = null. Do not set Display options!");
         }
         invalidateOptionsMenu(); // Recreate the options menu
-        boardView_.resetBoard();
+
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.resetBoard();
+        }
 
         ChatFragment chatFragment = myChatFragment_.get();
         if (chatFragment != null) {
@@ -586,10 +606,9 @@ public class MainActivity extends AppCompatActivity
     }
     
     public void onLocalPlayerJoined(ColorEnum myColor) {
-        // Reverse the board view so that my seat is always at the bottom of the screen.
-        if (  (myColor == ColorEnum.COLOR_RED && !isBlackOnTop_) ||
-              (myColor == ColorEnum.COLOR_BLACK && isBlackOnTop_) ) {
-            reverseView();
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.onLocalPlayerJoined(myColor);
         }
     }
 
@@ -608,12 +627,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void onGameEnded(Enums.GameStatus gameStatus) {
-        boardView_.onGameEnded(gameStatus);
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.onGameEnded(gameStatus);
+        }
         adjustScreenOnFlagBasedOnGameStatus();
     }
 
     public void onGameReset() {
-        boardView_.resetBoard();
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.resetBoard();
+        }
     }
 
     @Override
@@ -648,7 +673,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void showGameMessage_DRAW(String pid) {
-        Snackbar.make(boardView_,
+        Snackbar.make(viewPager_,
                 getString(R.string.msg_player_offered_draw, pid), Snackbar.LENGTH_LONG).show();
     }
 
@@ -662,10 +687,10 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void onBoardViewCreated(final MainActivity activity) {
+    /*private void onBoardViewCreated(final MainActivity activity) {
         Log.d(TAG, "onBoardViewCreated...");
 
-        progressBar_ = (ProgressBar) findViewById(R.id.progress_spinner);
+        //progressBar_ = (ProgressBar) findViewById(R.id.progress_spinner);
         boardView_ = (BoardView) activity.findViewById(R.id.board_view);
         topPlayerLabel_ = (TextView) activity.findViewById(R.id.top_player_label);
         bottomPlayerLabel_ = (TextView) activity.findViewById(R.id.bottom_player_label);
@@ -735,8 +760,40 @@ public class MainActivity extends AppCompatActivity
         // Set table Id.
         tableController_.setTableTitle();
 
-        SoundManager.getInstance().initialize(activity);
+        //SoundManager.getInstance().initialize(activity);
+    }*/
+
+    /**
+     * Implementation of OnFragmentInteractionListener
+     */
+    @Override
+    public void onResetViewClick(View view) {
+        tableController_.onClick_resetTable(this, view);
     }
+
+    @Override
+    public void onChangeRoleRequest(Enums.ColorEnum clickedColor) {
+        tableController_.handlePlayerButtonClick(clickedColor);
+    }
+
+    /**
+     * Implementation of OnFragmentInteractionListener
+     */
+    @Override
+    public void onBoardFragment_Attach(BoardFragment boardFragment) {
+        myBoardFragment_ = new WeakReference<BoardFragment>(boardFragment);
+    }
+
+    @Override
+    public void onBoardFragment_CreateView() {
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.setBoardEventListener(tableController_);
+        }
+
+        tableController_.setTableTitle();
+    }
+    // ******
 
     public void registerChatFragment(final ChatFragment fragment) {
         Log.d(TAG, "registerChatFragment: old:" + myChatFragment_.get() + " => new:" + fragment);
@@ -748,11 +805,11 @@ public class MainActivity extends AppCompatActivity
         myPlayersFragment_ = new WeakReference<PlayersFragment>(fragment);
     }
 
-    private void onBoardViewResume(MainActivity activity) {
-        Log.d(TAG, "onBoardViewResume...");
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.syncUI(); // Among things to be updated is AI Level.
-    }
+//    private void onBoardViewResume(MainActivity activity) {
+//        Log.d(TAG, "onBoardViewResume...");
+//        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+//        playerTracker.syncUI(); // Among things to be updated is AI Level.
+//    }
     
     public void setAndShowTitle(String title) {
         if (getSupportActionBar() == null) {
@@ -765,45 +822,46 @@ public class MainActivity extends AppCompatActivity
         }
     }
     
-    private void onReplayBegin() {
-        boardView_.onReplay_BEGIN();
-    }
+//    private void onReplayBegin() {
+//        boardView_.onReplay_BEGIN();
+//    }
     
-    public void onReplayPrevious(View view) {
-        boardView_.onReplay_PREV(true);
-    }
-
-    public void onReplayNext(View view) {
-        boardView_.onReplay_NEXT(true);
-    }
+//    public void onReplayPrevious(View view) {
+//        boardView_.onReplay_PREV(true);
+//    }
+//
+//    public void onReplayNext(View view) {
+//        boardView_.onReplay_NEXT(true);
+//    }
     
-    private void onReplayEnd() {
-        boardView_.onReplay_END();
-    }
+//    private void onReplayEnd() {
+//        boardView_.onReplay_END();
+//    }
 
-    public void onReverseView(View view) {
-        reverseView();
-    }
+//    public void onReverseView(View view) {
+//        reverseView();
+//    }
 
-    public void onResetTable(View view) {
-        tableController_.onClick_resetTable(this, view);
-    }
+//    public void onResetTable(View view) {
+//        tableController_.onClick_resetTable(this, view);
+//    }
     
-    public void onTopButtonClick(View view) {
-        Enums.ColorEnum clickedColor =
-                (isBlackOnTop_ ? ColorEnum.COLOR_BLACK : ColorEnum.COLOR_RED);
-        tableController_.handlePlayerButtonClick(clickedColor);
-    }
-
-    public void onBottomButtonClick(View view) {
-        Enums.ColorEnum clickedColor =
-                (isBlackOnTop_ ? ColorEnum.COLOR_RED : ColorEnum.COLOR_BLACK);
-        tableController_.handlePlayerButtonClick(clickedColor);
-    }
+//    public void onTopButtonClick(View view) {
+//        Enums.ColorEnum clickedColor =
+//                (isBlackOnTop_ ? ColorEnum.COLOR_BLACK : ColorEnum.COLOR_RED);
+//        tableController_.handlePlayerButtonClick(clickedColor);
+//    }
+//
+//    public void onBottomButtonClick(View view) {
+//        Enums.ColorEnum clickedColor =
+//                (isBlackOnTop_ ? ColorEnum.COLOR_RED : ColorEnum.COLOR_BLACK);
+//        tableController_.handlePlayerButtonClick(clickedColor);
+//    }
     
     /**
      * A placeholder fragment containing a simple view.
      */
+    /*
     public static class PlaceholderFragment extends Fragment {
 
         private static final String TAG = "PlaceholderFragment";
@@ -853,6 +911,7 @@ public class MainActivity extends AppCompatActivity
             Log.i(TAG, "onDetach...");
         }
     }
+    */
 
     /**
      * The ViewPager adapter for the main page.
@@ -873,7 +932,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public Fragment getItem(int position) {
             switch (position) {
-                case 0: return new PlaceholderFragment();
+                case 0: return BoardFragment.newInstance("AI"); //PlaceholderFragment();
                 case 1: return new ChatFragment();
                 default: return new PlayersFragment();
             }
