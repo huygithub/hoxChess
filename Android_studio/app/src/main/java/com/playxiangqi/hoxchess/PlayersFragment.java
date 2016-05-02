@@ -60,14 +60,6 @@ public class PlayersFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         Log.d(TAG, "onAttach...");
-
-        if (context instanceof MainActivity) {
-            Log.d(TAG, "onAttach: context = MainActivity. Register self with the activity.");
-            MainActivity activity = (MainActivity) context;
-            activity.registerPlayersFragment(this);
-        } else {
-            Log.d(TAG, "onAttach: context != MainActivity. Do not register.");
-        }
     }
 
     @Override
@@ -96,6 +88,7 @@ public class PlayersFragment extends Fragment {
         inProgressView_.setVisibility(View.GONE);
         playersListView_.setVisibility(View.VISIBLE);
 
+        ((MainActivity) getActivity()).registerPlayersFragment(this);
         return view;
     }
 
@@ -168,6 +161,13 @@ public class PlayersFragment extends Fragment {
     public void onPause () {
         super.onPause();
         Log.d(TAG, "onPause...");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Log.d(TAG, "onDestroyView");
+        ((MainActivity) getActivity()).unregisterPlayersFragment(this);
     }
 
     public void clearAll() {

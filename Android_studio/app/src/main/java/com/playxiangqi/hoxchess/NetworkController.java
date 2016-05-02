@@ -234,10 +234,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             default:
                 break;
         }
-
-        if (mainActivity != null) {
-            mainActivity.onNetworkCode(networkCode);
-        }
     }
 
     private void handleNetworkEvent_LOGIN(int code, String content) {

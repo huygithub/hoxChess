@@ -19,12 +19,9 @@
 package com.playxiangqi.hoxchess;
 
 import java.lang.ref.WeakReference;
-import java.util.List;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
-import com.playxiangqi.hoxchess.Enums.GameStatus;
 import com.playxiangqi.hoxchess.Enums.TableType;
-import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.content.Context;
 import android.content.Intent;
@@ -46,16 +43,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnLongClickListener;
-import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 /**
@@ -68,8 +59,6 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG = "MainActivity";
 
-    //private static final String STATE_IS_BLACK_ON_TOP = "isBlackOnTop";
-
     // The request codes
     private static final int JOIN_TABLE_REQUEST = 1;
 
@@ -77,16 +66,6 @@ public class MainActivity extends AppCompatActivity
     private ActionBarDrawerToggle drawerToggle_;
     private MainPagerAdapter pagerAdapter_;
     private ViewPager viewPager_;
-
-    //private Fragment placeholderFragment_;
-    //private ProgressBar progressBar_;
-//    private BoardView boardView_;
-//    private TextView topPlayerLabel_;
-//    private TextView bottomPlayerLabel_;
-//    private Button topPlayerButton_;
-//    private Button bottomPlayerButton_;
-
-    //private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
 
     private boolean isWaitingForTables = false;
 
@@ -139,18 +118,6 @@ public class MainActivity extends AppCompatActivity
         viewPager_ = (ViewPager) findViewById(R.id.main_view_pager);
         viewPager_.setAdapter(pagerAdapter_);
 
-//        if (savedInstanceState == null) {
-//            placeholderFragment_ = new PlaceholderFragment();
-//            Log.d(TAG, "onCreate: (NEW): Created board-fragment = " + placeholderFragment_);
-//
-//            getSupportFragmentManager().beginTransaction()
-//                    .add(R.id.container, placeholderFragment_, "board")
-//                    .commit();
-//        } else {
-//            placeholderFragment_ = getSupportFragmentManager().findFragmentByTag("board");
-//            Log.d(TAG, "onCreate: (savedInstanceState): Found board-fragment = " + placeholderFragment_);
-//        }
-
         // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
         // Reference:
         //    http://developer.android.com/training/managing-audio/volume-playback.html
@@ -177,8 +144,6 @@ public class MainActivity extends AppCompatActivity
             public void onDrawerClosed(View view) {
                 super.onDrawerClosed(view);
                 Log.d(TAG, "onDrawerClosed");
-                //getSupportActionBar().setTitle(mActivityTitle);
-                //invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
             }
         };
 
@@ -289,39 +254,28 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
-        //HoxApp.getApp().getNetworkController().addListener(this);
         MessageManager.getInstance().addListener(this);
         adjustScreenOnFlagBasedOnGameStatus();
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        Log.d(TAG, "onSaveInstanceState");
-        // Save the table's current game state
-        //savedInstanceState.putBoolean(STATE_IS_BLACK_ON_TOP, isBlackOnTop_);
-
-        // Always call the superclass so it can save the view hierarchy state
-        super.onSaveInstanceState(savedInstanceState);
-    }
-
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        Log.d(TAG, "onRestoreInstanceState");
-        // Always call the superclass so it can restore the view hierarchy
-        super.onRestoreInstanceState(savedInstanceState);
-
-        // Restore state members from saved instance
-//        boolean isBlackOnTop = savedInstanceState.getBoolean(STATE_IS_BLACK_ON_TOP, true);
-//        if (!isBlackOnTop) {
-//            reverseView();
-//        }
-    }
+//    @Override
+//    public void onSaveInstanceState(Bundle savedInstanceState) {
+//        Log.d(TAG, "onSaveInstanceState");
+//        // Always call the superclass so it can save the view hierarchy state
+//        super.onSaveInstanceState(savedInstanceState);
+//    }
+//
+//    @Override
+//    public void onRestoreInstanceState(Bundle savedInstanceState) {
+//        Log.d(TAG, "onRestoreInstanceState");
+//        // Always call the superclass so it can restore the view hierarchy
+//        super.onRestoreInstanceState(savedInstanceState);
+//    }
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
-        //HoxApp.getApp().getNetworkController().removeListener(this);
         MessageManager.getInstance().removeListener(this);
         adjustScreenOnFlagBasedOnGameStatus();
     }
@@ -329,10 +283,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         Log.d(TAG, "onBackPressed");
-
-        if (tableController_.handleBackPressed()) { // already handled?
-            return;
-        } else {
+        if (!tableController_.handleBackPressed()) { // not already handled?
             super.onBackPressed();
         }
     }
@@ -449,16 +400,6 @@ public class MainActivity extends AppCompatActivity
         notifCount_ = 0;
         invalidateOptionsMenu();
     }
-    
-//    private void reverseView() {
-//        Log.d(TAG, "Reverse view...");
-//        isBlackOnTop_ = !isBlackOnTop_;
-//
-//        BoardFragment boardFragment = myBoardFragment_.get();
-//        if (boardFragment != null) {
-//            boardFragment.reverseView();
-//        }
-//    }
 
     private void askNetworkControllerForTableList() {
         //Snackbar.make(this.findViewById(R.id.container), R.string.msg_get_list_tables,
@@ -469,7 +410,6 @@ public class MainActivity extends AppCompatActivity
 
     private void onViewTablesClicked() {
         Log.d(TAG, "On ViewTables clicked...");
-        //progressBar_.setVisibility(View.VISIBLE);
 
         PlayerManager.getInstance().clearTables(); // will get a new list
 
@@ -485,7 +425,6 @@ public class MainActivity extends AppCompatActivity
 
     private void onViewPlayersClicked() {
         Log.d(TAG, "On ViewPlayers clicked...");
-        //progressBar_.setVisibility(View.VISIBLE);
 
         PlayerManager.getInstance().clearTables(); // will get a new list
 
@@ -501,18 +440,12 @@ public class MainActivity extends AppCompatActivity
 
     private void startActivityToListTables() {
         Log.d(TAG, "Start activity (TABLES): ENTER.");
-
-        //progressBar_.setVisibility(View.GONE);
-        
         Intent intent = new Intent(this, TablesActivity.class);
         startActivityForResult(intent, JOIN_TABLE_REQUEST);
     }
 
     public void startActivityToListPlayers() {
         Log.d(TAG, "Start activity (PLAYERS): ENTER.");
-
-        //progressBar_.setVisibility(View.GONE);
-
         Intent intent = new Intent(this, PlayersActivity.class);
         startActivity(intent);
     }
@@ -652,10 +585,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void onNetworkCode(int networkCode) {
-        //progressBar_.setVisibility(View.GONE);
-    }
-
     public void showBriefMessage(int resId, int duration) {
         Snackbar.make(viewPager_, resId, duration).show();
     }
@@ -687,82 +616,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    /*private void onBoardViewCreated(final MainActivity activity) {
-        Log.d(TAG, "onBoardViewCreated...");
-
-        //progressBar_ = (ProgressBar) findViewById(R.id.progress_spinner);
-        boardView_ = (BoardView) activity.findViewById(R.id.board_view);
-        topPlayerLabel_ = (TextView) activity.findViewById(R.id.top_player_label);
-        bottomPlayerLabel_ = (TextView) activity.findViewById(R.id.bottom_player_label);
-        topPlayerButton_ = (Button) activity.findViewById(R.id.top_button);
-        bottomPlayerButton_ = (Button) activity.findViewById(R.id.bottom_button);
-
-        boardView_.setBoardEventListener(tableController_);
-
-        // Setup the long-click handlers to handle BEGIN and END actions of replay.
-        ImageButton previousButton = (ImageButton) activity.findViewById(R.id.replay_previous);
-        if (previousButton != null) {
-            previousButton.setOnLongClickListener(new OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    activity.onReplayBegin();
-                    return true;
-                }
-            });
-        }
-        
-        ImageButton nextButton = (ImageButton) activity.findViewById(R.id.replay_next);
-        if (nextButton != null) {
-            nextButton.setOnLongClickListener(new OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    activity.onReplayEnd();
-                    return true;
-                }
-            });
-        }
-        
-        // Game timers.
-        TextView topGameTimeView = (TextView) activity.findViewById(R.id.top_game_time);
-        TextView topMoveTimeView = (TextView) activity.findViewById(R.id.top_move_time);
-        TextView bottomGameTimeView = (TextView) activity.findViewById(R.id.bottom_game_time);
-        TextView bottomMoveTimeView = (TextView) activity.findViewById(R.id.bottom_move_time);
-    
-        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-        timeTracker.setUITextViews(
-                topGameTimeView, topMoveTimeView, bottomGameTimeView, bottomMoveTimeView);
-        timeTracker.reset();
-        
-        // Player tracker.
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.setUIViews(
-                topPlayerLabel_, topPlayerButton_, bottomPlayerLabel_, bottomPlayerButton_);
-        
-        // Restore the previous state of the board.
-        List<Move> historyMoves = HoxApp.getApp().getReferee().getHistoryMoves();
-        int moveCount = historyMoves.size();
-        int moveIndex = 0;
-        for (Move move : historyMoves) {
-            Log.d(TAG, "Update board with a new AI move = " + move.fromPosition + " => " + move.toPosition);
-            final boolean isLastMove = (moveIndex == (moveCount - 1));
-            boardView_.restoreMove(move.fromPosition, move.toPosition, isLastMove);
-            ++moveIndex;
-        }
-
-        if (HoxApp.getApp().isGameOver()) {
-            final GameStatus gameStatus = HoxApp.getApp().getGameStatus();
-            Log.d(TAG, "... Game Over: gameStatus = " + gameStatus);
-            boardView_.onGameEnded(gameStatus);
-        }
-        
-        boardView_.invalidate();
-        
-        // Set table Id.
-        tableController_.setTableTitle();
-
-        //SoundManager.getInstance().initialize(activity);
-    }*/
-
     /**
      * Implementation of OnFragmentInteractionListener
      */
@@ -780,18 +633,24 @@ public class MainActivity extends AppCompatActivity
      * Implementation of OnFragmentInteractionListener
      */
     @Override
-    public void onBoardFragment_Attach(BoardFragment boardFragment) {
-        myBoardFragment_ = new WeakReference<BoardFragment>(boardFragment);
-    }
+    public void onBoardFragment_CreateView(BoardFragment fragment) {
+        myBoardFragment_ = new WeakReference<BoardFragment>(fragment);
 
-    @Override
-    public void onBoardFragment_CreateView() {
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
             boardFragment.setBoardEventListener(tableController_);
         }
 
         tableController_.setTableTitle();
+    }
+
+    @Override
+    public void onBoardFragment_DestroyView(BoardFragment fragment) {
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null && boardFragment == fragment) {
+            Log.d(TAG, "Board fragment view destroyed. Release weak reference.");
+            myBoardFragment_ = new WeakReference<BoardFragment>(null);
+        }
     }
     // ******
 
@@ -800,17 +659,19 @@ public class MainActivity extends AppCompatActivity
         myChatFragment_ = new WeakReference<ChatFragment>(fragment);
     }
 
-    public void registerPlayersFragment(final PlayersFragment fragment) {
+    public void registerPlayersFragment(PlayersFragment fragment) {
         Log.d(TAG, "registerPlayersFragment: old:" + myPlayersFragment_.get() + " => new:" + fragment);
         myPlayersFragment_ = new WeakReference<PlayersFragment>(fragment);
     }
 
-//    private void onBoardViewResume(MainActivity activity) {
-//        Log.d(TAG, "onBoardViewResume...");
-//        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-//        playerTracker.syncUI(); // Among things to be updated is AI Level.
-//    }
-    
+    public void unregisterPlayersFragment(PlayersFragment fragment) {
+        PlayersFragment playersFragment = myPlayersFragment_.get();
+        if (playersFragment != null && playersFragment == fragment) {
+            myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
+            Log.d(TAG, "unregisterPlayersFragment: " + playersFragment);
+        }
+    }
+
     public void setAndShowTitle(String title) {
         if (getSupportActionBar() == null) {
             Log.w(TAG, "setAndShowTitle: getSupportActionBar() = null. Do not set Display options!");
@@ -821,97 +682,6 @@ public class MainActivity extends AppCompatActivity
             getSupportActionBar().setTitle(getString(R.string.title_table, title));
         }
     }
-    
-//    private void onReplayBegin() {
-//        boardView_.onReplay_BEGIN();
-//    }
-    
-//    public void onReplayPrevious(View view) {
-//        boardView_.onReplay_PREV(true);
-//    }
-//
-//    public void onReplayNext(View view) {
-//        boardView_.onReplay_NEXT(true);
-//    }
-    
-//    private void onReplayEnd() {
-//        boardView_.onReplay_END();
-//    }
-
-//    public void onReverseView(View view) {
-//        reverseView();
-//    }
-
-//    public void onResetTable(View view) {
-//        tableController_.onClick_resetTable(this, view);
-//    }
-    
-//    public void onTopButtonClick(View view) {
-//        Enums.ColorEnum clickedColor =
-//                (isBlackOnTop_ ? ColorEnum.COLOR_BLACK : ColorEnum.COLOR_RED);
-//        tableController_.handlePlayerButtonClick(clickedColor);
-//    }
-//
-//    public void onBottomButtonClick(View view) {
-//        Enums.ColorEnum clickedColor =
-//                (isBlackOnTop_ ? ColorEnum.COLOR_RED : ColorEnum.COLOR_BLACK);
-//        tableController_.handlePlayerButtonClick(clickedColor);
-//    }
-    
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    /*
-    public static class PlaceholderFragment extends Fragment {
-
-        private static final String TAG = "PlaceholderFragment";
-        
-        public PlaceholderFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            Log.d(TAG, "onCreateView...");
-            return inflater.inflate(R.layout.fragment_main, container, false);
-        }
-        
-        @Override
-        public void onActivityCreated(Bundle savedInstanceState) {
-            super.onActivityCreated(savedInstanceState);
-            Log.d(TAG, "onActivityCreated...");
-            
-            MainActivity activity = (MainActivity) getActivity();
-            activity.onBoardViewCreated(activity);
-        }
-
-        @Override
-        public void onResume () {
-            super.onResume();
-            Log.i(TAG, "onResume...");
-            MainActivity activity = (MainActivity) getActivity();
-            activity.onBoardViewResume(activity);
-        }
-
-        @Override
-        public void onDestroyView () {
-            super.onDestroyView();
-            Log.i(TAG, "onDestroyView...");
-        }
-
-        @Override
-        public void onDestroy () {
-            super.onDestroy();
-            Log.i(TAG, "onDestroy...");
-        }
-        
-        @Override
-        public void onDetach () {
-            super.onDetach();
-            Log.i(TAG, "onDetach...");
-        }
-    }
-    */
 
     /**
      * The ViewPager adapter for the main page.

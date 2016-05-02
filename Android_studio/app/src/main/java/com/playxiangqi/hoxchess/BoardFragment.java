@@ -19,9 +19,7 @@
 package com.playxiangqi.hoxchess;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,13 +27,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.List;
 
 /**
- * A simple {@link Fragment} subclass.
+ * The fragment that controls a Board.
  * Activities that contain this fragment must implement the
  * {@link BoardFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
@@ -63,10 +60,26 @@ public class BoardFragment extends Fragment {
     private static final String STATE_IS_BLACK_ON_TOP = "isBlackOnTop";
 
     /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     * <p/>
+     * See the Android Training lesson <a href=
+     * "http://developer.android.com/training/basics/fragments/communicating.html"
+     * >Communicating with Other Fragments</a> for more information.
+     */
+    public interface OnFragmentInteractionListener {
+        void onBoardFragment_CreateView(BoardFragment fragment);
+        void onBoardFragment_DestroyView(BoardFragment fragment);
+        void onResetViewClick(View v);
+        void onChangeRoleRequest(Enums.ColorEnum clickedColor);
+    }
+
+    /**
      * Constructor
      */
     public BoardFragment() {
-        // Required empty public constructor
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "[CONSTRUCTOR]");
     }
 
@@ -95,8 +108,6 @@ public class BoardFragment extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
-
-        listener_.onBoardFragment_Attach(this);
     }
 
     @Override
@@ -113,21 +124,13 @@ public class BoardFragment extends Fragment {
                              Bundle savedInstanceState) {
         if (DEBUG_LIFE_CYCLE) Log.d(TAG, "onCreateView: board-type = " + boardType_ );
 
-        //TextView textView = new TextView(getActivity());
-        //textView.setText(R.string.hello_blank_fragment);
-
         final View view = inflater.inflate(R.layout.fragment_main, container, false);
-
-        // ********** START of MainActivity.onBoardViewCreated **************
-        // (from MainActivity, already disabled!) progressBar_ = (ProgressBar) findViewById(R.id.progress_spinner);
 
         boardView_ = (BoardView) view.findViewById(R.id.board_view);
         TextView topPlayerLabel = (TextView) view.findViewById(R.id.top_player_label);
         TextView bottomPlayerLabel = (TextView) view.findViewById(R.id.bottom_player_label);
         Button topPlayerButton = (Button) view.findViewById(R.id.top_button);
         Button bottomPlayerButton = (Button) view.findViewById(R.id.bottom_button);
-
-        // (Done. Using callback) boardView_.setBoardEventListener(tableController_);
 
         // Game timers.
         TextView topGameTimeView = (TextView) view.findViewById(R.id.top_game_time);
@@ -164,21 +167,15 @@ public class BoardFragment extends Fragment {
 
         boardView_.invalidate();
 
-        // Set table Id.
-        // (Don in callback) tableController_.setTableTitle();
-
-        // (We do it in MainActivity.onCreate) SoundManager.getInstance().initialize(activity);
-        // **************** END of MainActivity.onBoardViewCreated **********************
-
         setOnClickHandlers(view);
 
-        listener_.onBoardFragment_CreateView();
+        listener_.onBoardFragment_CreateView(this);
 
         return view;
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onActivityCreated");
 
@@ -203,6 +200,7 @@ public class BoardFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDestroyView");
+        listener_.onBoardFragment_DestroyView(this);
     }
 
     @Override
@@ -225,23 +223,6 @@ public class BoardFragment extends Fragment {
 
         // Save the table's current game state
         outState.putBoolean(STATE_IS_BLACK_ON_TOP, isBlackOnTop_);
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        void onBoardFragment_Attach(BoardFragment boardFragment);
-        void onBoardFragment_CreateView();
-        void onResetViewClick(View v);
-        void onChangeRoleRequest(Enums.ColorEnum clickedColor);
     }
 
     // ***************************************************************************
