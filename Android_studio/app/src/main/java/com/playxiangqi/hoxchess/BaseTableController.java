@@ -42,6 +42,8 @@ public class BaseTableController implements BoardView.BoardEventListener {
     private static NetworkTableController networkTableController_;
     private static EmptyTableController emptyTableController_;
 
+    private static BaseTableController currentController_;
+
     protected WeakReference<MainActivity> mainActivity_ = new WeakReference<MainActivity>(null);
 
     /**
@@ -91,6 +93,12 @@ public class BaseTableController implements BoardView.BoardEventListener {
     }
 
     public void onTableClear() {
+    }
+
+    public void onNetworkMove(MoveInfo move) {
+    }
+
+    public void onResetBoardWithMoves(MoveInfo[] moves) {
     }
 
     @Override
@@ -169,26 +177,37 @@ public class BaseTableController implements BoardView.BoardEventListener {
      * The factory method for table controllers.
      */
     public static BaseTableController getTableController(TableType tableType) {
+        BaseTableController controller;
         switch (tableType) {
             case TABLE_TYPE_LOCAL:
                 if (localTableController_ == null) {
                     localTableController_ = new LocalTableController();
                 }
-                return localTableController_;
+                controller = localTableController_;
+                break;
 
             case TABLE_TYPE_NETWORK:
                 if (networkTableController_ == null) {
                     networkTableController_ = new NetworkTableController();
                 }
-                return networkTableController_;
+                controller = networkTableController_;
+                break;
 
             case TABLE_TYPE_EMPTY: // falls through
             default:
                 if (emptyTableController_ == null) {
                     emptyTableController_ = new EmptyTableController();
                 }
-                return emptyTableController_;
+                controller = emptyTableController_;
+                break;
         }
+
+        currentController_ = controller;
+        return controller;
+    }
+
+    public static BaseTableController getCurrentController() {
+        return currentController_;
     }
 
 }

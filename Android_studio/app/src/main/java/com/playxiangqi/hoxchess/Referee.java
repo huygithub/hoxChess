@@ -89,7 +89,20 @@ public class Referee {
         return (   gameStatus_ == Referee.hoxGAME_STATUS_READY 
                 || gameStatus_ == Referee.hoxGAME_STATUS_IN_PROGRESS);
     }
-    
+
+    public static String gameStatusToString(int gameStatus) {
+        switch (gameStatus) {
+            case Referee.hoxGAME_STATUS_UNKNOWN:     return "Unknown";
+            //case Referee.hoxGAME_STATUS_OPEN:      return "Open";
+            case Referee.hoxGAME_STATUS_READY:       return "Ready";
+            case Referee.hoxGAME_STATUS_IN_PROGRESS: return "Progress";
+            case Referee.hoxGAME_STATUS_RED_WIN:     return "Red_win";
+            case Referee.hoxGAME_STATUS_BLACK_WIN:   return "Black_win";
+            case Referee.hoxGAME_STATUS_DRAWN:       return "Drawn";
+            default: return "__BUG_Not_Supported_Game_Status__:" + gameStatus;
+        }
+    }
+
     // ****************************** Native code **********************************
     // TODO: Need to fix for invalid moves when "king-facing-king"!!!
     private native int nativeCreateReferee();

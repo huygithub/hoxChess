@@ -237,22 +237,18 @@ public class BoardFragment extends Fragment {
         }
     }
 
-    public void makeMove(final Position fromPos, final Position toPos, boolean animated) {
-        boardView_.makeMove(fromPos, toPos, animated);
+    public void makeMove(MoveInfo move, boolean animated) {
+        boardView_.makeMove(move.fromPosition, move.toPosition, move.gameStatus, animated);
     }
 
     public void resetBoard() {
         boardView_.resetBoard();
     }
 
-    public void resetBoardWithNewMoves(String[] moves) {
+    public void resetBoardWithNewMoves(MoveInfo[] moves) {
         Log.d(TAG, "Reset board with new (MOVES): length = " + moves.length);
-        for (String move : moves) {
-            int row1 = move.charAt(1) - '0';
-            int col1 = move.charAt(0) - '0';
-            int row2 = move.charAt(3) - '0';
-            int col2 = move.charAt(2) - '0';
-            boardView_.makeMove(new Position(row1, col1), new Position(row2, col2), false);
+        for (MoveInfo move : moves) {
+            boardView_.makeMove(move.fromPosition, move.toPosition, move.gameStatus, false);
         }
         boardView_.invalidate();
     }

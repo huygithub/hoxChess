@@ -149,8 +149,45 @@ public class NetworkTableController extends BaseTableController {
         networkController.logoutFromNetwork();
     }
 
+    @Override
     public void onTableClear() {
         MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
+    }
+
+    @Override
+    public void onNetworkMove(MoveInfo move) {
+        move.gameStatus = HoxApp.getApp().getReferee().validateMove(
+                move.fromPosition.row, move.fromPosition.column,
+                move.toPosition.row, move.toPosition.column);
+
+        if (move.gameStatus == Referee.hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
+            Log.e(TAG, "[SINGLE] This move =" + move + " is NOT valid. Do nothing.");
+            return;
+        }
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.updateBoardWithNewMove(move);
+        }
+    }
+
+    @Override
+    public void onResetBoardWithMoves(MoveInfo[] moves) {
+        for (MoveInfo move : moves) {
+            move.gameStatus = HoxApp.getApp().getReferee().validateMove(
+                    move.fromPosition.row, move.fromPosition.column,
+                    move.toPosition.row, move.toPosition.column);
+
+            if (move.gameStatus == Referee.hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
+                Log.e(TAG, "[LIST] This move =" + move + " is NOT valid. Do nothing.");
+                return;
+            }
+        }
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.resetBoardWithNewMoves(moves);
+        }
     }
 
     @Override

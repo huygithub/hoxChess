@@ -685,17 +685,9 @@ public class BoardView extends ImageView
         }
     }
 
-    public void makeMove(final Position fromPos, final Position toPos, boolean animated) {
+    public void makeMove(final Position fromPos, final Position toPos,
+                         final int gameStatus, boolean animated) {
         Log.d(TAG, "*** Make move = " + fromPos + " => " + toPos);
-
-        final int status = referee_.validateMove(fromPos.row, fromPos.column,
-                toPos.row, toPos.column);
-        Log.d(TAG, "... (native referee) move-validation returned status = " + status);
-
-        if (status == Referee.hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
-            Log.e(TAG, " This move =" + fromPos + " => " + toPos + " is NOT valid. Do nothing.");
-            return;
-        }
 
         // Do not update the Pieces on Board if we are in the review mode.
         if (isBoardInReviewMode()) {
@@ -719,7 +711,7 @@ public class BoardView extends ImageView
                     fromPiece.setIsAnimated(false);
                     recentPiece_ = fromPiece;
                     addMoveToHistory(fromPos, toPos, capture);
-                    didMoveOccur(capture, status, true);
+                    didMoveOccur(capture, gameStatus, true);
                     BoardView.this.invalidate();
                 }
             };
@@ -730,7 +722,7 @@ public class BoardView extends ImageView
             fromPiece.setPosition(toPos);
             recentPiece_ = fromPiece;
             addMoveToHistory(fromPos, toPos, capture);
-            didMoveOccur(capture, status, false);
+            didMoveOccur(capture, gameStatus, false);
         }
     }
 
@@ -766,7 +758,7 @@ public class BoardView extends ImageView
     private Piece tryCapturePieceAtPosition(Position position) {
         Piece foundPiece = getPieceAtViewPosition(position);
         if (foundPiece == null) {
-            Log.v(TAG, "... No piece is (to be captured) found at " + position);
+            //Log.v(TAG, "... No piece is (to be captured) found at " + position);
             return null;
         }
         Log.d(TAG, "Capture a piece at " + position);

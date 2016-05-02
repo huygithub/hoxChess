@@ -209,18 +209,26 @@ public class LocalTableController extends BaseTableController {
         Position fromPos = new Position(aiMove.charAt(0) - '0', aiMove.charAt(1) - '0');
         Position toPos = new Position(aiMove.charAt(2) - '0', aiMove.charAt(3) - '0');
 
+        MoveInfo move = new MoveInfo(fromPos, toPos);
+
+        move.gameStatus = referee.validateMove(
+                fromPos.row, fromPos.column,
+                toPos.row, toPos.column);
+
+        if (move.gameStatus == Referee.hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
+            Log.e(TAG, " This move = " + move + " is NOT valid. Do nothing.");
+            return;
+        }
+
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
-            mainActivity.updateBoardWithNewAIMove(fromPos, toPos);
+            mainActivity.updateBoardWithNewAIMove(move);
         }
 
         timeTracker.nextColor();
 
         if (referee.getMoveCount() == 2) {
             timeTracker.start();
-            if (mainActivity != null) {
-                mainActivity.onGameStatusChanged();
-            }
         }
 
         if (!referee.isGameInProgress()) {

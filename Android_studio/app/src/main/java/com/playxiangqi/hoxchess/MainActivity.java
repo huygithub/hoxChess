@@ -450,11 +450,15 @@ public class MainActivity extends AppCompatActivity
         startActivity(intent);
     }
 
-    public void updateBoardWithNewAIMove(Position fromPos, Position toPos) {
-        Log.d(TAG, "Update board with a new AI move = " + fromPos + " => " + toPos);
+    public void updateBoardWithNewAIMove(MoveInfo move) {
+        Log.d(TAG, "Update board with a new AI move = " + move);
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
-            boardFragment.makeMove(fromPos, toPos, true);
+            boardFragment.makeMove(move, true);
+        }
+
+        if (HoxApp.getApp().getReferee().getMoveCount() == 2) { // The game has started?
+            onGameStatusChanged();
         }
     }
     
@@ -475,7 +479,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void resetBoardWithNewMoves(String[] moves) {
+    public void resetBoardWithNewMoves(MoveInfo[] moves) {
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
             boardFragment.resetBoardWithNewMoves(moves);
@@ -493,16 +497,15 @@ public class MainActivity extends AppCompatActivity
         tableController_.setTableTitle();
     }
     
-    public void updateBoardWithNewMove(String move) {
-        Log.d(TAG, "Update board with a new (MOVE): Move: [" + move + "]");
-        int row1 = move.charAt(1) - '0';
-        int col1 = move.charAt(0) - '0';
-        int row2 = move.charAt(3) - '0';
-        int col2 = move.charAt(2) - '0';
-
+    public void updateBoardWithNewMove(MoveInfo move) {
+        Log.d(TAG, "Update board with a new (MOVE): " + move);
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
-            boardFragment.makeMove(new Position(row1, col1), new Position(row2, col2), true);
+            boardFragment.makeMove(move, true);
+        }
+
+        if (HoxApp.getApp().getReferee().getMoveCount() == 2) { // The game has started?
+            onGameStatusChanged();
         }
     }
 

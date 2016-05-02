@@ -340,12 +340,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             return;
         }
 
-        final String[] moves = movesStr.split("/");
-
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.resetBoardWithNewMoves(moves);
-        }
+        final MoveInfo[] moves = MoveInfo.parseForListOfNetworkMoves(movesStr);
+        BaseTableController.getCurrentController().onResetBoardWithMoves(moves);
 
         timeTracker_.setInitialColor(referee_.getNextColor());
         timeTracker_.start();
@@ -365,13 +361,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         timeTracker_.nextColor();
         timeTracker_.start();
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.updateBoardWithNewMove(move);
-            if (referee_.getMoveCount() == 2) { // The game has started?
-                mainActivity.onGameStatusChanged();
-            }
-        }
+        final MoveInfo moveInfo = MoveInfo.parseForNetworkMove(move);
+        BaseTableController.getCurrentController().onNetworkMove(moveInfo);
     }
 
     private void handleNetworkEvent_LEAVE(String content) {
