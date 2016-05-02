@@ -113,7 +113,7 @@ public class BoardFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onCreate");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onCreate" + ", savedInstanceState=" + savedInstanceState);
         if (getArguments() != null) {
             boardType_ = getArguments().getString(ARG_BOARD_TYPE);
         }
@@ -122,7 +122,7 @@ public class BoardFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        if (DEBUG_LIFE_CYCLE) Log.d(TAG, "onCreateView: board-type = " + boardType_ );
+        if (DEBUG_LIFE_CYCLE) Log.d(TAG, "onCreateView: board-type = " + boardType_ + ", savedInstanceState=" + savedInstanceState);
 
         final View view = inflater.inflate(R.layout.fragment_main, container, false);
 
@@ -177,13 +177,17 @@ public class BoardFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onActivityCreated");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onActivityCreated" + ", savedInstanceState=" + savedInstanceState);
 
         if (savedInstanceState != null) {
-            boolean isBlackOnTop = savedInstanceState.getBoolean(STATE_IS_BLACK_ON_TOP, isBlackOnTop_);
-            if (!isBlackOnTop) {
-                reverseView();
-            }
+            isBlackOnTop_ = savedInstanceState.getBoolean(STATE_IS_BLACK_ON_TOP, isBlackOnTop_);
+            Log.d(TAG, "onActivityCreated: Restore isBlackOnTop => " +  isBlackOnTop_);
+        }
+
+        if (!isBlackOnTop_) {
+            // NOTE: Just reverse the view only WITHOUT changing the variable isBlackOnTop_
+            //       because the instance is the same!
+            reverseView();
         }
     }
 
@@ -257,18 +261,19 @@ public class BoardFragment extends Fragment {
         boardView_.onGameEnded(gameStatus);
     }
 
-    public void reverseView() {
-        Log.d(TAG, "Reverse board view...");
-        isBlackOnTop_ = !isBlackOnTop_;
+    private void reverseView() {
+        Log.d(TAG, "Reverse board view: isBlackOnTop_=" + isBlackOnTop_);
         boardView_.reverseView();
         HoxApp.getApp().getTimeTracker().reverseView();
         HoxApp.getApp().getPlayerTracker().reverseView();
     }
 
     public void onLocalPlayerJoined(Enums.ColorEnum myColor) {
+        Log.d(TAG, "onLocalPlayerJoined: myColor=" + myColor + ", isBlackOnTop_=" + isBlackOnTop_);
         // Reverse the board view so that my seat is always at the bottom of the screen.
         if (  (myColor == Enums.ColorEnum.COLOR_RED && !isBlackOnTop_) ||
                 (myColor == Enums.ColorEnum.COLOR_BLACK && isBlackOnTop_) ) {
+            isBlackOnTop_ = !isBlackOnTop_;
             reverseView();
         }
     }
@@ -285,6 +290,7 @@ public class BoardFragment extends Fragment {
             reverseViewButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    isBlackOnTop_ = !isBlackOnTop_;
                     reverseView();
                 }
             });
@@ -307,6 +313,7 @@ public class BoardFragment extends Fragment {
             topPlayerButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Log.d(TAG, "(Top Button):onClick: isBlackOnTop_=" + isBlackOnTop_);
                     Enums.ColorEnum clickedColor =
                             (isBlackOnTop_ ? Enums.ColorEnum.COLOR_BLACK : Enums.ColorEnum.COLOR_RED);
                     if (listener_ != null) {
@@ -321,6 +328,7 @@ public class BoardFragment extends Fragment {
             bottomPlayerButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Log.d(TAG, "(Bottom Button):onClick: isBlackOnTop_=" + isBlackOnTop_);
                     Enums.ColorEnum clickedColor =
                             (isBlackOnTop_ ? Enums.ColorEnum.COLOR_RED : Enums.ColorEnum.COLOR_BLACK);
                     if (listener_ != null) {

@@ -106,8 +106,8 @@ public class TablePlayerTracker {
 
     public void setObservers(List<String> observers) {
         observers_.clear();
-        for (String observer : observers) {
-            observers_.put(observer, new PlayerInfo(observer, "0"));
+        for (String pid : observers) {
+            observers_.put(pid, new PlayerInfo(pid, "0"));
         }
     }
 
@@ -137,6 +137,8 @@ public class TablePlayerTracker {
                 blackPlayer_ = new PlayerInfo();
             } else if (redPlayer_.hasPid(pid)) {
                 redPlayer_ = new PlayerInfo();
+            } else {
+                observers_.remove(pid);
             }
         }
     }
@@ -153,14 +155,17 @@ public class TablePlayerTracker {
         switch (playerColor) {
             case COLOR_BLACK:
                 blackPlayer_ = new PlayerInfo(pid, rating);
+                observers_.remove(pid);
                 break;
             
             case COLOR_RED:
                 redPlayer_ = new PlayerInfo(pid, rating);
+                observers_.remove(pid);
                 break;
             
             case COLOR_NONE:
-                /* falls through */
+                observers_.put(pid, new PlayerInfo(pid, rating));
+                break;
             default:
                 break; // Do nothing
         }

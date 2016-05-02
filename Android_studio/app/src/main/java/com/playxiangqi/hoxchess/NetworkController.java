@@ -736,7 +736,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
      * @param clickedColor The playing role to which I want to change.
      */
     public void handleMyRequestToChangeRole(Enums.ColorEnum clickedColor) {
-        Log.d(TAG, "Handle my request to change role to = " + clickedColor);
+        Log.d(TAG, "Handle my request to change role. clickedColor = " + clickedColor);
 
         Enums.ColorEnum requestedColor = ColorEnum.COLOR_UNKNOWN;
 

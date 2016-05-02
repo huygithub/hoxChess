@@ -841,7 +841,7 @@ public class BoardView extends ImageView
     }
 
     public void reverseView() {
-        Log.d(TAG, "The 'Reverse View' action clicked...");
+        Log.d(TAG, "reverseView...");
         isBlackOnTop_ = !isBlackOnTop_;
         this.invalidate(); // Request to redraw the board.
     }
