@@ -59,6 +59,9 @@ public class BaseTableController implements BoardView.BoardEventListener {
     //
     // ***************************************************************
 
+    public void setupNewTable() {
+    }
+
     public void setTableTitle() {
     }
 
@@ -202,8 +205,13 @@ public class BaseTableController implements BoardView.BoardEventListener {
                 break;
         }
 
-        currentController_ = controller;
+        currentController_ = controller; // FIXME: Should move to setCurrentController()
         return controller;
+    }
+
+    public static void setCurrentController(TableType tableType) {
+        getTableController(tableType);
+        // FIXME: Should set currentController_ instead of relying on get...()
     }
 
     public static BaseTableController getCurrentController() {

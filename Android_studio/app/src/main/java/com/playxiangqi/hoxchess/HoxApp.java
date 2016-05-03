@@ -49,8 +49,10 @@ public class HoxApp extends Application {
         super.onCreate();
         Log.i(TAG, "onCreate()...");
         thisApp_ = this;
-        
-        aiEngine_.initGame();
+
+        BaseTableController.setCurrentController(TableType.TABLE_TYPE_LOCAL);
+        BaseTableController.getCurrentController().setupNewTable();
+
         aiEngine_.setAILevel(SettingsActivity.getAILevel(this));
 
         networkController_ = new NetworkController(timeTracker_,

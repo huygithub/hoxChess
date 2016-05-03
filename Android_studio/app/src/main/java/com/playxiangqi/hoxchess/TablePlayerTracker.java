@@ -36,22 +36,21 @@ import java.util.Map;
 public class TablePlayerTracker {
     private static final String TAG = "TablePlayerTracker";
 
-    // ------------------
     private enum SeatMode {
         SEAT_MODE_NONE,
         SEAT_MODE_PLAY,
         SEAT_MODE_LEAVE
     }
-    // ------------------
-    
-    private TableType tableType_;
-    private ColorEnum myColor_ = ColorEnum.COLOR_RED;
-    
+
+    private boolean hasUI_ = false;
     private TextView blackLabel_;
     private Button blackButton_;
     private TextView redLabel_;
     private Button redButton_;
-    
+
+    private TableType tableType_;
+    private ColorEnum myColor_ = ColorEnum.COLOR_RED;
+
     private PlayerInfo blackPlayer_ = new PlayerInfo();
     private PlayerInfo redPlayer_ = new PlayerInfo();
 
@@ -74,8 +73,17 @@ public class TablePlayerTracker {
         blackButton_ = blackButton;
         redLabel_ = redLabel;
         redButton_ = redButton;
+        hasUI_ = true;
     }
-    
+
+    public void unsetUIViews() {
+        blackLabel_ = null;
+        blackButton_ = null;
+        redLabel_ = null;
+        redButton_ = null;
+        hasUI_ = false;
+    }
+
     public void reverseView() {
         TextView view = blackLabel_;
         blackLabel_ = redLabel_;
@@ -170,8 +178,43 @@ public class TablePlayerTracker {
                 break; // Do nothing
         }
     }
-    
+
+    private void syncSeatLabels() {
+        if (!hasUI_) return;
+
+        switch (tableType_) {
+            case TABLE_TYPE_LOCAL:
+            {
+                final int aiLevel = HoxApp.getApp().getAILevel();
+                if (myColor_ == ColorEnum.COLOR_RED) {
+                    blackLabel_.setText(convertAILevelToString(aiLevel));
+                    redLabel_.setText(HoxApp.getApp().getString(R.string.you_label));
+                } else {
+                    blackLabel_.setText(HoxApp.getApp().getString(R.string.you_label));
+                    redLabel_.setText(convertAILevelToString(aiLevel));
+                }
+                break;
+            }
+            case TABLE_TYPE_NETWORK:
+            {
+                blackLabel_.setText(blackPlayer_.getInfo());
+                redLabel_.setText(redPlayer_.getInfo());
+                break;
+            }
+            case TABLE_TYPE_EMPTY:
+                /* falls through */
+            default:
+            {
+                blackLabel_.setText("");
+                redLabel_.setText("");
+                break;
+            }
+        }
+    }
+
     private void syncSeatMode_Black() {
+        if (!hasUI_) return;
+
         switch (blackSeatMode_) {
             case SEAT_MODE_PLAY:
                 blackButton_.setVisibility(View.VISIBLE);
@@ -192,6 +235,8 @@ public class TablePlayerTracker {
     }
     
     private void syncSeatMode_Red() {
+        if (!hasUI_) return;
+
         switch (redSeatMode_) {
             case SEAT_MODE_PLAY:
                 redButton_.setVisibility(View.VISIBLE);
@@ -222,35 +267,8 @@ public class TablePlayerTracker {
     
     public void syncUI() {
         Log.d(TAG, "Sync UI...");
-        
-        switch (tableType_) {
-            case TABLE_TYPE_LOCAL:
-            {
-                final int aiLevel = HoxApp.getApp().getAILevel();
-                if (myColor_ == ColorEnum.COLOR_RED) {
-                    blackLabel_.setText(convertAILevelToString(aiLevel));
-                    redLabel_.setText(HoxApp.getApp().getString(R.string.you_label));
-                } else {
-                    blackLabel_.setText(HoxApp.getApp().getString(R.string.you_label));
-                    redLabel_.setText(convertAILevelToString(aiLevel));
-                }
-                break;
-            }
-            case TABLE_TYPE_NETWORK:
-            {
-                blackLabel_.setText(blackPlayer_.getInfo());
-                redLabel_.setText(redPlayer_.getInfo());
-                break;
-            }
-            case TABLE_TYPE_EMPTY:
-                /* falls through */
-            default:
-            {
-                blackLabel_.setText("");
-                redLabel_.setText("");
-                break;
-            }
-        }
+
+        syncSeatLabels();
         
         // Determine the seat modes.
         switch (tableType_) {

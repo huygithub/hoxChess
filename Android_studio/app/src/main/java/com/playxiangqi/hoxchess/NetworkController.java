@@ -808,8 +808,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             if (myTable_.isValid()) {
                 networkPlayer_.sendRequest_LEAVE(myTable_.tableId); // Leave the current table.
             }
-            final String itimes = "900/180/20"; // The initial times.
-            networkPlayer_.sendRequest_NEW(itimes);
+            networkPlayer_.sendRequest_NEW(Enums.DEFAULT_INITIAL_GAME_TIMES);
         }
         else {
             Log.w(TAG, "Either offline or not playing. Ignore this 'open new table request'.");

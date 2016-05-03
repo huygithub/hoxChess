@@ -141,7 +141,7 @@ public class BoardFragment extends Fragment {
         TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
         timeTracker.setUITextViews(
                 topGameTimeView, topMoveTimeView, bottomGameTimeView, bottomMoveTimeView);
-        timeTracker.reset();
+        timeTracker.syncUI();
 
         // Player tracker.
         TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
@@ -195,9 +195,7 @@ public class BoardFragment extends Fragment {
     public void onResume () {
         super.onResume();
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onResume");
-
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.syncUI(); // Among things to be updated, AI Level is one.
+        HoxApp.getApp().getPlayerTracker().syncUI(); // AI Level is one hthat needs to be updated.
     }
 
     @Override
@@ -205,6 +203,8 @@ public class BoardFragment extends Fragment {
         super.onDestroyView();
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDestroyView");
         listener_.onBoardFragment_DestroyView(this);
+        HoxApp.getApp().getTimeTracker().unsetUITextViews();
+        HoxApp.getApp().getPlayerTracker().unsetUIViews();
     }
 
     @Override

@@ -35,14 +35,15 @@ import android.widget.TextView;
 public class TableTimeTracker {
 
     private static final String TAG = "TableTimeTracker";
-    
+
+    private boolean hasUI_ = false;
     private TextView blackGameTimeView_;
     private TextView blackMoveTimeView_;
     private TextView redGameTimeView_;
     private TextView redMoveTimeView_;
 
     // Times.
-    private TimeInfo initialTime_ = new TimeInfo("900/180/20"); //  "15m / 3m / 20s"
+    private TimeInfo initialTime_ = new TimeInfo(Enums.DEFAULT_INITIAL_GAME_TIMES);
     private TimeInfo blackTime_ = new TimeInfo();
     private TimeInfo redTime_ = new TimeInfo();
     
@@ -75,8 +76,17 @@ public class TableTimeTracker {
         blackMoveTimeView_ = blackMoveTimeView;
         redGameTimeView_ = redGameTimeView;
         redMoveTimeView_ = redMoveTimeView;
+        hasUI_ = true;
     }
-    
+
+    public void unsetUITextViews() {
+        blackGameTimeView_ = null;
+        blackMoveTimeView_ = null;
+        redGameTimeView_ = null;
+        redMoveTimeView_ = null;
+        hasUI_ = false;
+    }
+
     public void reset() {
         nextColor_ = ColorEnum.COLOR_RED;
         
@@ -91,7 +101,9 @@ public class TableTimeTracker {
     
     public void syncUI() {
         Log.d(TAG, "Sync UI...");
-        
+
+        if (!hasUI_) return;
+
         // NOTE: We are in the main thread.
         //       Update the UI views directly.
 
@@ -162,6 +174,8 @@ public class TableTimeTracker {
         
         @Override
         public void run() {
+            if (!hasUI_) return;
+
             if (uiColor_ == ColorEnum.COLOR_RED) {
                 redGameTimeView_.setText(formatTime(uiGameTime_));
                 redMoveTimeView_.setText(formatTime(uiMoveTime_));

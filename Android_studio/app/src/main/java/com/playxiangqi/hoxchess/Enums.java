@@ -1,5 +1,5 @@
 /**
- *  Copyright 2015 Huy Phan <huyphan@playxiangqi.com>
+ *  Copyright 2016 Huy Phan <huyphan@playxiangqi.com>
  * 
  *  This file is part of HOXChess.
  * 
@@ -62,5 +62,6 @@ public class Enums {
     public static final String HC_URL_SERVER = "http://www.playxiangqi.com";
     public static final String HC_GUEST_PREFIX = "Guest#";
     public static final int MAX_GUEST_ID = 10000;
+    public static final String DEFAULT_INITIAL_GAME_TIMES = "900/180/20"; // "15m / 3m / 20s"
     
 }

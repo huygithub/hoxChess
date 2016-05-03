@@ -92,6 +92,18 @@ public class LocalTableController extends BaseTableController {
     }
 
     @Override
+    public void setupNewTable() {
+        Log.d(TAG, "setupNewTable:...");
+        HoxApp.getApp().getAiEngine().initGame();
+
+        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
+        final TimeInfo initialTime = new TimeInfo(Enums.DEFAULT_INITIAL_GAME_TIMES);
+        timeTracker.setInitialTime(initialTime);
+        timeTracker.setBlackTime(initialTime);
+        timeTracker.setRedTime(initialTime);
+    }
+
+    @Override
     public void setTableTitle() {
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
