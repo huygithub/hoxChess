@@ -19,16 +19,22 @@
 package com.playxiangqi.hoxchess;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.TableType;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -55,7 +61,8 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
                 MessageManager.EventListener,
-                BoardFragment.OnFragmentInteractionListener {
+                BoardFragment.OnFragmentInteractionListener,
+                PlayersFragment.OnFragmentInteractionListener {
 
     private static final String TAG = "MainActivity";
 
@@ -620,7 +627,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * Implementation of OnFragmentInteractionListener
+     * Implementation of BoardFragment.OnFragmentInteractionListener
      */
     @Override
     public void onResetViewClick(View view) {
@@ -633,7 +640,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * Implementation of OnFragmentInteractionListener
+     * Implementation of BoardFragment.OnFragmentInteractionListener
      */
     @Override
     public void onBoardFragment_CreateView(BoardFragment fragment) {
@@ -655,24 +662,103 @@ public class MainActivity extends AppCompatActivity
             myBoardFragment_ = new WeakReference<BoardFragment>(null);
         }
     }
+
+    /**
+     * Implementation of PlayersFragment.OnFragmentInteractionListener
+     */
+    @Override
+    public void onPlayersFragment_CreateView(PlayersFragment fragment) {
+        myPlayersFragment_ = new WeakReference<PlayersFragment>(fragment);
+    }
+
+    /**
+     * Implementation of PlayersFragment.OnFragmentInteractionListener
+     */
+    @Override
+    public void onPlayersFragment_DestroyView(PlayersFragment fragment) {
+        PlayersFragment playersFragment = myPlayersFragment_.get();
+        if (playersFragment != null && playersFragment == fragment) {
+            myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
+            Log.d(TAG, "Release Players fragment: " + playersFragment);
+        }
+    }
+
+    /**
+     * Implementation of PlayersFragment.OnFragmentInteractionListener
+     */
+    @Override
+    public List<PlayerInfo> onRequestToRefreshPlayers() {
+        List<PlayerInfo> players = new ArrayList<PlayerInfo>();
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+
+        PlayerInfo redPlayer = playerTracker.getRedPlayer();
+        if (redPlayer.isValid()) players.add(redPlayer);
+
+        PlayerInfo blackPlayer = playerTracker.getBlackPlayer();
+        if (blackPlayer.isValid()) players.add(blackPlayer);
+
+        Map<String, PlayerInfo> observers = playerTracker.getObservers();
+        for (HashMap.Entry<String, PlayerInfo> entry : observers.entrySet()) {
+            players.add(entry.getValue());
+        }
+
+        return players;
+    }
+
+    /**
+     * Implementation of PlayersFragment.OnFragmentInteractionListener
+     */
+    @Override
+    public void onPlayerClick(PlayerInfo playerInfo, String tableId) {
+        HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
+        final PlayersInTableSheetDialog dialog = new PlayersInTableSheetDialog(this, playerInfo);
+        dialog.show();
+    }
+
+    private static class PlayersInTableSheetDialog extends BottomSheetDialog {
+        public PlayersInTableSheetDialog(final Activity activity, PlayerInfo playerInfo) {
+            super(activity);
+
+            final String playerId = playerInfo.pid;
+            View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_player, null);
+            setContentView(sheetView);
+
+            TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
+            View sendMessageView = sheetView.findViewById(R.id.sheet_send_private_message);
+            View inviteView = sheetView.findViewById(R.id.sheet_invite_to_play);
+            View joinView = sheetView.findViewById(R.id.sheet_join_table_of_player);
+
+            playerInfoView.setText(
+                    activity.getString(R.string.msg_player_info, playerId, playerInfo.rating));
+
+            sendMessageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (activity instanceof MainActivity) {
+                        ((MainActivity)activity).showBriefMessage("Not yet implement Send Personal Message",
+                                Snackbar.LENGTH_SHORT);
+                    }
+                    dismiss(); // this the dialog.
+                }
+            });
+
+            inviteView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
+                    dismiss(); // this the dialog.
+                }
+            });
+
+            joinView.setVisibility(View.GONE);
+        }
+    }
+
     // ******
 
     public void registerChatFragment(final ChatFragment fragment) {
         Log.d(TAG, "registerChatFragment: old:" + myChatFragment_.get() + " => new:" + fragment);
         myChatFragment_ = new WeakReference<ChatFragment>(fragment);
-    }
-
-    public void registerPlayersFragment(PlayersFragment fragment) {
-        Log.d(TAG, "registerPlayersFragment: old:" + myPlayersFragment_.get() + " => new:" + fragment);
-        myPlayersFragment_ = new WeakReference<PlayersFragment>(fragment);
-    }
-
-    public void unregisterPlayersFragment(PlayersFragment fragment) {
-        PlayersFragment playersFragment = myPlayersFragment_.get();
-        if (playersFragment != null && playersFragment == fragment) {
-            myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
-            Log.d(TAG, "unregisterPlayersFragment: " + playersFragment);
-        }
     }
 
     public void setAndShowTitle(String title) {

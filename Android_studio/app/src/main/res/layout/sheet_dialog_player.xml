@@ -15,7 +15,6 @@
         android:background="@drawable/side_nav_bar"
         android:padding="16dp"/>
 
-
     <LinearLayout
         android:id="@+id/sheet_send_private_message"
         android:clickable="true"
@@ -60,6 +59,30 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/action_invite_to_play"
+            android:padding="16dp"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/sheet_join_table_of_player"
+        android:clickable="true"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/bottom_sheet_horizontal_margin"
+        android:layout_marginRight="@dimen/bottom_sheet_horizontal_margin"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_message_black" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/action_join_table"
             android:padding="16dp"
             android:textSize="16sp" />
     </LinearLayout>

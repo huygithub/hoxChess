@@ -34,6 +34,7 @@
         <activity
             android:name=".TablesActivity"
             android:label="@string/title_activity_tables"
+            android:theme="@style/Theme.AppCompat.Light"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

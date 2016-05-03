@@ -18,60 +18,51 @@
  */
 package com.playxiangqi.hoxchess;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.BottomSheetDialog;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.BaseAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
 
-public class TablesActivity extends Activity
-                implements PlayerManager.EventListener {
+public class TablesActivity extends AppCompatActivity
+                implements TablesFragment.OnFragmentInteractionListener,
+                           PlayersFragment.OnFragmentInteractionListener,
+                           PlayerManager.EventListener {
 
     private static final String TAG = "TablesActivity";
 
     private View inProgressView_;
-    private ListView tablesListView_;
+    private ViewPager viewPager_;
 
-    private TablesAdapter adapter_;
-    
+    private WeakReference<TablesFragment> myTablesFragment_ = new WeakReference<TablesFragment>(null);
+    private WeakReference<PlayersFragment> myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tables);
         Log.d(TAG, "onCreate:");
 
-        inProgressView_ = findViewById(R.id.inProgressLayout);
-        tablesListView_ = (ListView)findViewById(R.id.list_tables);
-        
-        adapter_ = new TablesAdapter(this, R.layout.listview_item_table);
-        tablesListView_.setAdapter(adapter_);
-        
-        tablesListView_.setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TableInfo itemValue = (TableInfo) tablesListView_.getItemAtPosition(position);
-                
-                Log.d(TAG, "Position:" + position + " TableId: " + itemValue.tableId
-                        + ", ListItem: " + itemValue);
-                
-                // Return the table-ID.
-                Intent result = new Intent();
-                result.putExtra("tid", itemValue.tableId);
-                setResult(Activity.RESULT_OK, result);
-                finish();
-            }
-        });
-        
+        inProgressView_ = findViewById(R.id.tables_InProgressLayout);
+
+        TablesPagerAdapter pagerAdapter = new TablesPagerAdapter(this, getSupportFragmentManager());
+        viewPager_ = (ViewPager) findViewById(R.id.tables_view_pager);
+        viewPager_.setAdapter(pagerAdapter);
     }
 
     @Override
@@ -81,19 +72,17 @@ public class TablesActivity extends Activity
 
     @Override
     public void onTablesLoaded() {
-        Log.d(TAG, "onTablesLoaded:");
-
         List<TableInfo> tables = PlayerManager.getInstance().getTables();
         Log.d(TAG, "onTablesLoaded: # of tables = " + tables.size());
-
-        refreshListViewIfNeeded();
+        refreshTablesViewIfNeeded();
+        refreshPlayersViewIfNeeded();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume:");
-        if (!refreshListViewIfNeeded()) {
+        if (!refreshTablesViewIfNeeded()) {
             PlayerManager.getInstance().addListener(this);
         }
     }
@@ -105,95 +94,222 @@ public class TablesActivity extends Activity
         PlayerManager.getInstance().removeListener(this);
     }
 
-    private boolean refreshListViewIfNeeded() {
+    private boolean refreshTablesViewIfNeeded() {
         if (!PlayerManager.getInstance().areTablesLoaded()) {
-            Log.d(TAG, "refreshListViewIfNeeded: The table LIST is not yet loaded.");
+            //Log.d(TAG, "refreshTablesViewIfNeeded: The table LIST is not yet loaded.");
             return false;
         }
 
         if (inProgressView_.getVisibility() != View.GONE) {
             inProgressView_.setVisibility(View.GONE);
-            tablesListView_.setVisibility(View.VISIBLE);
+            viewPager_.setVisibility(View.VISIBLE);
         }
-        adapter_.refreshTables();
+
+        TablesFragment tablesFragment = myTablesFragment_.get();
+        if (tablesFragment != null) {
+            tablesFragment.refreshView();
+        }
+
+        return true;
+    }
+
+    private boolean refreshPlayersViewIfNeeded() {
+        if (!PlayerManager.getInstance().areTablesLoaded()) {
+            //Log.d(TAG, "refreshPlayersViewIfNeeded: The table LIST is not yet loaded.");
+            return false;
+        }
+
+        if (inProgressView_.getVisibility() != View.GONE) {
+            inProgressView_.setVisibility(View.GONE);
+            viewPager_.setVisibility(View.VISIBLE);
+        }
+
+        PlayersFragment playersFragment = myPlayersFragment_.get();
+        if (playersFragment != null) {
+            playersFragment.refreshPlayersIfNeeded();
+        }
+
         return true;
     }
 
     /**
-     * The custom adapter for our list view.
+     * Implements the interface TablesFragment.OnFragmentInteractionListener
      */
-    private static class TablesAdapter extends BaseAdapter {
-        private final Activity activity_;
-        private final int resourceId_;
-        private final HashMap<Integer, TableInfo> mIdMap_ = new HashMap<Integer, TableInfo>();
+    @Override
+    public void onTablesFragment_CreateView(TablesFragment fragment) {
+        myTablesFragment_ = new WeakReference<TablesFragment>(fragment);
+        refreshTablesViewIfNeeded();
+    }
 
-        public TablesAdapter(Activity context, int textViewResourceId) {
-            activity_ = context;
-            resourceId_ = textViewResourceId;
+    /**
+     * Implements the interface TablesFragment.OnFragmentInteractionListener
+     */
+    @Override
+    public void onTablesFragment_DestroyView(TablesFragment fragment) {
+        TablesFragment tablesFragment = myTablesFragment_.get();
+        if (tablesFragment != null && tablesFragment == fragment) {
+            Log.d(TAG, "Tables fragment view destroyed. Release weak reference.");
+            myTablesFragment_ = new WeakReference<TablesFragment>(null);
+        }
+    }
+
+    /**
+     * Implements the interface TablesFragment.OnFragmentInteractionListener
+     */
+    @Override
+    public void onTableSelected(String tableId) {
+        Log.d(TAG, "onTableSelected: tableId = " + tableId);
+
+        // Return the table-ID to the caller.
+        Intent result = new Intent();
+        result.putExtra("tid", tableId);
+        setResult(Activity.RESULT_OK, result);
+        finish();
+    }
+
+    /**
+     * Implementation of PlayersFragment.OnFragmentInteractionListener
+     */
+    @Override
+    public void onPlayersFragment_CreateView(PlayersFragment fragment) {
+        myPlayersFragment_ = new WeakReference<PlayersFragment>(fragment);
+        refreshPlayersViewIfNeeded();
+    }
+
+    /**
+     * Implementation of PlayersFragment.OnFragmentInteractionListener
+     */
+    @Override
+    public void onPlayersFragment_DestroyView(PlayersFragment fragment) {
+        PlayersFragment playersFragment = myPlayersFragment_.get();
+        if (playersFragment != null && playersFragment == fragment) {
+            myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
+            Log.d(TAG, "Release Players fragment: " + playersFragment);
+        }
+    }
+
+    /**
+     * Implementation of PlayersFragment.OnFragmentInteractionListener
+     */
+    @Override
+    public List<PlayerInfo> onRequestToRefreshPlayers() {
+        List<PlayerInfo> players = new ArrayList<PlayerInfo>();
+
+        HashMap<String, PlayerInfo> playersMap = PlayerManager.getInstance().getPlayers();
+        for (HashMap.Entry<String, PlayerInfo> entry : playersMap.entrySet()) {
+            players.add(entry.getValue());
         }
 
-        public void refreshTables() {
-            mIdMap_.clear();
-            final List<TableInfo> tables = PlayerManager.getInstance().getTables();
-            for (int i = 0; i < tables.size(); ++i) {
-                mIdMap_.put(Integer.valueOf(i), tables.get(i));
+        return players;
+    }
+
+    /**
+     * Implementation of PlayersFragment.OnFragmentInteractionListener
+     */
+    @Override
+    public void onPlayerClick(PlayerInfo playerInfo, String tableId) {
+        //HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
+        final AllPlayersSheetDialog dialog = new AllPlayersSheetDialog(this, playerInfo, tableId);
+        dialog.show();
+    }
+
+    private static class AllPlayersSheetDialog extends BottomSheetDialog {
+        public AllPlayersSheetDialog(final Activity activity, PlayerInfo playerInfo, final String tableId) {
+            super(activity);
+
+            final String playerId = playerInfo.pid;
+            View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_player, null);
+            setContentView(sheetView);
+
+            TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
+            View sendMessageView = sheetView.findViewById(R.id.sheet_send_private_message);
+            View inviteView = sheetView.findViewById(R.id.sheet_invite_to_play);
+            View joinView = sheetView.findViewById(R.id.sheet_join_table_of_player);
+
+            playerInfoView.setText(
+                    activity.getString(R.string.msg_player_info, playerId, playerInfo.rating));
+
+            // Setup for "Send Personal Message"
+            sendMessageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (activity instanceof MainActivity) {
+                        ((MainActivity)activity).showBriefMessage("Not yet implement Send Personal Message",
+                                Snackbar.LENGTH_SHORT);
+                    }
+                    dismiss(); // this the dialog.
+                }
+            });
+
+            // Setup for "Invite" or "Join".
+            if (TextUtils.isEmpty(tableId)) {
+                inviteView.setVisibility(View.VISIBLE);
+                joinView.setVisibility(View.GONE);
+
+                inviteView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
+                        dismiss(); // this the dialog.
+                    }
+                });
+            } else {
+                inviteView.setVisibility(View.GONE);
+                joinView.setVisibility(View.VISIBLE);
+
+                joinView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        HoxApp.getApp().getNetworkController().handleTableSelection(tableId);
+                        dismiss(); // this the dialog.
+                        activity.finish();
+                    }
+                });
             }
-            notifyDataSetChanged();
+        }
+    }
+
+    /**
+     * The ViewPager adapter for the tables activity.
+     */
+    private static class TablesPagerAdapter extends FragmentPagerAdapter {
+        private final Context context_;
+
+        public TablesPagerAdapter(Context context, FragmentManager fragmentManager) {
+            super(fragmentManager);
+            context_ = context;
         }
 
         @Override
         public int getCount() {
-            return mIdMap_.size();
+            return 2;
         }
 
         @Override
-        public Object getItem(int position) {
-            return mIdMap_.get(Integer.valueOf(position));
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public boolean hasStableIds() {
-            return true;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ViewHolder holder;
-            if (convertView == null) {
-                LayoutInflater layoutInflater = activity_.getLayoutInflater();
-                convertView = layoutInflater.inflate(resourceId_, null);
-                holder = new ViewHolder();
-                holder.tableIdView = (TextView) convertView.findViewById(R.id.table_id);
-                holder.playersInfoView = (TextView) convertView.findViewById(R.id.players_info);
-                holder.gameInfoView = (TextView) convertView.findViewById(R.id.game_info);
-                convertView.setTag(holder);
-            } else {
-                holder = (ViewHolder) convertView.getTag();
+        public Fragment getItem(int position) {
+            switch (position) {
+                case 0: return TablesFragment.newInstance();
+                default: return new PlayersFragment();
             }
-
-            final TableInfo tableInfo = (TableInfo) getItem(Integer.valueOf(position));
-            holder.tableIdView.setText(tableInfo.tableId);
-            holder.playersInfoView.setText(
-                    String.format("%s vs. %s", tableInfo.getRedInfo(), tableInfo.getBlackInfo()));
-            holder.gameInfoView.setText(tableInfo.itimes);
-
-            return convertView;
         }
 
-    }
+        @Override
+        public CharSequence getPageTitle(int position) {
+            switch (position) {
+                case 0: return context_.getString(R.string.label_table);
+                default: return context_.getString(R.string.action_view_players);
+            }
+        }
 
-    /**
-     * The view holder for our custom adapter.
-     */
-    private static class ViewHolder {
-        public TextView tableIdView;
-        public TextView playersInfoView;
-        public TextView gameInfoView;
+        /**
+         * Reference: https://guides.codepath.com/android/ViewPager-with-FragmentPagerAdapter
+         */
+        @Override
+        public float getPageWidth (int position) {
+            switch (position) {
+                case 0: return 1f;
+                default: return 1f;
+            }
+        }
     }
-    
 }

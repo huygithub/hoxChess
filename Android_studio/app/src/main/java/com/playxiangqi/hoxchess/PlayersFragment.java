@@ -21,8 +21,6 @@ package com.playxiangqi.hoxchess;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.design.widget.BottomSheetDialog;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
@@ -38,34 +36,58 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class PlayersFragment extends Fragment {
 
     private static final String TAG = "PlayersFragment";
+    private boolean DEBUG_LIFE_CYCLE = true;
+
+    private OnFragmentInteractionListener listener_;
 
     private View inProgressView_;
     private ListView playersListView_;
 
     private PlayersAdapter adapter_;
 
+    /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     * <p/>
+     * See the Android Training lesson <a href=
+     * "http://developer.android.com/training/basics/fragments/communicating.html"
+     * >Communicating with Other Fragments</a> for more information.
+     */
+    public interface OnFragmentInteractionListener {
+        void onPlayersFragment_CreateView(PlayersFragment fragment);
+        void onPlayersFragment_DestroyView(PlayersFragment fragment);
+        List<PlayerInfo> onRequestToRefreshPlayers();
+        void onPlayerClick(PlayerInfo playerInfo, String tableId);
+    }
+
     public PlayersFragment() {
-        Log.d(TAG, "[CONSTRUCTOR]");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "[CONSTRUCTOR]");
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        Log.d(TAG, "onAttach...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onAttach");
+        if (context instanceof OnFragmentInteractionListener) {
+            listener_ = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onCreateView...");
         final View view = inflater.inflate(R.layout.fragment_players_in_table, container, false);
 
         inProgressView_ = view.findViewById(R.id.inProgressLayout);
@@ -78,9 +100,18 @@ public class PlayersFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 PlayerInfo playerInfo = (PlayerInfo) playersListView_.getItemAtPosition(position);
-                Log.d(TAG, "Position:" + position + " pid: " + playerInfo.pid
+                Log.d(TAG, "onItemClick: View:" + view + ", Position:" + position + " pid: " + playerInfo.pid
                         + ", ListItem: " + playerInfo);
-                handlePlayerClickEvent(playerInfo);
+
+                // Note: I don't know of a better way to get table ID.
+                String tableId = null;
+                ViewHolder holder = (ViewHolder) view.getTag();
+                if (holder != null) {
+                    tableId = holder.tableIdView.getText().toString();
+                    Log.d(TAG, "onItemClick: tableId = [" + tableId + "]");
+                }
+
+                handlePlayerClickEvent(playerInfo, tableId);
             }
         });
 
@@ -88,62 +119,24 @@ public class PlayersFragment extends Fragment {
         inProgressView_.setVisibility(View.GONE);
         playersListView_.setVisibility(View.VISIBLE);
 
-        ((MainActivity) getActivity()).registerPlayersFragment(this);
+        listener_.onPlayersFragment_CreateView(this);
         return view;
     }
 
-    private void handlePlayerClickEvent(PlayerInfo playerInfo) {
-        HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
-        final MyBottomSheetDialog dialog = new MyBottomSheetDialog(getActivity(), playerInfo);
-        dialog.show();
-    }
-
-    private class MyBottomSheetDialog extends BottomSheetDialog {
-        public MyBottomSheetDialog(final Activity activity, PlayerInfo playerInfo) {
-            super(activity);
-
-            final String playerId = playerInfo.pid;
-            View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_player, null);
-            setContentView(sheetView);
-
-            TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
-            View sendMessageView = sheetView.findViewById(R.id.sheet_send_private_message);
-            View inviteView = sheetView.findViewById(R.id.sheet_invite_to_play);
-
-            playerInfoView.setText(
-                    getString(R.string.msg_player_info, playerId, playerInfo.rating));
-
-            sendMessageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (activity instanceof MainActivity) {
-                        ((MainActivity)activity).showBriefMessage("Not yet implement Send Personal Message",
-                                Snackbar.LENGTH_SHORT);
-                    }
-                    dismiss(); // this the dialog.
-                }
-            });
-
-            inviteView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
-                    dismiss(); // this the dialog.
-                }
-            });
-        }
+    private void handlePlayerClickEvent(PlayerInfo playerInfo, String tableId) {
+        listener_.onPlayerClick(playerInfo, tableId);
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        Log.d(TAG, "onActivityCreated...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onActivityCreated...");
     }
 
     @Override
     public void onResume () {
         super.onResume();
-        Log.d(TAG, "onResume...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onResume...");
 
         if (!refreshPlayersIfNeeded()) {
             //PlayerManager.getInstance().addListener(this);
@@ -160,14 +153,14 @@ public class PlayersFragment extends Fragment {
     @Override
     public void onPause () {
         super.onPause();
-        Log.d(TAG, "onPause...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onPause...");
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        Log.d(TAG, "onDestroyView");
-        ((MainActivity) getActivity()).unregisterPlayersFragment(this);
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDestroyView");
+        listener_.onPlayersFragment_DestroyView(this);
     }
 
     public void clearAll() {
@@ -187,20 +180,22 @@ public class PlayersFragment extends Fragment {
             inProgressView_.setVisibility(View.GONE);
             playersListView_.setVisibility(View.VISIBLE);
         }
-        adapter_.refreshPlayers();
+
+        List<PlayerInfo> players = listener_.onRequestToRefreshPlayers();
+        adapter_.refreshPlayers(players);
         return true;
     }
 
     @Override
     public void onDestroy () {
         super.onDestroy();
-        Log.d(TAG, "onDestroy...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDestroy...");
     }
 
     @Override
     public void onDetach () {
         super.onDetach();
-        Log.d(TAG, "onDetach...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDetach...");
     }
 
     /**
@@ -216,26 +211,9 @@ public class PlayersFragment extends Fragment {
             resourceId_ = textViewResourceId;
         }
 
-        public void refreshPlayers() {
+        public void refreshPlayers(List<PlayerInfo> newPlayers) {
             players_.clear();
-
-            TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-
-            PlayerInfo redPlayer = playerTracker.getRedPlayer();
-            if (redPlayer.isValid()) {
-                players_.add(redPlayer);
-            }
-
-            PlayerInfo blackPlayer = playerTracker.getBlackPlayer();
-            if (blackPlayer.isValid()) {
-                players_.add(blackPlayer);
-            }
-
-            Map<String, PlayerInfo> observers = playerTracker.getObservers();
-            for (HashMap.Entry<String, PlayerInfo> entry : observers.entrySet()) {
-                players_.add(entry.getValue());
-            }
-
+            players_.addAll(newPlayers);
             notifyDataSetChanged();
         }
 
