@@ -231,9 +231,6 @@ public class MainActivity extends AppCompatActivity
             case R.id.action_view_tables:
                 onViewTablesClicked();
                 break;
-            //case R.id.action_view_players:
-            //    onViewPlayersClicked();
-            //    break;
             case R.id.action_settings:
                 openSettingsView();
                 break;
@@ -364,9 +361,6 @@ public class MainActivity extends AppCompatActivity
             case R.id.action_view_tables:
                 onViewTablesClicked();
                 return true;
-            //case R.id.action_view_players:
-            //    onViewPlayersClicked();
-            //    return true;
             case R.id.action_notifications:
                 openChatView();
                 return true;
@@ -430,31 +424,10 @@ public class MainActivity extends AppCompatActivity
         startActivityToListTables();
     }
 
-//    private void onViewPlayersClicked() {
-//        Log.d(TAG, "On ViewPlayers clicked...");
-//
-//        PlayerManager.getInstance().clearTables(); // will get a new list
-//
-//        if (HoxApp.getApp().isOnlineAndLoginOK()) {
-//            askNetworkControllerForTableList();
-//        } else {
-//            isWaitingForTables = true; // Need tables info as well.
-//            HoxApp.getApp().loginServer();
-//        }
-//
-//        startActivityToListPlayers();
-//    }
-
     private void startActivityToListTables() {
         Log.d(TAG, "Start activity (TABLES): ENTER.");
         Intent intent = new Intent(this, TablesActivity.class);
         startActivityForResult(intent, JOIN_TABLE_REQUEST);
-    }
-
-    public void startActivityToListPlayers() {
-        Log.d(TAG, "Start activity (PLAYERS): ENTER.");
-        Intent intent = new Intent(this, PlayersActivity.class);
-        startActivity(intent);
     }
 
     public void updateBoardWithNewAIMove(MoveInfo move) {

@@ -25,14 +25,11 @@ import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -285,9 +282,6 @@ public class PlayersFragment extends Fragment {
                 holder.playerIdView = (TextView) convertView.findViewById(R.id.player_id);
                 holder.playerRatingView = (TextView) convertView.findViewById(R.id.player_rating);
                 holder.tableIdView = (TextView) convertView.findViewById(R.id.table_id);
-                holder.menuImageView = (ImageView) convertView.findViewById(R.id.player_action_menu);
-
-                holder.menuImageView.setOnClickListener(new ContextMenuOnClickListener(activity_));
 
                 convertView.setTag(holder);
             } else {
@@ -301,8 +295,6 @@ public class PlayersFragment extends Fragment {
             final String playerTable = PlayerManager.getInstance().findTableOfPlayer(playerInfo.pid);
             holder.tableIdView.setText(TextUtils.isEmpty(playerTable) ? "" : playerTable);
 
-            holder.menuImageView.setTag(holder);
-
             return convertView;
         }
 
@@ -315,63 +307,5 @@ public class PlayersFragment extends Fragment {
         public TextView playerIdView;
         public TextView playerRatingView;
         public TextView tableIdView;
-        public ImageView menuImageView;
-    }
-
-    private static class ContextMenuOnClickListener implements View.OnClickListener {
-
-        private final Activity activity_;
-
-        ContextMenuOnClickListener(Activity activity) {
-            activity_ = activity;
-        }
-
-        @Override
-        public void onClick(View view) {
-            ViewHolder holder = (ViewHolder) view.getTag();
-            final String playerId = holder.playerIdView.getText().toString();
-            final String tableId = holder.tableIdView.getText().toString();
-            Log.d(TAG, "(OnClickListener): playerId:" + playerId + ", tableId:" + tableId);
-
-            PopupMenu popup = new PopupMenu(view.getContext(), view);
-            popup.getMenuInflater().inflate(R.menu.players_activity_actions, popup.getMenu());
-
-            popup.getMenu().removeItem(R.id.action_join_table);
-            if (!TextUtils.isEmpty(tableId)) {
-                popup.getMenu().removeItem(R.id.action_invite_to_play);
-            }
-
-            if (popup.getMenu().size() == 0) {
-                Log.i(TAG, "(OnClickListener): No need to show popup menu!");
-                return;
-            }
-
-            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                public boolean onMenuItemClick(MenuItem item) {
-                    switch (item.getItemId()) {
-                        case R.id.action_join_table:
-                            HoxApp.getApp().getNetworkController().handleTableSelection(tableId);
-                            break;
-                        case R.id.action_invite_to_play:
-                            HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
-                            break;
-                        case R.id.action_get_player_info:
-                            HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerId);
-                            break;
-                        default:
-                            return true;
-                    }
-
-                    //Intent result = new Intent();
-                    //result.putExtra("pid", playerId); // NOTE: Not used currently!
-                    //activity_.setResult(Activity.RESULT_OK, result);
-                    //activity_.finish();
-                    return true;
-                }
-            });
-
-            popup.show();
-
-        }
     }
 }
