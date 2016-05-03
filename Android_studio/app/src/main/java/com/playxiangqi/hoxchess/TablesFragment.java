@@ -18,7 +18,7 @@
  */
 package com.playxiangqi.hoxchess;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
@@ -146,7 +146,7 @@ public class TablesFragment extends Fragment {
     private static class TablesAdapter extends BaseAdapter {
         private final Activity activity_;
         private final int resourceId_;
-        private final HashMap<Integer, TableInfo> mIdMap_ = new HashMap<Integer, TableInfo>();
+        private final List<TableInfo> tables_ = new ArrayList<TableInfo>();
 
         public TablesAdapter(Activity context, int textViewResourceId) {
             activity_ = context;
@@ -154,22 +154,20 @@ public class TablesFragment extends Fragment {
         }
 
         public void refreshTables() {
-            mIdMap_.clear();
-            final List<TableInfo> tables = PlayerManager.getInstance().getTables();
-            for (int i = 0; i < tables.size(); ++i) {
-                mIdMap_.put(Integer.valueOf(i), tables.get(i));
-            }
+            tables_.clear();
+            final List<TableInfo> latestTables = PlayerManager.getInstance().getTables();
+            tables_.addAll(latestTables);
             notifyDataSetChanged();
         }
 
         @Override
         public int getCount() {
-            return mIdMap_.size();
+            return tables_.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return mIdMap_.get(Integer.valueOf(position));
+            return tables_.get(position);
         }
 
         @Override
@@ -197,7 +195,7 @@ public class TablesFragment extends Fragment {
                 holder = (ViewHolder) convertView.getTag();
             }
 
-            final TableInfo tableInfo = (TableInfo) getItem(Integer.valueOf(position));
+            final TableInfo tableInfo = (TableInfo) getItem(position);
             holder.tableIdView.setText(tableInfo.tableId);
             holder.playersInfoView.setText(
                     String.format("%s vs. %s", tableInfo.getRedInfo(), tableInfo.getBlackInfo()));
