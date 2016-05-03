@@ -1,5 +1,5 @@
 /**
- *  Copyright 2015 Huy Phan <huyphan@playxiangqi.com>
+ *  Copyright 2016 Huy Phan <huyphan@playxiangqi.com>
  * 
  *  This file is part of HOXChess.
  * 
@@ -18,13 +18,13 @@
  */
 package com.playxiangqi.hoxchess;
 
-import android.app.Activity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.util.Log;
 import android.widget.TextView;
 
-public class AboutActivity extends Activity {
+public class AboutActivity extends AppCompatActivity {
     private static final String TAG = "AboutActivity";
     
     @Override

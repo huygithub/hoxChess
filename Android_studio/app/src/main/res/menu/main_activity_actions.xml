@@ -17,10 +17,10 @@
           android:title="@string/action_view_tables"
           app:showAsAction="always" />
 
-    <item android:id="@+id/action_view_players"
+    <!--<item android:id="@+id/action_view_players"
           android:icon="@drawable/ic_group_white"
           android:title="@string/action_view_players"
-          app:showAsAction="always" />
+          app:showAsAction="always" />-->
 
     <!--  Notification item -->
     <item android:id="@+id/action_notifications"

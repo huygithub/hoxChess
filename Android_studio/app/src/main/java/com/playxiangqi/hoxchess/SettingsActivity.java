@@ -19,8 +19,8 @@
 package com.playxiangqi.hoxchess;
 
 import android.preference.CheckBoxPreference;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -31,7 +31,7 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-public class SettingsActivity extends Activity {
+public class SettingsActivity extends AppCompatActivity {
 
     private static final String TAG = "SettingsActivity";
     
