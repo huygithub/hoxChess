@@ -301,24 +301,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
         Log.i(TAG, "Set my table Id: " + myTable_.tableId + ", myColor: " + myColor_);
 
-        timeTracker_.stop();
-        timeTracker_.setInitialColor(ColorEnum.COLOR_RED);
-        timeTracker_.setInitialTime( new TimeInfo(myTable_.itimes) );
-        timeTracker_.setBlackTime( new TimeInfo(myTable_.blackTimes) );
-        timeTracker_.setRedTime( new TimeInfo(myTable_.redTimes) );
-        timeTracker_.syncUI();
-
-        playerTracker_.setTableType(TableType.TABLE_TYPE_NETWORK);
-        playerTracker_.setBlackInfo(myTable_.blackId, myTable_.blackRating);
-        playerTracker_.setRedInfo(myTable_.redId, myTable_.redRating);
-        playerTracker_.setObservers(myTable_.observers);
-        playerTracker_.syncUI();
-
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.updateBoardWithNewTableInfo(myTable_);
-            mainActivity.setTableController(TableType.TABLE_TYPE_NETWORK);
-        }
+        BaseTableController.getCurrentController().onNetworkTableEnter(myTable_);
     }
 
     private void handleNetworkEvent_I_MOVES(String content) {
@@ -369,31 +352,18 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         // Check if I just left the Table.
-        MainActivity mainActivity = mainActivity_.get();
-        final String myPid = HoxApp.getApp().getMyPid();
-        if (pid.equals(myPid)) {
-            Log.i(TAG, "I just left my table: " + tableId);
+        if (pid.equals(HoxApp.getApp().getMyPid())) {
+            Log.d(TAG, "I just left my table: " + tableId);
             myTable_ = new TableInfo();
             myColor_ = ColorEnum.COLOR_UNKNOWN;
             gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
-            timeTracker_.stop();
-            //newMessages_.clear();
-            playerTracker_.clearAllPlayers();
-            playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
-            if (mainActivity != null) {
-                mainActivity.clearTable();
-                mainActivity.setTableController(TableType.TABLE_TYPE_EMPTY);
-            }
+
         // Other player left my table?
         } else {
             myTable_.onPlayerLeft(pid);
-            playerTracker_.onPlayerLeave(pid);
-            if (mainActivity != null) {
-                mainActivity.onPlayerLeave(pid);
-            }
         }
 
-        playerTracker_.syncUI();
+        BaseTableController.getCurrentController().onNetworkPlayerLeave(pid);
     }
 
     private void handleNetworkEvent_E_JOIN(String content) {
@@ -626,7 +596,12 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     public void logoutFromNetwork() {
         Log.d(TAG, "Logout from network...");
 
-        closeCurrentNetworkTable();
+        if (myTable_.isValid()) {
+            Log.d(TAG, "Clear existing data of the network table: " + myTable_.tableId);
+            myTable_ = new TableInfo();
+            myColor_ = ColorEnum.COLOR_UNKNOWN;
+            gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
+        }
 
         if (networkPlayer_.isOnline() ) {
             networkPlayer_.disconnectFromServer();
@@ -635,20 +610,16 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     }
 
     private void handleNetworkError() {
-        Log.d(TAG, "Handle network error...");
+        Log.i(TAG, "Handle network error...");
 
         // Attempt to login again if we are observing a network table.
         if (myTable_.isValid()) {
-            closeCurrentNetworkTable();
-            networkPlayer_.connectToServer();
-        } else if (isLoginOK_) {
-            // NOTE: Only show this error while being logged in! Otherwise, login-related errors,
-            //       such as "Wrong password" message, may be suppressed.
-            MainActivity mainActivity = mainActivity_.get();
-            if (mainActivity != null) {
-                mainActivity.showBriefMessage(R.string.msg_network_error_io_exception_exception, Snackbar.LENGTH_SHORT);
-            }
+            myTable_ = new TableInfo();
+            myColor_ = ColorEnum.COLOR_UNKNOWN;
+            gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
         }
+
+        BaseTableController.getCurrentController().onNetworkError();
     }
 
     public void handleRequestToSendMove(Position fromPos, Position toPos) {
@@ -827,29 +798,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
     public void connectToServer() {
         networkPlayer_.connectToServer();
-    }
-
-    public void closeCurrentNetworkTable() {
-        if (myTable_.isValid()) {
-            Log.d(TAG, "Close the current network table: " + myTable_.tableId);
-
-            myTable_ = new TableInfo();
-            myColor_ = ColorEnum.COLOR_UNKNOWN;
-            gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
-            timeTracker_.stop();
-            //newMessages_.clear();
-            MainActivity mainActivity = mainActivity_.get();
-            if (mainActivity != null) {
-                mainActivity.clearTable();
-            }
-        }
-
-        playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
-        playerTracker_.syncUI();
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.setTableController(TableType.TABLE_TYPE_EMPTY);
-        }
     }
 
     public boolean isGameOver() {

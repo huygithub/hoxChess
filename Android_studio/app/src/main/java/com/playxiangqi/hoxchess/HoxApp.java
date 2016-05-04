@@ -111,9 +111,6 @@ public class HoxApp extends Application {
     //---------------------------------------------------------
     public void registerMainActivity(MainActivity activity) {
         networkController_.setMainActivity(activity);
-        if (activity != null) {
-            activity.setTableController(playerTracker_.getTableType());
-        }
     }
 
     public String getMyPid() { return pid_; }
@@ -125,9 +122,6 @@ public class HoxApp extends Application {
     public boolean isOnline() { return networkController_.isOnline(); }
     public boolean isGameOver() { return networkController_.isGameOver(); }
     public GameStatus getGameStatus() { return networkController_.getGameStatus(); }
-    public boolean isMyNetworkTableValid() { return networkController_.isMyTableValid(); }
-    public String getMyNetworkTableId() { return networkController_.getMyTableId(); }
-    //public List<ChatMessage> getNewMessages() { return networkController_.getNewMessages(); }
 
     public boolean isGameInProgress() {
         return ( !isGameOver() &&

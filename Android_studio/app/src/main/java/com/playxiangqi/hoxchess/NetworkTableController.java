@@ -21,6 +21,7 @@ package com.playxiangqi.hoxchess;
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 
 import android.content.Context;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -32,75 +33,181 @@ import android.widget.PopupMenu;
 public class NetworkTableController extends BaseTableController {
 
     private static final String TAG = "NetworkTableController";
-    
+
+    private Enums.TableType myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
+
     public NetworkTableController() {
         Log.v(TAG, "[CONSTRUCTOR]: ...");
+    }
+
+    @Override
+    public void onNetworkLoginSuccess() {
+        Log.d(TAG, "onNetworkLoginSuccess: Set table-type to EMPTY...");
+        myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
+
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.setTableType(myTableType_);
+        playerTracker.syncUI();
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.setTableController(this);
+            mainActivity.clearTable();
+            mainActivity.onLoginSuccess();
+        }
+    }
+
+    @Override
+    public void onNetworkError() {
+        Log.d(TAG, "onNetworkError:...");
+        clearCurrentTableIfNeeded();
+
+        // Attempt to login again if we are observing a network table.
+        if (!isTableEmpty()) {
+            HoxApp.getApp().getNetworkController().connectToServer();
+
+        } else if (HoxApp.getApp().getNetworkController().isLoginOK()) {
+            // NOTE: Only show this error while being logged in! Otherwise, login-related errors,
+            //       such as "Wrong password" message, may be suppressed.
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.showBriefMessage(R.string.msg_network_error_io_exception_exception, Snackbar.LENGTH_SHORT);
+            }
+        }
+    }
+
+    @Override
+    public void onNetworkTableEnter(TableInfo tableInfo) {
+        Log.d(TAG, "onNetworkTableEnter: Set table-type to NETWORK...");
+        myTableType_ = Enums.TableType.TABLE_TYPE_NETWORK;
+
+        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
+        timeTracker.stop();
+        timeTracker.setInitialColor(ColorEnum.COLOR_RED);
+        timeTracker.setInitialTime( new TimeInfo(tableInfo.itimes) );
+        timeTracker.setBlackTime( new TimeInfo(tableInfo.blackTimes) );
+        timeTracker.setRedTime( new TimeInfo(tableInfo.redTimes) );
+        timeTracker.syncUI();
+
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.setTableType(myTableType_);
+        playerTracker.setBlackInfo(tableInfo.blackId, tableInfo.blackRating);
+        playerTracker.setRedInfo(tableInfo.redId, tableInfo.redRating);
+        playerTracker.setObservers(tableInfo.observers);
+        playerTracker.syncUI();
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.updateBoardWithNewTableInfo(tableInfo);
+        }
+    }
+
+    @Override
+    public void onNetworkPlayerLeave(String pid) {
+        Log.d(TAG, "onNetworkPlayerLeave: PlayerId = "  + pid);
+
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        MainActivity mainActivity = mainActivity_.get();
+
+        // Check if I just left the Table.
+        if (pid.equals(HoxApp.getApp().getMyPid())) {
+            Log.i(TAG, "I just left my table...");
+
+            Log.d(TAG, "onNetworkPlayerLeave: Set table-type to EMPTY...");
+            myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
+
+            HoxApp.getApp().getTimeTracker().stop();
+            playerTracker.clearAllPlayers();
+            playerTracker.setTableType(myTableType_);
+            if (mainActivity != null) {
+                mainActivity.clearTable();
+            }
+
+        } else { // Other player left my table?
+            playerTracker.onPlayerLeave(pid);
+            if (mainActivity != null) {
+                mainActivity.onPlayerLeave(pid);
+            }
+        }
+
+        playerTracker.syncUI();
     }
 
     @Override
     public void setTableTitle() {
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
-            NetworkController networkController = HoxApp.getApp().getNetworkController();
-            mainActivity.setAndShowTitle(networkController.getMyTableId());
+            mainActivity.setAndShowTitle(
+                    HoxApp.getApp().getNetworkController().getMyTableId());
         }
     }
 
     @Override
     public boolean handleBackPressed() {
+        if (isTableEmpty()) return false;
         handleRequestToCloseCurrentTable();
         return true;
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Context context, Menu menu) {
-        NetworkController networkController = HoxApp.getApp().getNetworkController();
+        if (isTableEmpty()) {
+            menu.findItem(R.id.action_new_table).setVisible(true);
+            menu.findItem(R.id.action_close_table).setVisible(false);
+        } else {
+            final ColorEnum myColor = HoxApp.getApp().getNetworkController().getMyColor();
+            final boolean isGameOver = HoxApp.getApp().isGameOver();
+            final int moveCount = HoxApp.getApp().getReferee().getMoveCount();
 
-        final ColorEnum myColor = networkController.getMyColor();
-        final boolean isGameOver = HoxApp.getApp().isGameOver();
-        final int moveCount = HoxApp.getApp().getReferee().getMoveCount();
+            menu.findItem(R.id.action_new_table).setVisible(false);
 
-        menu.findItem(R.id.action_new_table).setVisible(false);
-
-        if (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED) {
-            if (moveCount >= 2) { // The game has actually started?
-                menu.findItem(R.id.action_close_table).setVisible(isGameOver);
+            if (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED) {
+                if (moveCount >= 2) { // The game has actually started?
+                    menu.findItem(R.id.action_close_table).setVisible(isGameOver);
+                } else {
+                    menu.findItem(R.id.action_close_table).setVisible(true);
+                }
             } else {
                 menu.findItem(R.id.action_close_table).setVisible(true);
             }
-
-        } else {
-            menu.findItem(R.id.action_close_table).setVisible(true);
         }
+
         return true; // display the menu
     }
 
     @Override
     public void onClick_resetTable(final Context context, View view) {
-        NetworkController networkController = HoxApp.getApp().getNetworkController();
-
         PopupMenu popup = new PopupMenu(context, view);
         popup.getMenuInflater().inflate(R.menu.table_actions, popup.getMenu());
 
-        final boolean isGameOver = HoxApp.getApp().isGameOver();
-        final ColorEnum myColor = networkController.getMyColor();
-        final boolean amIPlaying = (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED);
-        final int moveCount = HoxApp.getApp().getReferee().getMoveCount();
+        if (isTableEmpty()) {
+            popup.getMenu().removeItem(R.id.action_offer_draw);
+            popup.getMenu().removeItem(R.id.action_offer_resign);
+            popup.getMenu().removeItem(R.id.action_reset_table);
+            popup.getMenu().removeItem(R.id.action_close_table);
+            popup.getMenu().findItem(R.id.action_new_table).setVisible(true);
 
-        if (isGameOver) {
-            popup.getMenu().removeItem(R.id.action_offer_draw);
-            popup.getMenu().removeItem(R.id.action_offer_resign);
-            popup.getMenu().removeItem(R.id.action_close_table);
-        } else if (!amIPlaying) {
-            popup.getMenu().removeItem(R.id.action_offer_draw);
-            popup.getMenu().removeItem(R.id.action_offer_resign);
-            popup.getMenu().removeItem(R.id.action_reset_table);
-        }  else if (moveCount >= 2) { // game has started?
-            popup.getMenu().removeItem(R.id.action_reset_table);
-            popup.getMenu().removeItem(R.id.action_close_table);
         } else {
-            popup.getMenu().removeItem(R.id.action_offer_draw);
-            popup.getMenu().removeItem(R.id.action_offer_resign);
+            final boolean isGameOver = HoxApp.getApp().isGameOver();
+            final ColorEnum myColor = HoxApp.getApp().getNetworkController().getMyColor();
+            final boolean amIPlaying = (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED);
+            final int moveCount = HoxApp.getApp().getReferee().getMoveCount();
+
+            if (isGameOver) {
+                popup.getMenu().removeItem(R.id.action_offer_draw);
+                popup.getMenu().removeItem(R.id.action_offer_resign);
+                popup.getMenu().removeItem(R.id.action_close_table);
+            } else if (!amIPlaying) {
+                popup.getMenu().removeItem(R.id.action_offer_draw);
+                popup.getMenu().removeItem(R.id.action_offer_resign);
+                popup.getMenu().removeItem(R.id.action_reset_table);
+            } else if (moveCount >= 2) { // game has started?
+                popup.getMenu().removeItem(R.id.action_reset_table);
+                popup.getMenu().removeItem(R.id.action_close_table);
+            } else {
+                popup.getMenu().removeItem(R.id.action_offer_draw);
+                popup.getMenu().removeItem(R.id.action_offer_resign);
+            }
         }
 
         if (popup.getMenu().size() == 0) {
@@ -110,6 +217,30 @@ public class NetworkTableController extends BaseTableController {
 
         super.setupListenerForResetButton(context, popup);
         popup.show();
+    }
+
+    @Override
+    public void handleRequestToOpenNewTable() {
+        Log.d(TAG, "Request to open a new table...");
+
+        NetworkController networkController = HoxApp.getApp().getNetworkController();
+
+        // Case 1: I am not online at all.
+        if (!networkController.isOnline() && !networkController.isMyTableValid()) {
+            BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_LOCAL);
+
+            // FIXME: Transfer the UI control to the new controller.
+            BaseTableController.getCurrentController().setMainActivity(mainActivity_.get());
+
+            BaseTableController.getCurrentController().handleRequestToOpenNewTable();
+        }
+        // Case 2: I am online and am not playing in any table.
+        else if (networkController.isOnline()) {
+            networkController.handleMyRequestToOpenNewTable();
+        }
+        else {
+            Log.w(TAG, "Either offline or not playing. Ignore this 'open new table request'.");
+        }
     }
 
     @Override
@@ -145,8 +276,9 @@ public class NetworkTableController extends BaseTableController {
 
     @Override
     public void handleLogoutFromNetwork() {
-        NetworkController networkController = HoxApp.getApp().getNetworkController();
-        networkController.logoutFromNetwork();
+        Log.d(TAG, "handleLogoutFromNetwork: ...");
+        clearCurrentTableIfNeeded();
+        HoxApp.getApp().getNetworkController().logoutFromNetwork();
     }
 
     @Override
@@ -233,6 +365,34 @@ public class NetworkTableController extends BaseTableController {
     protected void handleRequestToOfferResign() {
         NetworkController networkController = HoxApp.getApp().getNetworkController();
         networkController.handleRequestToOfferResign();
+    }
+
+    // ***************************************************************************
+    //
+    //         Private APIs
+    //
+    // ***************************************************************************
+
+    private boolean isTableEmpty() {
+        return (myTableType_ == Enums.TableType.TABLE_TYPE_EMPTY);
+    }
+
+    private void clearCurrentTableIfNeeded() {
+        if (!isTableEmpty()) { // Are we in a network table?
+            Log.d(TAG, "Clear the current table...");
+            HoxApp.getApp().getTimeTracker().stop();
+            MainActivity mainActivity = mainActivity_.get();
+            if (mainActivity != null) {
+                mainActivity.clearTable();
+            }
+        }
+
+        Log.d(TAG, "clearCurrentTableIfNeeded: Set table-type to EMPTY...");
+        myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
+
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.setTableType(myTableType_);
+        playerTracker.syncUI();
     }
 
 }

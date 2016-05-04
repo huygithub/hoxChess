@@ -36,11 +36,11 @@ import android.widget.Toast;
 public class BaseTableController implements BoardView.BoardEventListener {
 
     private static final String TAG = "BaseTableController";
+    private boolean DEBUG_LIFE_CYCLE = false;
 
     // Shared table controllers.
     private static LocalTableController localTableController_;
     private static NetworkTableController networkTableController_;
-    private static EmptyTableController emptyTableController_;
 
     private static BaseTableController currentController_;
 
@@ -50,7 +50,7 @@ public class BaseTableController implements BoardView.BoardEventListener {
      * Constructor
      */
     public BaseTableController() {
-        Log.v(TAG, "[CONSTRUCTOR]: ...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "[CONSTRUCTOR]: ...");
     }
 
     // ***************************************************************
@@ -63,6 +63,15 @@ public class BaseTableController implements BoardView.BoardEventListener {
     }
 
     public void onNetworkLoginSuccess() {
+    }
+
+    public void onNetworkError() {
+    }
+
+    public void onNetworkTableEnter(TableInfo tableInfo) {
+    }
+
+    public void onNetworkPlayerLeave(String pid) {
     }
 
     public void setTableTitle() {
@@ -117,8 +126,17 @@ public class BaseTableController implements BoardView.BoardEventListener {
     //
     // ***************************************************************
 
-    public void setMainActivity(MainActivity activity) {
+    public void onMainActivityCreate(MainActivity activity) {
+        Log.d(TAG, "onMainActivityCreate:...");
         mainActivity_ = new WeakReference<MainActivity>(activity);
+        activity.setTableController(this);
+    }
+
+    public void onMainActivityDestroy(MainActivity activity) {
+        Log.d(TAG, "onMainActivityDestroy:...");
+        if (mainActivity_.get() == activity) {
+            mainActivity_ = new WeakReference<MainActivity>(null);
+        }
     }
 
     // ***************************************************************
@@ -126,6 +144,10 @@ public class BaseTableController implements BoardView.BoardEventListener {
     //              Other protected APIs
     //
     // ***************************************************************
+
+    protected void setMainActivity(MainActivity activity) {
+        mainActivity_ = new WeakReference<MainActivity>(activity);
+    }
 
     protected void setupListenerForResetButton(final Context context, PopupMenu popup) {
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -182,16 +204,11 @@ public class BaseTableController implements BoardView.BoardEventListener {
     /**
      * The factory method for table controllers.
      */
-    public static BaseTableController getTableController(TableType tableType) {
+    private static BaseTableController getTableController(TableType tableType) {
         BaseTableController controller;
         switch (tableType) {
-            case TABLE_TYPE_LOCAL:
-                if (localTableController_ == null) {
-                    localTableController_ = new LocalTableController();
-                }
-                controller = localTableController_;
-                break;
-
+            case TABLE_TYPE_EMPTY:
+                // falls through. Network controller will take care the empty table!
             case TABLE_TYPE_NETWORK:
                 if (networkTableController_ == null) {
                     networkTableController_ = new NetworkTableController();
@@ -199,22 +216,20 @@ public class BaseTableController implements BoardView.BoardEventListener {
                 controller = networkTableController_;
                 break;
 
-            case TABLE_TYPE_EMPTY: // falls through
+            case TABLE_TYPE_LOCAL: // falls through
             default:
-                if (emptyTableController_ == null) {
-                    emptyTableController_ = new EmptyTableController();
+                if (localTableController_ == null) {
+                    localTableController_ = new LocalTableController();
                 }
-                controller = emptyTableController_;
+                controller = localTableController_;
                 break;
         }
 
-        currentController_ = controller; // FIXME: Should move to setCurrentController()
         return controller;
     }
 
     public static void setCurrentController(TableType tableType) {
-        getTableController(tableType);
-        // FIXME: Should set currentController_ instead of relying on get...()
+        currentController_ = getTableController(tableType);
     }
 
     public static BaseTableController getCurrentController() {

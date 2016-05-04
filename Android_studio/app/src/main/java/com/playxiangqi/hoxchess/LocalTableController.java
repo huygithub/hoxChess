@@ -103,6 +103,7 @@ public class LocalTableController extends BaseTableController {
         timeTracker.setRedTime(initialTime);
 
         TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.setTableType(Enums.TableType.TABLE_TYPE_LOCAL); // A new practice table.
         playerTracker.setRedInfo(HoxApp.getApp().getString(R.string.you_label), "1501");
         playerTracker.setBlackInfo(HoxApp.getApp().getString(R.string.ai_label), "1502");
     }
@@ -155,6 +156,29 @@ public class LocalTableController extends BaseTableController {
 
         super.setupListenerForResetButton(context, popup);
         popup.show();
+    }
+
+    @Override
+    public void handleRequestToOpenNewTable() {
+        Log.d(TAG, "Request to open a new table...");
+
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.setTableType(Enums.TableType.TABLE_TYPE_LOCAL); // A new practice table.
+
+        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
+        timeTracker.stop();
+
+        setupNewTable();
+
+        timeTracker.syncUI();
+        playerTracker.syncUI();
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.setTableController(this);
+            mainActivity.openNewPracticeTable();
+            mainActivity.invalidateOptionsMenu(); // Recreate the options menu
+        }
     }
 
     @Override
