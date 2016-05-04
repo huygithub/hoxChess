@@ -123,6 +123,13 @@ public class TableTimeTracker {
         nextColor_ = (nextColor_ == ColorEnum.COLOR_RED
                 ? ColorEnum.COLOR_BLACK : ColorEnum.COLOR_RED);
         Log.d(TAG, "Change color: " + oldColor + " => " + nextColor_ + ".");
+
+        // Reset the move time.
+        if (nextColor_ == ColorEnum.COLOR_RED) {
+            redTime_.moveTime = initialTime_.moveTime;
+        } else if (nextColor_ == ColorEnum.COLOR_BLACK) {
+            blackTime_.moveTime = initialTime_.moveTime;
+        }
     }
     
     public void start() {

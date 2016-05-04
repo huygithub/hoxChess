@@ -98,6 +98,7 @@ public class LocalTableController extends BaseTableController {
 
         TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
         final TimeInfo initialTime = new TimeInfo(Enums.DEFAULT_INITIAL_GAME_TIMES);
+        timeTracker.setInitialColor(ColorEnum.COLOR_RED);
         timeTracker.setInitialTime(initialTime);
         timeTracker.setBlackTime(initialTime);
         timeTracker.setRedTime(initialTime);
