@@ -360,6 +360,10 @@ public class NetworkTableController extends BaseTableController {
         if (mainActivity != null) {
             mainActivity.updateBoardWithNewMove(move);
         }
+
+        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
+        timeTracker.nextColor();
+        timeTracker.start();
     }
 
     @Override
@@ -379,6 +383,10 @@ public class NetworkTableController extends BaseTableController {
         if (mainActivity != null) {
             mainActivity.resetBoardWithNewMoves(moves);
         }
+
+        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
+        timeTracker.setInitialColor(HoxApp.getApp().getReferee().getNextColor());
+        timeTracker.start();
     }
 
     @Override

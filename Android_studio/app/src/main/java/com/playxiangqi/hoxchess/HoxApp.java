@@ -55,7 +55,7 @@ public class HoxApp extends Application {
 
         aiEngine_.setAILevel(SettingsActivity.getAILevel(this));
 
-        networkController_ = new NetworkController(timeTracker_, referee_);
+        networkController_ = new NetworkController(referee_);
     }
 
     public static HoxApp getApp() {

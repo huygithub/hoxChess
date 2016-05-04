@@ -50,8 +50,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     
     private GameStatus gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
     
-    private final TableTimeTracker timeTracker_;
-    
     //private List<ChatMessage> newMessages_ = new ArrayList<ChatMessage>();
 
     // *************************************************************************************
@@ -73,10 +71,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     /**
      * Constructor
      */
-    public NetworkController(TableTimeTracker timeTracker,
-                             Referee referee) {
+    public NetworkController(Referee referee) {
         Log.d(TAG, "[CONSTRUCTOR]: ...");
-        timeTracker_ = timeTracker;
         referee_ = referee;
 
         networkPlayer_.setNetworkEventListener(this);
@@ -302,9 +298,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
         final MoveInfo[] moves = MoveInfo.parseForListOfNetworkMoves(movesStr);
         BaseTableController.getCurrentController().onResetBoardWithMoves(moves);
-
-        timeTracker_.setInitialColor(referee_.getNextColor());
-        timeTracker_.start();
     }
 
     private void handleNetworkEvent_MOVE(String content) {
@@ -317,9 +310,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             Log.w(TAG, "Ignore a MOVE from table: " + tableId);
             return;
         }
-
-        timeTracker_.nextColor();
-        timeTracker_.start();
 
         final MoveInfo moveInfo = MoveInfo.parseForNetworkMove(move);
         BaseTableController.getCurrentController().onNetworkMove(moveInfo);
