@@ -228,10 +228,6 @@ public class NetworkTableController extends BaseTableController {
         // Case 1: I am not online at all.
         if (!networkController.isOnline() && !networkController.isMyTableValid()) {
             BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_LOCAL);
-
-            // FIXME: Transfer the UI control to the new controller.
-            BaseTableController.getCurrentController().setMainActivity(mainActivity_.get());
-
             BaseTableController.getCurrentController().handleRequestToOpenNewTable();
         }
         // Case 2: I am online and am not playing in any table.

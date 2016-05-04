@@ -113,10 +113,6 @@ public class LocalTableController extends BaseTableController {
         Log.d(TAG, "onNetworkLoginSuccess:...");
 
         BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_EMPTY);
-
-        // FIXME: Transfer the UI control to the new controller.
-        BaseTableController.getCurrentController().setMainActivity(mainActivity_.get());
-
         BaseTableController.getCurrentController().onNetworkLoginSuccess();
     }
 

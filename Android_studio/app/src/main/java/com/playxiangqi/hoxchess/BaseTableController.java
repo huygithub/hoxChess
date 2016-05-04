@@ -149,6 +149,14 @@ public class BaseTableController implements BoardView.BoardEventListener {
         mainActivity_ = new WeakReference<MainActivity>(activity);
     }
 
+    /* default */ MainActivity getMainActivity() {
+        return mainActivity_.get();
+    }
+
+    /* default */ void setMainActivityFromController(BaseTableController otherController) {
+        mainActivity_ = new WeakReference<MainActivity>(otherController.getMainActivity());
+    }
+
     protected void setupListenerForResetButton(final Context context, PopupMenu popup) {
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             public boolean onMenuItemClick(MenuItem item) {
@@ -229,7 +237,13 @@ public class BaseTableController implements BoardView.BoardEventListener {
     }
 
     public static void setCurrentController(TableType tableType) {
+        BaseTableController oldController = currentController_;
         currentController_ = getTableController(tableType);
+
+        // Transfer the UI control to the new controller.
+        if (oldController != null && oldController != currentController_) {
+            currentController_.setMainActivityFromController(oldController);
+        }
     }
 
     public static BaseTableController getCurrentController() {
