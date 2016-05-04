@@ -131,8 +131,6 @@ public class MainActivity extends AppCompatActivity
         setVolumeControlStream(SoundManager.getInstance().getStreamType());
 
         SoundManager.getInstance().initialize(this);
-
-        HoxApp.getApp().registerMainActivity(this);
         BaseTableController.getCurrentController().onMainActivityCreate(this);
     }
 
@@ -309,7 +307,6 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
-        HoxApp.getApp().registerMainActivity(null);
         BaseTableController.getCurrentController().onMainActivityDestroy(this);
     }
     

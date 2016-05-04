@@ -44,15 +44,13 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     private final NetworkPlayer networkPlayer_ = new NetworkPlayer();
     private boolean isLoginOK_ = false;
     // (Not yet supported) private String myRating_ = "0";
-    
-    private WeakReference<MainActivity> mainActivity_ = new WeakReference<MainActivity>(null);
+
     private TableInfo myTable_ = new TableInfo();
     private ColorEnum myColor_ = ColorEnum.COLOR_UNKNOWN;
     
     private GameStatus gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
     
     private final TableTimeTracker timeTracker_;
-    private final TablePlayerTracker playerTracker_;
     
     //private List<ChatMessage> newMessages_ = new ArrayList<ChatMessage>();
 
@@ -76,11 +74,9 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
      * Constructor
      */
     public NetworkController(TableTimeTracker timeTracker,
-                             TablePlayerTracker playerTracker,
                              Referee referee) {
         Log.d(TAG, "[CONSTRUCTOR]: ...");
         timeTracker_ = timeTracker;
-        playerTracker_ = playerTracker;
         referee_ = referee;
 
         networkPlayer_.setNetworkEventListener(this);
@@ -136,10 +132,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
                     break;
             }
         }
-    }
-
-    public void setMainActivity(MainActivity activity) {
-        mainActivity_ = new WeakReference<MainActivity>(activity);
     }
 
     public boolean isLoginOK() { return isLoginOK_; }
@@ -207,32 +199,28 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
     public void handleNetworkCode(int networkCode) {
         Log.d(TAG, "On Network code: " + networkCode);
-        MainActivity mainActivity = mainActivity_.get();
+
+        int resId = -1;  // Default = Invalid
         switch (networkCode) {
-            case NetworkPlayer.NETWORK_CODE_CONNECTED:
-                if (mainActivity != null) {
-                    mainActivity.showBriefMessage(R.string.msg_connection_established, Snackbar.LENGTH_SHORT);
-                }
-                break;
-
-            case NetworkPlayer.NETWORK_CODE_UNRESOLVED_ADDRESS:
-                if (mainActivity != null) {
-                    mainActivity.showBriefMessage(R.string.msg_connection_failed_unresolved_address_exception, Snackbar.LENGTH_SHORT);
-                }
-                break;
-
             case NetworkPlayer.NETWORK_CODE_IO_EXCEPTION:
-                handleNetworkError();
+                handleNetworkError(); // NOTE: Handle specially
                 break;
 
+            case NetworkPlayer.NETWORK_CODE_CONNECTED:
+                resId = R.string.msg_connection_established;
+                break;
+            case NetworkPlayer.NETWORK_CODE_UNRESOLVED_ADDRESS:
+                resId = R.string.msg_connection_failed_unresolved_address_exception;
+                break;
             case NetworkPlayer.NETWORK_CODE_DISCONNECTED:
-                if (mainActivity != null) {
-                    mainActivity.showBriefMessage(R.string.msg_connection_disconnected, Snackbar.LENGTH_SHORT);
-                }
+                resId = R.string.msg_connection_disconnected;
                 break;
-
             default:
                 break;
+        }
+
+        if (resId != -1) {
+            BaseTableController.getCurrentController().onNetworkCode(resId);
         }
     }
 
@@ -243,10 +231,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
         if (!isLoginOK_) {  // Error
             Log.w(TAG, "Login failed. Code: [" + code + "], Error: [" + content + "]");
-            MainActivity mainActivity = mainActivity_.get();
-            if (mainActivity != null) {
-                mainActivity.showBriefMessage(getLocalizedLoginError(code), Snackbar.LENGTH_LONG);
-            }
+            BaseTableController.getCurrentController().onNetworkLoginFailure(getLocalizedLoginError(code));
             networkPlayer_.disconnectFromServer();
             return;
         }
@@ -382,29 +367,23 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         final Enums.ColorEnum playerColor = Utils.stringToPlayerColor(color);
         myTable_.onPlayerJoined(pid, rating, playerColor);
 
-        final String myPid = HoxApp.getApp().getMyPid();
-        switch (playerColor) {
-            case COLOR_RED:
-                if (pid.equals(myPid)) myColor_ = ColorEnum.COLOR_RED;
-                break;
-            case COLOR_BLACK:
-                if (pid.equals(myPid)) myColor_ = ColorEnum.COLOR_BLACK;
-                break;
-            case COLOR_NONE:
-                if (pid.equals(myPid)) myColor_ = ColorEnum.COLOR_NONE;
-                break;
-            default:
-                break;
+        // Determine if my role has changed.
+        ColorEnum myNewColor = ColorEnum.COLOR_UNKNOWN;
+        if (pid.equals(HoxApp.getApp().getMyPid())) { // my new role?
+            switch (playerColor) {
+                case COLOR_RED: myNewColor = ColorEnum.COLOR_RED; break;
+                case COLOR_BLACK: myNewColor = ColorEnum.COLOR_BLACK; break;
+                case COLOR_NONE: myNewColor = ColorEnum.COLOR_NONE; break;
+                default: break;
+            }
         }
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.onLocalPlayerJoined(myColor_);
-            mainActivity.onPlayerJoin(pid, rating, playerColor);
+        if (myNewColor != ColorEnum.COLOR_UNKNOWN) { // my role has changed?
+            myColor_ = myNewColor;
         }
 
-        playerTracker_.onPlayerJoin(pid, rating, playerColor);
-        playerTracker_.syncUI();
+        BaseTableController.getCurrentController().onNetworkPlayerJoin(
+                new PlayerInfo(pid, rating), playerColor, myNewColor);
     }
 
     private void handleNetworkEvent_E_END(String content) {
@@ -429,12 +408,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
         gameStatus_ = gameStatus;
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.onGameEnded(gameStatus);
-        }
-        timeTracker_.stop();
-        playerTracker_.syncUI();
+        BaseTableController.getCurrentController().onGameEnded(gameStatus);
     }
 
     private void handleNetworkEvent_RESET(String content) {
@@ -448,13 +422,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
-
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.onGameReset();
-        }
-        timeTracker_.stop();
-        timeTracker_.reset();
+        BaseTableController.getCurrentController().onGameReset();
     }
 
     private void handleNetworkEvent_DRAW(String content) {
@@ -468,10 +436,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             return;
         }
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.showGameMessage_DRAW(pid);
-        }
+        BaseTableController.getCurrentController().onGameDrawnRequested(pid);
     }
 
     private void handleNetworkEvent_MSG(String content, String tableId) {
@@ -585,12 +550,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         final String draws = components[3];
         final String losses = components[4];
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.showBriefMessage(
-                    mainActivity.getString(R.string.msg_player_record, pid, rating, wins, draws, losses),
-                    Snackbar.LENGTH_LONG);
-        }
+        BaseTableController.getCurrentController().onPlayerInfoReceived(pid, rating, wins, draws, losses);
     }
 
     public void logoutFromNetwork() {

@@ -103,6 +103,27 @@ public class NetworkTableController extends BaseTableController {
     }
 
     @Override
+    public void onNetworkPlayerJoin(PlayerInfo playerInfo, Enums.ColorEnum playerColor,
+                                    Enums.ColorEnum myNewColor) {
+        Log.d(TAG, "onNetworkPlayerJoin: playerInfo = "  + playerInfo);
+        MainActivity mainActivity = mainActivity_.get();
+
+        if (myNewColor != ColorEnum.COLOR_UNKNOWN) { // my role has changed?
+            if (mainActivity != null) {
+                mainActivity.onLocalPlayerJoined(myNewColor);
+            }
+        }
+
+        if (mainActivity != null) {
+            mainActivity.onPlayerJoin(playerInfo.pid, playerInfo.rating, playerColor);
+        }
+
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.onPlayerJoin(playerInfo.pid, playerInfo.rating, playerColor);
+        playerTracker.syncUI();
+    }
+
+    @Override
     public void onNetworkPlayerLeave(String pid) {
         Log.d(TAG, "onNetworkPlayerLeave: PlayerId = "  + pid);
 
@@ -131,6 +152,48 @@ public class NetworkTableController extends BaseTableController {
         }
 
         playerTracker.syncUI();
+    }
+
+    @Override
+    public void onGameEnded(Enums.GameStatus gameStatus) {
+        Log.d(TAG, "onGameEnded: gameStatus = "  + gameStatus);
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.onGameEnded(gameStatus);
+        }
+        HoxApp.getApp().getTimeTracker().stop();
+        HoxApp.getApp().getPlayerTracker().syncUI();
+    }
+
+    @Override
+    public void onGameReset() {
+        Log.d(TAG, "onGameEnded:...");
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.onGameReset();
+        }
+        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
+        timeTracker.stop();
+        timeTracker.reset();
+    }
+
+    @Override
+    public void onGameDrawnRequested(String pid) {
+        Log.d(TAG, "onGameDrawnRequested: pid = " + pid);
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.showGameMessage_DRAW(pid);
+        }
+    }
+
+    @Override
+    public void onPlayerInfoReceived(String pid, String rating, String wins, String draws, String losses) {
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.showBriefMessage(
+                    mainActivity.getString(R.string.msg_player_record, pid, rating, wins, draws, losses),
+                    Snackbar.LENGTH_LONG);
+        }
     }
 
     @Override

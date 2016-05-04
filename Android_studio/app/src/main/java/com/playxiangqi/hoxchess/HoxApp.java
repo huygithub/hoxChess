@@ -55,9 +55,7 @@ public class HoxApp extends Application {
 
         aiEngine_.setAILevel(SettingsActivity.getAILevel(this));
 
-        networkController_ = new NetworkController(timeTracker_,
-                playerTracker_,
-                referee_);
+        networkController_ = new NetworkController(timeTracker_, referee_);
     }
 
     public static HoxApp getApp() {
@@ -106,11 +104,6 @@ public class HoxApp extends Application {
             password_ = "";
             Log.d(TAG, "Load existing account. Guest ID: [" + pid_ + "]");
         }
-    }
-    
-    //---------------------------------------------------------
-    public void registerMainActivity(MainActivity activity) {
-        networkController_.setMainActivity(activity);
     }
 
     public String getMyPid() { return pid_; }

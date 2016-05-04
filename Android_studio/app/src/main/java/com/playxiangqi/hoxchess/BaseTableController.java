@@ -23,6 +23,7 @@ import java.lang.ref.WeakReference;
 import com.playxiangqi.hoxchess.Enums.TableType;
 
 import android.content.Context;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -65,13 +66,44 @@ public class BaseTableController implements BoardView.BoardEventListener {
     public void onNetworkLoginSuccess() {
     }
 
+    public void onNetworkLoginFailure(int errorMessageResId) {
+        Log.d(TAG, "onNetworkLoginFailure:...");
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.showBriefMessage(errorMessageResId, Snackbar.LENGTH_LONG);
+        }
+    }
+
+    public void onNetworkCode(int errorMessageResId) {
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.showBriefMessage(errorMessageResId, Snackbar.LENGTH_SHORT);
+        }
+    }
+
     public void onNetworkError() {
     }
 
     public void onNetworkTableEnter(TableInfo tableInfo) {
     }
 
+    public void onNetworkPlayerJoin(PlayerInfo playerInfo, Enums.ColorEnum playerColor,
+                                    Enums.ColorEnum myNewColor) {
+    }
+
     public void onNetworkPlayerLeave(String pid) {
+    }
+
+    public void onGameEnded(Enums.GameStatus gameStatus) {
+    }
+
+    public void onGameReset() {
+    }
+
+    public void onGameDrawnRequested(String pid) {
+    }
+
+    public void onPlayerInfoReceived(String pid, String rating, String wins, String draws, String losses) {
     }
 
     public void setTableTitle() {
