@@ -195,7 +195,7 @@ public class BoardFragment extends Fragment {
     public void onResume () {
         super.onResume();
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onResume");
-        HoxApp.getApp().getPlayerTracker().syncUI(); // AI Level is one hthat needs to be updated.
+        HoxApp.getApp().getPlayerTracker().syncUI(); // AI Level is one that needs to be updated.
     }
 
     @Override

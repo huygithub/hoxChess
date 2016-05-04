@@ -256,27 +256,19 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         final String rating = components[1];
         Log.d(TAG, ">>> [" + pid + " " + rating + "] LOGIN.");
 
+        PlayerManager.getInstance().addPlayer(new PlayerInfo(pid, rating));
+
         final String myPid = HoxApp.getApp().getMyPid();
         if (myPid.equals(pid)) { // my LOGIN?
             Log.i(TAG, "Received my LOGIN info [" + pid + " " + rating + "].");
             //myRating_ = rating;
 
             myColor_ = ColorEnum.COLOR_UNKNOWN;
-            playerTracker_.setTableType(TableType.TABLE_TYPE_EMPTY);
-            playerTracker_.syncUI();
+            BaseTableController.getCurrentController().onNetworkLoginSuccess();
 
-            MainActivity mainActivity = mainActivity_.get();
-            if (mainActivity != null) {
-                mainActivity.clearTable();
-                mainActivity.setTableController(TableType.TABLE_TYPE_EMPTY);
-
-                mainActivity.onLoginSuccess();
-            }
         } else { // Other player 's LOGIN?
             Log.d(TAG, "Received other player LOGIN info [" + pid + " " + rating + "].");
         }
-
-        PlayerManager.getInstance().addPlayer(new PlayerInfo(pid, rating));
     }
 
     private void handleNetworkEvent_LIST(String content) {
@@ -395,12 +387,12 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         // Other player left my table?
         } else {
             myTable_.onPlayerLeft(pid);
+            playerTracker_.onPlayerLeave(pid);
             if (mainActivity != null) {
                 mainActivity.onPlayerLeave(pid);
             }
         }
 
-        playerTracker_.onPlayerLeave(pid);
         playerTracker_.syncUI();
     }
 

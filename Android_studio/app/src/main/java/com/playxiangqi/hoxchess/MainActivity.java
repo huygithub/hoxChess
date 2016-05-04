@@ -90,6 +90,19 @@ public class MainActivity extends AppCompatActivity
 
     private BaseTableController tableController_ = new BaseTableController();
 
+    /** FIXME: This API will replace the old one setTableController() later!!! */
+    public void setTableController_NEW(BaseTableController controller) {
+        Log.d(TAG, "setTableController_NEW: controller = " + controller);
+        tableController_ = controller;
+        //tableController_.setMainActivity(this);
+
+        // Note: Set the listener again even though we already do in onBoardViewCreated !!!
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.setBoardEventListener(tableController_);
+        }
+    }
+
     public void setTableController(TableType tableType) {
         tableController_ = BaseTableController.getTableController(tableType);
         tableController_.setMainActivity(this);

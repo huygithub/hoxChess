@@ -101,6 +101,22 @@ public class LocalTableController extends BaseTableController {
         timeTracker.setInitialTime(initialTime);
         timeTracker.setBlackTime(initialTime);
         timeTracker.setRedTime(initialTime);
+
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.setRedInfo(HoxApp.getApp().getString(R.string.you_label), "1501");
+        playerTracker.setBlackInfo(HoxApp.getApp().getString(R.string.ai_label), "1502");
+    }
+
+    @Override
+    public void onNetworkLoginSuccess() {
+        Log.d(TAG, "onNetworkLoginSuccess:...");
+
+        BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_EMPTY);
+
+        // FIXME: Transfer the UI control to the new controller.
+        BaseTableController.getCurrentController().setMainActivity(mainActivity_.get());
+
+        BaseTableController.getCurrentController().onNetworkLoginSuccess();
     }
 
     @Override

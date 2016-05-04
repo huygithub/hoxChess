@@ -138,13 +138,6 @@ public class PlayersFragment extends Fragment {
         if (!refreshPlayersIfNeeded()) {
             //PlayerManager.getInstance().addListener(this);
         }
-
-        // FIXME: Hack
-        if (adapter_.getCount() == 0) {
-            if (HoxApp.getApp().getPlayerTracker().getTableType() != Enums.TableType.TABLE_TYPE_NETWORK) {
-                adapter_.addPlayer("AI", "1501");
-            }
-        }
     }
 
     @Override

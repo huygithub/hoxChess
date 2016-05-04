@@ -62,6 +62,9 @@ public class BaseTableController implements BoardView.BoardEventListener {
     public void setupNewTable() {
     }
 
+    public void onNetworkLoginSuccess() {
+    }
+
     public void setTableTitle() {
     }
 

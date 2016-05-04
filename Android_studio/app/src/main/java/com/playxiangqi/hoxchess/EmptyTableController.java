@@ -38,6 +38,24 @@ public class EmptyTableController extends BaseTableController {
     }
 
     @Override
+    public void onNetworkLoginSuccess() {
+        Log.d(TAG, "onNetworkLoginSuccess:...");
+        //myRating_ = rating;
+
+        //myColor_ = ColorEnum.COLOR_UNKNOWN;
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.setTableType(Enums.TableType.TABLE_TYPE_EMPTY);
+        playerTracker.syncUI();
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            mainActivity.setTableController_NEW(this); // TODO: Rename later
+            mainActivity.clearTable();
+            mainActivity.onLoginSuccess();
+        }
+    }
+
+    @Override
     public void setTableTitle() {
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
