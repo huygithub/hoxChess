@@ -20,12 +20,15 @@ package com.playxiangqi.hoxchess;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 
+import android.app.Activity;
 import android.content.Context;
+import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.PopupMenu;
+import android.widget.TextView;
 
 /**
  * The controller that manages a network table.
@@ -47,6 +50,7 @@ public class NetworkTableController extends BaseTableController {
 
         TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
         playerTracker.setTableType(myTableType_);
+        playerTracker.clearAllPlayers();
         playerTracker.syncUI();
 
         MainActivity mainActivity = mainActivity_.get();
@@ -138,8 +142,8 @@ public class NetworkTableController extends BaseTableController {
             myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
 
             HoxApp.getApp().getTimeTracker().stop();
-            playerTracker.clearAllPlayers();
             playerTracker.setTableType(myTableType_);
+            playerTracker.clearAllPlayers();
             if (mainActivity != null) {
                 mainActivity.clearTable();
             }
@@ -280,6 +284,17 @@ public class NetworkTableController extends BaseTableController {
 
         super.setupListenerForResetButton(context, popup);
         popup.show();
+    }
+
+    @Override
+    public void handlePlayerOnClickInTable(PlayerInfo playerInfo, String tableId) {
+        HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
+
+        MainActivity mainActivity = mainActivity_.get();
+        if (mainActivity != null) {
+            PlayersInTableSheetDialog dialog = new PlayersInTableSheetDialog(mainActivity, playerInfo);
+            dialog.show();
+        }
     }
 
     @Override
@@ -459,7 +474,47 @@ public class NetworkTableController extends BaseTableController {
 
         TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
         playerTracker.setTableType(myTableType_);
+        playerTracker.clearAllPlayers();
         playerTracker.syncUI();
+    }
+
+    private static class PlayersInTableSheetDialog extends BottomSheetDialog {
+        public PlayersInTableSheetDialog(final Activity activity, PlayerInfo playerInfo) {
+            super(activity);
+
+            final String playerId = playerInfo.pid;
+            View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_player, null);
+            setContentView(sheetView);
+
+            TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
+            View sendMessageView = sheetView.findViewById(R.id.sheet_send_private_message);
+            View inviteView = sheetView.findViewById(R.id.sheet_invite_to_play);
+            View joinView = sheetView.findViewById(R.id.sheet_join_table_of_player);
+
+            playerInfoView.setText(
+                    activity.getString(R.string.msg_player_info, playerId, playerInfo.rating));
+
+            sendMessageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (activity instanceof MainActivity) {
+                        ((MainActivity)activity).showBriefMessage("Not yet implement Send Personal Message",
+                                Snackbar.LENGTH_SHORT);
+                    }
+                    dismiss(); // this the dialog.
+                }
+            });
+
+            inviteView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
+                    dismiss(); // this the dialog.
+                }
+            });
+
+            joinView.setVisibility(View.GONE);
+        }
     }
 
 }

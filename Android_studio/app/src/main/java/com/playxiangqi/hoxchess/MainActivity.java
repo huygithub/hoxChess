@@ -25,16 +25,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
-import com.playxiangqi.hoxchess.Enums.TableType;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -682,48 +679,7 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void onPlayerClick(PlayerInfo playerInfo, String tableId) {
-        HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
-        final PlayersInTableSheetDialog dialog = new PlayersInTableSheetDialog(this, playerInfo);
-        dialog.show();
-    }
-
-    private static class PlayersInTableSheetDialog extends BottomSheetDialog {
-        public PlayersInTableSheetDialog(final Activity activity, PlayerInfo playerInfo) {
-            super(activity);
-
-            final String playerId = playerInfo.pid;
-            View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_player, null);
-            setContentView(sheetView);
-
-            TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
-            View sendMessageView = sheetView.findViewById(R.id.sheet_send_private_message);
-            View inviteView = sheetView.findViewById(R.id.sheet_invite_to_play);
-            View joinView = sheetView.findViewById(R.id.sheet_join_table_of_player);
-
-            playerInfoView.setText(
-                    activity.getString(R.string.msg_player_info, playerId, playerInfo.rating));
-
-            sendMessageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (activity instanceof MainActivity) {
-                        ((MainActivity)activity).showBriefMessage("Not yet implement Send Personal Message",
-                                Snackbar.LENGTH_SHORT);
-                    }
-                    dismiss(); // this the dialog.
-                }
-            });
-
-            inviteView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
-                    dismiss(); // this the dialog.
-                }
-            });
-
-            joinView.setVisibility(View.GONE);
-        }
+        tableController_.handlePlayerOnClickInTable(playerInfo, tableId);
     }
 
     // ******

@@ -120,6 +120,9 @@ public class BaseTableController implements BoardView.BoardEventListener {
     public void onClick_resetTable(final Context context, View view) {
     }
 
+    public void handlePlayerOnClickInTable(PlayerInfo playerInfo, String tableId) {
+    }
+
     public void handleRequestToOpenNewTable() {
     }
 
