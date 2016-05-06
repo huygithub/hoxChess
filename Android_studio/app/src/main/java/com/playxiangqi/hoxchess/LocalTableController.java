@@ -27,7 +27,6 @@ import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.widget.PopupMenu;
 
 /**
  * The controller that manages a local table.
@@ -139,20 +138,21 @@ public class LocalTableController extends BaseTableController {
 
     @Override
     public void onClick_resetTable(final Context context, View view) {
-        PopupMenu popup = new PopupMenu(context, view);
-        popup.getMenuInflater().inflate(R.menu.table_actions, popup.getMenu());
-
-        popup.getMenu().removeItem(R.id.action_offer_draw);
-        popup.getMenu().removeItem(R.id.action_offer_resign);
-        popup.getMenu().removeItem(R.id.action_close_table);
-
-        if (popup.getMenu().size() == 0) {
-            Log.i(TAG, "(on 'Reset' button click) No need to show popup menu!");
-            return;
+        if (mainActivity_ == null || context != mainActivity_.get()) {
+            throw new RuntimeException("The context must be the Main Activity");
         }
 
-        super.setupListenerForResetButton(context, popup);
-        popup.show();
+        MainActivity mainActivity = mainActivity_.get();
+        final TableActionSheet actionSheet = new TableActionSheet(mainActivity);
+        actionSheet.setHeaderText(mainActivity.getString(R.string.title_table_ai));
+        super.setupListenersInTableActionSheet(actionSheet);
+
+        actionSheet.hideAction(TableActionSheet.Action.ACTION_CLOSE_TABLE);
+        actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
+        actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
+        actionSheet.hideAction(TableActionSheet.Action.ACTION_NEW_TABLE);
+
+        actionSheet.show();
     }
 
     @Override

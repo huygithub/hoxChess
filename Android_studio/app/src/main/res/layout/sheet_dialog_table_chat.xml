@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/sheet_chat_main_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    >
+
+<RelativeLayout
+    android:id="@+id/bottom_sheet"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingLeft="@dimen/bottom_sheet_horizontal_margin"
+    android:paddingRight="@dimen/bottom_sheet_horizontal_margin">
+
+    <!-- Input comment box -->
+    <RelativeLayout
+        android:id="@+id/chat_input_layout"
+        android:clickable="true"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Line separator before the input -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#fff5f5f5"
+            android:layout_alignParentTop="true"/>
+
+        <ImageView
+            android:id="@+id/sheet_comment_button"
+            android:clickable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="Send"
+            android:layout_centerInParent="true"
+            android:src="@drawable/ic_send_black" />
+
+        <EditText
+            android:id="@+id/sheet_comment_input"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine"
+            android:ems="10"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_toLeftOf="@+id/sheet_comment_button"
+            android:layout_centerInParent="true"
+            android:hint="@string/chat_edit_text_hint" />
+
+        <!--<android.support.design.widget.TextInputLayout
+            android:id="@+id/sheet_comment_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:focusableInTouchMode="true"
+            android:layout_toLeftOf="@id/sheet_comment_button">
+
+            <android.support.design.widget.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/chat_edit_text_hint"
+                />
+        </android.support.design.widget.TextInputLayout>-->
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/chat_content_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_above="@id/chat_input_layout"
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/bottom_sheet_horizontal_margin"
+        android:paddingRight="@dimen/bottom_sheet_horizontal_margin"
+        >
+
+        <TextView
+            android:id="@+id/sheet_player_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Conversation"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"/>
+
+        <!--<EditText
+            android:id="@+id/sheet_edit_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine"
+            android:ems="10"
+            android:hint="@string/chat_edit_text_hint"
+            android:visibility="gone"/>-->
+
+        <RelativeLayout
+            android:id="@+id/chat_input_layout_header"
+            android:clickable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone">
+
+            <!-- Line separator before the input -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#fff5f5f5"
+                android:layout_alignParentTop="true"/>
+
+            <ImageView
+                android:id="@+id/sheet_comment_button_header"
+                android:clickable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:text="Send"
+                android:visibility="gone"
+                android:layout_centerInParent="true"
+                android:src="@drawable/ic_send_black" />
+
+            <EditText
+                android:id="@+id/sheet_edit_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:ems="10"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_toLeftOf="@+id/sheet_comment_button_header"
+                android:layout_centerInParent="true"
+                android:hint="@string/chat_edit_text_hint" />
+
+        </RelativeLayout>
+
+        <!-- Line separator -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#fff5f5f5"/>
+
+        <!--<ListView
+            android:id="@+id/sheet_chat_listView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </ListView>-->
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/sheet_chat_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="vertical"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+
+
+        <!--
+        <LinearLayout
+            android:id="@+id/sheet_close_table"
+            android:clickable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="@dimen/bottom_sheet_horizontal_icon_margin"
+                android:src="@drawable/close_table_icon" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/action_close"
+                android:textSize="16sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/sheet_reset_table"
+            android:clickable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="@dimen/bottom_sheet_horizontal_icon_margin"
+                android:src="@drawable/reset_table_icon" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/action_reset"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/sheet_reverse_table_view"
+            android:clickable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="@dimen/bottom_sheet_horizontal_icon_margin"
+                android:src="@drawable/reverse_table_view_blue" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/action_reverse_view"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/sheet_offer_draw_view"
+            android:clickable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="@dimen/bottom_sheet_horizontal_icon_margin"
+                android:src="@drawable/offer_draw_icon" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/action_draw"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/sheet_offer_resign_view"
+            android:clickable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="@dimen/bottom_sheet_horizontal_icon_margin"
+                android:src="@drawable/offer_resign_icon" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/action_resign"
+                android:textSize="16sp" />
+        </LinearLayout>
+        -->
+    </LinearLayout>
+
+</RelativeLayout>
+
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/floating_action_edit_mode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_mode_edit_black"
+        app:backgroundTint="@color/menu_button_material_light"
+        app:layout_anchor="@id/sheet_player_info"
+        app:layout_anchorGravity="top|right|end"
+        app:fabSize="mini"
+        app:elevation="4dp" />
+
+
+</android.support.design.widget.CoordinatorLayout>

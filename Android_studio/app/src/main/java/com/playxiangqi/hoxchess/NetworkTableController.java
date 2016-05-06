@@ -27,7 +27,6 @@ import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 
 /**
@@ -244,15 +243,21 @@ public class NetworkTableController extends BaseTableController {
 
     @Override
     public void onClick_resetTable(final Context context, View view) {
-        PopupMenu popup = new PopupMenu(context, view);
-        popup.getMenuInflater().inflate(R.menu.table_actions, popup.getMenu());
+        if (mainActivity_ == null || context != mainActivity_.get()) {
+            throw new RuntimeException("The context must be the Main Activity");
+        }
+
+        MainActivity mainActivity = mainActivity_.get();
+        final TableActionSheet actionSheet = new TableActionSheet(mainActivity);
+        actionSheet.setHeaderText(mainActivity.getString(R.string.title_table_ai));
+        super.setupListenersInTableActionSheet(actionSheet);
 
         if (isTableEmpty()) {
-            popup.getMenu().removeItem(R.id.action_offer_draw);
-            popup.getMenu().removeItem(R.id.action_offer_resign);
-            popup.getMenu().removeItem(R.id.action_reset_table);
-            popup.getMenu().removeItem(R.id.action_close_table);
-            popup.getMenu().findItem(R.id.action_new_table).setVisible(true);
+            actionSheet.hideAction(TableActionSheet.Action.ACTION_RESET_TABLE);
+            actionSheet.hideAction(TableActionSheet.Action.ACTION_REVERSE_BOARD);
+            actionSheet.hideAction(TableActionSheet.Action.ACTION_CLOSE_TABLE);
+            actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
+            actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
 
         } else {
             final boolean isGameOver = HoxApp.getApp().isGameOver();
@@ -260,30 +265,24 @@ public class NetworkTableController extends BaseTableController {
             final boolean amIPlaying = (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED);
             final int moveCount = HoxApp.getApp().getReferee().getMoveCount();
 
+            actionSheet.hideAction(TableActionSheet.Action.ACTION_NEW_TABLE);
             if (isGameOver) {
-                popup.getMenu().removeItem(R.id.action_offer_draw);
-                popup.getMenu().removeItem(R.id.action_offer_resign);
-                popup.getMenu().removeItem(R.id.action_close_table);
+                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
+                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
             } else if (!amIPlaying) {
-                popup.getMenu().removeItem(R.id.action_offer_draw);
-                popup.getMenu().removeItem(R.id.action_offer_resign);
-                popup.getMenu().removeItem(R.id.action_reset_table);
+                actionSheet.hideAction(TableActionSheet.Action.ACTION_RESET_TABLE);
+                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
+                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
             } else if (moveCount >= 2) { // game has started?
-                popup.getMenu().removeItem(R.id.action_reset_table);
-                popup.getMenu().removeItem(R.id.action_close_table);
+                actionSheet.hideAction(TableActionSheet.Action.ACTION_RESET_TABLE);
+                actionSheet.hideAction(TableActionSheet.Action.ACTION_CLOSE_TABLE);
             } else {
-                popup.getMenu().removeItem(R.id.action_offer_draw);
-                popup.getMenu().removeItem(R.id.action_offer_resign);
+                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
+                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
             }
         }
 
-        if (popup.getMenu().size() == 0) {
-            Log.i(TAG, "(on 'Reset' button click) No need to show popup menu!");
-            return;
-        }
-
-        super.setupListenerForResetButton(context, popup);
-        popup.show();
+        actionSheet.show();
     }
 
     @Override

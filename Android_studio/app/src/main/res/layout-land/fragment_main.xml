@@ -69,41 +69,67 @@
             android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true" >
+            android:layout_centerInParent="true"
+            android:paddingLeft="4dp">
 
-            <ImageButton
+            <ImageView
                   android:id="@+id/replay_previous"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
+                  android:paddingRight="8dp"
                   android:layout_alignParentLeft="true"
                   android:contentDescription="@string/replay_prev"
-                  android:src="@drawable/ic_action_previous_item"
+                  android:src="@drawable/ic_play_arrow_black_prev"
+                  android:tint="@color/menu_button_material_dark"
                   android:longClickable="true" />
 
-            <ImageButton
+            <ImageView
                   android:id="@+id/replay_next"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
+                  android:paddingRight="8dp"
                   android:layout_toRightOf="@id/replay_previous"
                   android:contentDescription="@string/replay_next"
-                  android:src="@drawable/ic_action_next_item"
+                  android:src="@drawable/ic_play_arrow_black_next"
+                  android:tint="@color/menu_button_material_dark"
                   android:longClickable="true" />
 
-            <ImageButton
+            <ImageView
                   android:id="@+id/action_reset"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:layout_alignParentRight="true"
                   android:contentDescription="@string/action_reset"
-                  android:src="@drawable/ic_action_menu_white" />
+                  android:src="@drawable/ic_menu_black"
+                  android:tint="@color/menu_button_material_dark" />
 
-            <ImageButton
-                  android:id="@+id/reverse_view"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:layout_toLeftOf="@id/action_reset"
-                  android:contentDescription="@string/action_reverse_view"
-                  android:src="@drawable/ic_action_shuffle" />
+            <!-- http://stackoverflow.com/questions/6011786/add-new-item-count-to-icon-on-button-android/6039353#6039353 -->
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@id/action_reset"
+                android:layout_marginRight="16dp">
+                <!-- Set paddingRight to prevent the badge number from clipping when 2 digits or more -->
+                <ImageView
+                    android:id="@+id/message_badge_image"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingRight="5dp"
+                    android:src="@drawable/ic_chat_bubble_outline_black"
+                    android:contentDescription="@string/title_activity_notifications"
+                    android:tint="@color/menu_button_material_dark"/>
+                <TextView
+                    android:id="@+id/message_badge_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignTop="@id/message_badge_image"
+                    android:layout_alignRight="@id/message_badge_image"
+                    android:textColor="#FFF"
+                    android:textSize="12sp"
+                    android:textStyle="normal"
+                    android:background="@drawable/badge_circle"
+                    android:visibility="gone"/>
+            </RelativeLayout>
 
         </RelativeLayout>
 

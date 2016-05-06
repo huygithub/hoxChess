@@ -1,5 +1,5 @@
 /**
- *  Copyright 2015 Huy Phan <huyphan@playxiangqi.com>
+ *  Copyright 2016 Huy Phan <huyphan@playxiangqi.com>
  *
  *  This file is part of HOXChess.
  *
@@ -18,8 +18,12 @@
  */
 package com.playxiangqi.hoxchess;
 
+import android.animation.Animator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
+import android.support.v4.view.ViewPager;
+import android.view.animation.AccelerateInterpolator;
 
 import java.util.Random;
 
@@ -74,4 +78,55 @@ public class Utils {
         return "ORIENTATION_UNDEFINED";
     }
 
+    /**
+     * Move the ViewPager to a direction (forward or backward) in certain speed.
+     *
+     * NOTE: This API is copied from:
+     *  http://stackoverflow.com/questions/8155257/slowing-speed-of-viewpager-controller-in-android
+     */
+    public static void animatePagerTransition(final ViewPager viewPager, final boolean forward,
+                                              long animationDurationInMillSecs) {
+        // The move factor, which was set to 1.0 in the original version of the function.
+        // In this app, I have to reduce it to avoid moving to 2 pages (instead of 1).
+        final float MOVE_FACTOR = 0.6f;
+
+        int moveX = viewPager.getWidth() - (forward ? viewPager.getPaddingLeft() : viewPager.getPaddingRight());
+        moveX = (int) (moveX * MOVE_FACTOR);
+        ValueAnimator animator = ValueAnimator.ofInt(0, moveX);
+        animator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {}
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                viewPager.endFakeDrag();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                viewPager.endFakeDrag();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {}
+        });
+
+        animator.setInterpolator(new AccelerateInterpolator());
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+            private int oldDragPosition = 0;
+
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                int dragPosition = (Integer) animation.getAnimatedValue();
+                int dragOffset = dragPosition - oldDragPosition;
+                oldDragPosition = dragPosition;
+                viewPager.fakeDragBy(dragOffset * (forward ? -1 : 1));
+            }
+        });
+
+        animator.setDuration(animationDurationInMillSecs);
+        viewPager.beginFakeDrag();
+        animator.start();
+    }
 }

@@ -192,39 +192,67 @@ public class BaseTableController implements BoardView.BoardEventListener {
         mainActivity_ = new WeakReference<MainActivity>(otherController.getMainActivity());
     }
 
-    protected void setupListenerForResetButton(final Context context, PopupMenu popup) {
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.action_offer_draw:
-                        handleRequestToOfferDraw();
-                        Toast.makeText(HoxApp.getApp(),
-                                context.getString(R.string.action_draw),
-                                Toast.LENGTH_SHORT).show();
-                        return true;
+    protected void setupListenersInTableActionSheet(final TableActionSheet actionSheet) {
+        actionSheet.setOnClickListener_ResetTable(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                handleRequestToResetTable();
+                actionSheet.dismiss();
+            }
+        });
 
-                    case R.id.action_offer_resign:
-                        handleRequestToOfferResign();
-                        Toast.makeText(HoxApp.getApp(),
-                                context.getString(R.string.action_resign),
-                                Toast.LENGTH_SHORT).show();
-                        return true;
-
-                    case R.id.action_reset_table:
-                        handleRequestToResetTable();
-                        return true;
-
-                    case R.id.action_close_table:
-                        handleRequestToCloseCurrentTable();
-                        return true;
-
-                    case R.id.action_new_table:
-                        handleRequestToOpenNewTable();
-                        return true;
-
-                    default:
-                        return true;
+        actionSheet.setOnClickListener_ReverseBoard(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity mainActivity = mainActivity_.get();
+                if (mainActivity != null) {
+                    mainActivity.reverseBoardView();
                 }
+                actionSheet.dismiss();
+            }
+        });
+
+        actionSheet.setOnClickListener_Close(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                handleRequestToCloseCurrentTable();
+                actionSheet.dismiss();
+            }
+        });
+
+        actionSheet.setOnClickListener_OfferDrawn(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                handleRequestToOfferDraw();
+                MainActivity mainActivity = mainActivity_.get();
+                if (mainActivity != null) {
+                    Toast.makeText(HoxApp.getApp(),
+                            mainActivity.getString(R.string.action_draw),
+                            Toast.LENGTH_SHORT).show();
+                }
+                actionSheet.dismiss();
+            }
+        });
+
+        actionSheet.setOnClickListener_OfferResign(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                handleRequestToOfferResign();
+                MainActivity mainActivity = mainActivity_.get();
+                if (mainActivity != null) {
+                    Toast.makeText(HoxApp.getApp(),
+                            mainActivity.getString(R.string.action_resign),
+                            Toast.LENGTH_SHORT).show();
+                }
+                actionSheet.dismiss();
+            }
+        });
+
+        actionSheet.setOnClickListener_NewTable(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                handleRequestToOpenNewTable();
+                actionSheet.dismiss();
             }
         });
     }

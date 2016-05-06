@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- http://stackoverflow.com/questions/6011786/add-new-item-count-to-icon-on-button-android/6039353#6039353 -->
+
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid
+        android:color="#F00" />
+    <stroke
+        android:width="2dip"
+        android:color="#FFF" />
+    <padding
+        android:left="5dip"
+        android:right="5dip"
+        android:top="5dip"
+        android:bottom="5dip" />
+</shape>
+
+<!--
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners
+        android:radius="10dip"/>
+    <solid
+        android:color="#F00" />
+    <stroke
+        android:width="2dip"
+        android:color="#FFF" />
+    <padding
+        android:left="5dip"
+        android:right="5dip"
+        android:top="5dip"
+        android:bottom="5dip" />
+</shape>
+-->
+
+<!--
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="ring"
+    android:useLevel="false"
+    android:thickness="9dp"
+    android:innerRadius="0dp"
+    >
+
+    <solid
+        android:color="#F00"
+        />
+    <stroke
+        android:width="1dip"
+        android:color="#FFF" />
+
+    <padding
+        android:top="2dp"
+        android:bottom="2dp"/>
+
+</shape>
+    -->

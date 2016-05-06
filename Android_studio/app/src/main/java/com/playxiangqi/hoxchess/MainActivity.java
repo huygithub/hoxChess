@@ -121,6 +121,7 @@ public class MainActivity extends AppCompatActivity
         pagerAdapter_ = new MainPagerAdapter(this, getSupportFragmentManager());
         viewPager_ = (ViewPager) findViewById(R.id.main_view_pager);
         viewPager_.setAdapter(pagerAdapter_);
+        viewPager_.setOffscreenPageLimit(2); // Performance: Keep the 3rd page from being destroyed!
 
         // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
         // Reference:
@@ -604,6 +605,19 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onShowMessageViewClick(View v) {
+        Utils.animatePagerTransition(viewPager_, true /* forward */, 500);
+        //viewPager_.setCurrentItem(1);
+        //viewPager_.setCurrentItem(1, true /* smooth scroll */);
+
+//        TableInfo tableInfo = new TableInfo();
+//        tableInfo.tableId = "14";
+//        tableInfo.itimes = Enums.DEFAULT_INITIAL_GAME_TIMES;
+//        final ChatInTableSheet dialog = new ChatInTableSheet(this, tableController_, tableInfo);
+//        dialog.show();
+    }
+
+    @Override
     public void onChangeRoleRequest(Enums.ColorEnum clickedColor) {
         tableController_.handlePlayerButtonClick(clickedColor);
     }
@@ -697,6 +711,13 @@ public class MainActivity extends AppCompatActivity
         } else {
             getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
             getSupportActionBar().setTitle(getString(R.string.title_table, title));
+        }
+    }
+
+    public void reverseBoardView() {
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.reverseView();
         }
     }
 

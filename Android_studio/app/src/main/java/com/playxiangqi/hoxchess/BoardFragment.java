@@ -26,7 +26,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import java.util.List;
@@ -53,6 +52,7 @@ public class BoardFragment extends Fragment {
 
     private OnFragmentInteractionListener listener_;
 
+    private MessageBadgeTester badgeTester_; // FIXME: Temporarily used for testing.
     private BoardView boardView_;
 
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
@@ -73,6 +73,7 @@ public class BoardFragment extends Fragment {
         void onBoardFragment_CreateView(BoardFragment fragment);
         void onBoardFragment_DestroyView(BoardFragment fragment);
         void onResetViewClick(View v);
+        void onShowMessageViewClick(View v);
         void onChangeRoleRequest(Enums.ColorEnum clickedColor);
     }
 
@@ -125,6 +126,12 @@ public class BoardFragment extends Fragment {
         if (DEBUG_LIFE_CYCLE) Log.d(TAG, "onCreateView: board-type = " + boardType_ + ", savedInstanceState=" + savedInstanceState);
 
         final View view = inflater.inflate(R.layout.fragment_main, container, false);
+
+        // FIXME: Testing only!
+        TextView messageBadgeText = (TextView) view.findViewById(R.id.message_badge_text);
+        if (messageBadgeText != null) {
+            badgeTester_ = new MessageBadgeTester(messageBadgeText);
+        }
 
         boardView_ = (BoardView) view.findViewById(R.id.board_view);
         TextView topPlayerLabel = (TextView) view.findViewById(R.id.top_player_label);
@@ -261,7 +268,7 @@ public class BoardFragment extends Fragment {
         boardView_.onGameEnded(gameStatus);
     }
 
-    private void reverseView() {
+    public void reverseView() {
         Log.d(TAG, "Reverse board view: isBlackOnTop_=" + isBlackOnTop_);
         boardView_.reverseView();
         HoxApp.getApp().getTimeTracker().reverseView();
@@ -284,19 +291,58 @@ public class BoardFragment extends Fragment {
     //
     // ***************************************************************************
 
+    /** FIXME: Temporarily used for testing. */
+    private static class MessageBadgeTester {
+        private int badgeCount_ = 0;
+        private final TextView messageBadgeText_;
+
+        public MessageBadgeTester(TextView messageBadgeText) {
+            messageBadgeText_ = messageBadgeText;
+        }
+
+        public void setBadgeCount(int count) {
+            badgeCount_ = count;
+            if (count <= 0) {
+                messageBadgeText_.setVisibility(View.INVISIBLE);
+                messageBadgeText_.setText("");
+            }
+        }
+        private void increment() {
+            if (badgeCount_ > 10) { badgeCount_ += 10; }
+            else badgeCount_++;
+            if (badgeCount_ > 99) {
+                messageBadgeText_.setText("99+");
+            } else {
+                messageBadgeText_.setText(Integer.valueOf(badgeCount_).toString());
+            }
+            messageBadgeText_.setVisibility(View.VISIBLE);
+        }
+        private void decrement() {
+            if (badgeCount_ > 10) { badgeCount_ -= 10; }
+            else if (badgeCount_ > 0) badgeCount_--;
+            else return; // Do nothing
+            if (badgeCount_ <= 0) {
+                messageBadgeText_.setVisibility(View.INVISIBLE);
+            } else {
+                messageBadgeText_.setText(Integer.valueOf(badgeCount_).toString());
+                messageBadgeText_.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
     private void setOnClickHandlers(View view) {
-        ImageButton reverseViewButton = (ImageButton) view.findViewById(R.id.reverse_view);
-        if (reverseViewButton != null) {
-            reverseViewButton.setOnClickListener(new View.OnClickListener() {
+        final View messageBadgeView = view.findViewById(R.id.message_badge_image);
+        if (messageBadgeView != null) {
+            messageBadgeView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    isBlackOnTop_ = !isBlackOnTop_;
-                    reverseView();
+                    if (badgeTester_ != null) badgeTester_.setBadgeCount(0);;
+                    listener_.onShowMessageViewClick(v);
                 }
             });
         }
 
-        ImageButton resetButton = (ImageButton) view.findViewById(R.id.action_reset);
+        View resetButton = view.findViewById(R.id.action_reset);
         if (resetButton != null) {
             resetButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -339,12 +385,13 @@ public class BoardFragment extends Fragment {
         }
 
         // Setup the long-click handlers to handle BEGIN and END actions of replay.
-        ImageButton previousButton = (ImageButton) view.findViewById(R.id.replay_previous);
+        View previousButton = view.findViewById(R.id.replay_previous);
         if (previousButton != null) {
             previousButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     boardView_.onReplay_PREV(true);
+                    if (badgeTester_ != null) badgeTester_.increment();
                 }
             });
 
@@ -357,12 +404,13 @@ public class BoardFragment extends Fragment {
             });
         }
 
-        ImageButton nextButton = (ImageButton) view.findViewById(R.id.replay_next);
+        View nextButton = view.findViewById(R.id.replay_next);
         if (nextButton != null) {
             nextButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     boardView_.onReplay_NEXT(true);
+                    if (badgeTester_ != null) badgeTester_.decrement();
                 }
             });
 
