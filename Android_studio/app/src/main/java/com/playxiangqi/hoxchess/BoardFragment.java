@@ -72,7 +72,7 @@ public class BoardFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         void onBoardFragment_CreateView(BoardFragment fragment);
         void onBoardFragment_DestroyView(BoardFragment fragment);
-        void onResetViewClick(View v);
+        void onTableMenuClick(View v);
         void onShowMessageViewClick(View v);
         void onChangeRoleRequest(Enums.ColorEnum clickedColor);
     }
@@ -342,13 +342,13 @@ public class BoardFragment extends Fragment {
             });
         }
 
-        View resetButton = view.findViewById(R.id.action_reset);
-        if (resetButton != null) {
-            resetButton.setOnClickListener(new View.OnClickListener() {
+        View tableMenuButton = view.findViewById(R.id.action_table_menu);
+        if (tableMenuButton != null) {
+            tableMenuButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (listener_ != null) {
-                        listener_.onResetViewClick(v);
+                        listener_.onTableMenuClick(v);
                     }
                 }
             });

@@ -117,7 +117,7 @@ public class BaseTableController implements BoardView.BoardEventListener {
         return false; // Do not display the menu
     }
 
-    public void onClick_resetTable(final Context context, View view) {
+    public void handleTableMenuOnClick(final Context context, View view) {
     }
 
     public void handlePlayerOnClickInTable(PlayerInfo playerInfo, String tableId) {

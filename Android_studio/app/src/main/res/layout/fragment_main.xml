@@ -129,11 +129,11 @@
               android:longClickable="true" />
 
         <ImageView
-              android:id="@+id/action_reset"
+              android:id="@+id/action_table_menu"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:layout_alignParentRight="true"
-              android:contentDescription="@string/action_reset"
+              android:contentDescription="@string/action_table_menu"
               android:src="@drawable/ic_menu_black"
               android:tint="@color/menu_button_material_dark"/>
 
@@ -141,7 +141,7 @@
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toLeftOf="@id/action_reset"
+            android:layout_toLeftOf="@id/action_table_menu"
             android:layout_marginRight="16dp">
             <!-- Set paddingRight to prevent the badge number from clipping when 2 digits or more -->
             <ImageView

@@ -242,7 +242,7 @@ public class NetworkTableController extends BaseTableController {
     }
 
     @Override
-    public void onClick_resetTable(final Context context, View view) {
+    public void handleTableMenuOnClick(final Context context, View view) {
         if (mainActivity_ == null || context != mainActivity_.get()) {
             throw new RuntimeException("The context must be the Main Activity");
         }

@@ -113,5 +113,6 @@
     <string name="msg_player_info">%1$s (%2$s)</string>
     <string name="action_send_personal_message">Send message</string>
     <string name="title_table_ai">Table: AI</string>
+    <string name="action_table_menu">Table menu</string>
 
 </resources>

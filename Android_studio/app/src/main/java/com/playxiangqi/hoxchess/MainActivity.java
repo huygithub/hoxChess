@@ -600,8 +600,8 @@ public class MainActivity extends AppCompatActivity
      * Implementation of BoardFragment.OnFragmentInteractionListener
      */
     @Override
-    public void onResetViewClick(View view) {
-        tableController_.onClick_resetTable(this, view);
+    public void onTableMenuClick(View view) {
+        tableController_.handleTableMenuOnClick(this, view);
     }
 
     @Override
