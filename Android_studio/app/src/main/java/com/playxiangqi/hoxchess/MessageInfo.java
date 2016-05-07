@@ -20,6 +20,8 @@ package com.playxiangqi.hoxchess;
 
 import android.text.TextUtils;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * A message
  */
@@ -31,6 +33,9 @@ public class MessageInfo {
         MESSAGE_TYPE_INVITE_TO_PLAY
     }
 
+    private final static AtomicInteger messageIdGenerator_ = new AtomicInteger(0);
+    private final int messageId_;
+
     public final MessageType type;
     public final String senderPid;
 
@@ -41,10 +46,14 @@ public class MessageInfo {
     public String toPid;
     public String tableId;
 
+    /** Constructor */
     public MessageInfo(MessageType messageType, String fromPlayer) {
+        messageId_ = messageIdGenerator_.incrementAndGet();
         type = messageType;
         senderPid = fromPlayer;
     }
+
+    public int getId() { return messageId_; }
 
     @Override
     public String toString() {

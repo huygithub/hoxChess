@@ -39,7 +39,7 @@ import java.util.List;
  * Reference:
  *    http://javapapers.com/android/android-chat-bubble/
  */
-public class ChatFragment extends Fragment implements MessageManager.EventListener {
+public class ChatFragment extends Fragment {
 
     private static final String TAG = "ChatFragment";
 
@@ -127,7 +127,6 @@ public class ChatFragment extends Fragment implements MessageManager.EventListen
         });
 
         syncWithNewMessages();
-        //HoxApp.getApp().registerChatActivity(this);
 
         inputLayout.setVisibility(inputEnabled_ ? View.VISIBLE : View.GONE);
 
@@ -138,39 +137,24 @@ public class ChatFragment extends Fragment implements MessageManager.EventListen
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         Log.d(TAG, "onActivityCreated...");
-
-        //MainActivity activity = (MainActivity) getActivity();
-        //activity.onBoardViewCreated(activity);
     }
 
     @Override
     public void onResume () {
         super.onResume();
         Log.i(TAG, "onResume...");
-        //MainActivity activity = (MainActivity) getActivity();
-        //activity.onBoardViewResume(activity);
-
-        //setMessageListener(HoxApp.getApp().getNetworkController());
-        //HoxApp.getApp().getNetworkController().addListener(this);
-        MessageManager.getInstance().addListener(this);
     }
 
     @Override
     public void onPause () {
         super.onPause();
         Log.i(TAG, "onPause...");
-        //MainActivity activity = (MainActivity) getActivity();
-        //activity.onBoardViewResume(activity);
-
-        //HoxApp.getApp().getNetworkController().removeListener(this);
-        MessageManager.getInstance().removeListener(this);
     }
 
     @Override
     public void onDestroy () {
         super.onDestroy();
         Log.i(TAG, "onDestroy...");
-        //HoxApp.getApp().registerChatActivity(null);
     }
 
     @Override
@@ -179,8 +163,21 @@ public class ChatFragment extends Fragment implements MessageManager.EventListen
         Log.i(TAG, "onDetach...");
     }
 
+    public void addNewMessage(MessageInfo messageInfo) {
+        ChatMessage chatMsg = processMessage(messageInfo);
+        if (chatMsg != null) {
+            addMessage(chatMsg);
+        }
+    }
 
-    // ----
+    public void addNewMessages(List<MessageInfo> newMessages) {
+        for (MessageInfo messageInfo : newMessages) {
+            ChatMessage chatMsg = processMessage(messageInfo);
+            if (chatMsg != null) {
+                addMessage(chatMsg);
+            }
+        }
+    }
 
     protected void syncWithNewMessages() {
         List<MessageInfo> newMessages = MessageManager.getInstance().getMessages();
@@ -199,8 +196,7 @@ public class ChatFragment extends Fragment implements MessageManager.EventListen
     protected ChatMessage processMessage(MessageInfo messageInfo) {
         switch (messageInfo.type) {
             case MESSAGE_TYPE_CHAT_IN_TABLE: // fall through
-                ChatMessage chatMsg = new ChatMessage(true, messageInfo.getFormattedString());
-                return chatMsg;
+                return new ChatMessage(true, messageInfo.getFormattedString());
             default:
                 return null;
         }
@@ -209,14 +205,6 @@ public class ChatFragment extends Fragment implements MessageManager.EventListen
     protected void addMessage(ChatMessage chatMsg) {
         if (chatMsg != null) {
             chatArrayAdapter.add(chatMsg);
-        }
-    }
-
-    @Override
-    public void onMessageReceived(MessageInfo messageInfo) {
-        ChatMessage chatMsg = processMessage(messageInfo);
-        if (chatMsg != null) {
-            addMessage(chatMsg);
         }
     }
 

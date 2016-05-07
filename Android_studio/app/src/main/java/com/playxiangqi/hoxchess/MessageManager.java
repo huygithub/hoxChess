@@ -97,6 +97,16 @@ public class MessageManager {
         return messages_.size();
     }
 
+    public int getMessageCount(MessageInfo.MessageType messageType) {
+        int messageCount = 0;
+        for (MessageInfo message : messages_) {
+            if (message.type == messageType) {
+                ++messageCount;
+            }
+        }
+        return messageCount;
+    }
+
     public void addMessage(MessageInfo messageInfo) {
         messages_.add(messageInfo);
         Log.d(TAG, "addMessage: Notify listeners-size:" + listeners_.size());
@@ -106,6 +116,7 @@ public class MessageManager {
     }
 
     public void removeMessages(MessageInfo.MessageType messageType) {
+        Log.d(TAG, "removeMessages: type:" + messageType);
         Iterator<MessageInfo> iterator = messages_.iterator();
         while (iterator.hasNext()) {
             final MessageInfo message = iterator.next();
@@ -115,7 +126,17 @@ public class MessageManager {
         }
     }
 
-
+    public void removeMessage(MessageInfo messageInfo) {
+        final int idToBeRemoved = messageInfo.getId();
+        // TODO: Convert the list into a map (by ID) later.
+        Iterator<MessageInfo> iterator = messages_.iterator();
+        while (iterator.hasNext()) {
+            final MessageInfo message = iterator.next();
+            if (message.getId() == idToBeRemoved) {
+                iterator.remove();
+            }
+        }
+    }
     // ***************************************************************
     //
     //              Private APIs

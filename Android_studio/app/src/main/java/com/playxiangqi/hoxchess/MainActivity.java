@@ -57,6 +57,7 @@ import android.widget.TextView;
  */
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
+                ViewPager.OnPageChangeListener,
                 MessageManager.EventListener,
                 BoardFragment.OnFragmentInteractionListener,
                 PlayersFragment.OnFragmentInteractionListener {
@@ -122,6 +123,7 @@ public class MainActivity extends AppCompatActivity
         viewPager_ = (ViewPager) findViewById(R.id.main_view_pager);
         viewPager_.setAdapter(pagerAdapter_);
         viewPager_.setOffscreenPageLimit(2); // Performance: Keep the 3rd page from being destroyed!
+        viewPager_.addOnPageChangeListener(this);
 
         // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
         // Reference:
@@ -556,12 +558,30 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onMessageReceived(MessageInfo messageInfo) {
-        Log.d(TAG, "On new message: [" + messageInfo + "]");
+        Log.d(TAG, "On new message: {#" + messageInfo.getId() + " " + messageInfo + "}");
         // Only interest in certain message-types.
         if (messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY ||
                 messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE) {
             notifCount_++;
             invalidateOptionsMenu(); // Recreate the options menu
+
+        } else if (messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE) {
+            int currentPageIndex = viewPager_.getCurrentItem();
+            if (currentPageIndex == MainPagerAdapter.POSITION_BOARD) {
+                BoardFragment boardFragment = myBoardFragment_.get();
+                if (boardFragment != null) {
+                    int messageCount = MessageManager.getInstance().getMessageCount(
+                            MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
+                    Log.d(TAG, "On new message: ... table-message count = " + messageCount);
+                    boardFragment.setTableMessageCount(messageCount);
+                }
+            } else if (currentPageIndex == MainPagerAdapter.POSITION_CHAT) {
+                ChatFragment chatFragment = myChatFragment_.get();
+                if (chatFragment != null) {
+                    chatFragment.addNewMessage(messageInfo);
+                }
+                MessageManager.getInstance().removeMessage(messageInfo);
+            }
         }
     }
 
@@ -696,6 +716,51 @@ public class MainActivity extends AppCompatActivity
         tableController_.handlePlayerOnClickInTable(playerInfo, tableId);
     }
 
+    /**
+     * Implementation ViewPager.OnPageChangeListener
+     */
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+    }
+
+    /**
+     * This method will be invoked when a new page becomes selected. Animation is not
+     * necessarily complete.
+     *
+     * @param position Position index of the new selected page.
+     */
+    public void onPageSelected(int position) {
+        Log.d(TAG, "onPageSelected: position:"+ position);
+        if (position == MainPagerAdapter.POSITION_BOARD) {
+            int messageCount = MessageManager.getInstance().getMessageCount(
+                    MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
+            Log.d(TAG, "onPageSelected: ... table-message count = " + messageCount);
+            BoardFragment boardFragment = myBoardFragment_.get();
+            if (boardFragment != null) {
+                boardFragment.setTableMessageCount(messageCount);
+            }
+        } else if (position == MainPagerAdapter.POSITION_CHAT) {
+            List<MessageInfo> newMessages = MessageManager.getInstance().getMessages();
+            ChatFragment chatFragment = myChatFragment_.get();
+            if (chatFragment != null) {
+                chatFragment.addNewMessages(newMessages);
+            }
+            MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
+        }
+    }
+
+    /**
+     * Called when the scroll state changes. Useful for discovering when the user
+     * begins dragging, when the pager is automatically settling to the current page,
+     * or when it is fully stopped/idle.
+     *
+     * @param state The new scroll state.
+     * @see ViewPager#SCROLL_STATE_IDLE
+     * @see ViewPager#SCROLL_STATE_DRAGGING
+     * @see ViewPager#SCROLL_STATE_SETTLING
+     */
+    public void onPageScrollStateChanged(int state) {
+    }
+
     // ******
 
     public void registerChatFragment(final ChatFragment fragment) {
@@ -726,6 +791,9 @@ public class MainActivity extends AppCompatActivity
      */
     public static class MainPagerAdapter extends FragmentPagerAdapter {
         private final Context context_;
+
+        public static final int POSITION_BOARD = 0;
+        public static final int POSITION_CHAT = 1;
 
         public MainPagerAdapter(Context context, FragmentManager fragmentManager) {
             super(fragmentManager);

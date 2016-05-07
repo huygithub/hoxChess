@@ -52,8 +52,8 @@ public class BoardFragment extends Fragment {
 
     private OnFragmentInteractionListener listener_;
 
-    private MessageBadgeTester badgeTester_; // FIXME: Temporarily used for testing.
     private BoardView boardView_;
+    private TextView messageBadgeText_;
 
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
 
@@ -127,13 +127,9 @@ public class BoardFragment extends Fragment {
 
         final View view = inflater.inflate(R.layout.fragment_main, container, false);
 
-        // FIXME: Testing only!
-        TextView messageBadgeText = (TextView) view.findViewById(R.id.message_badge_text);
-        if (messageBadgeText != null) {
-            badgeTester_ = new MessageBadgeTester(messageBadgeText);
-        }
-
         boardView_ = (BoardView) view.findViewById(R.id.board_view);
+        messageBadgeText_ = (TextView) view.findViewById(R.id.message_badge_text);
+
         TextView topPlayerLabel = (TextView) view.findViewById(R.id.top_player_label);
         TextView bottomPlayerLabel = (TextView) view.findViewById(R.id.bottom_player_label);
         Button topPlayerButton = (Button) view.findViewById(R.id.top_button);
@@ -285,50 +281,23 @@ public class BoardFragment extends Fragment {
         }
     }
 
+    public void setTableMessageCount(int messageCount) {
+        if (messageCount > 99) {
+            messageBadgeText_.setText("99+");
+        } else if (messageCount <= 0) {
+            messageBadgeText_.setVisibility(View.INVISIBLE);
+            messageBadgeText_.setText("");
+        } else {
+            messageBadgeText_.setText(Integer.valueOf(messageCount).toString());
+            messageBadgeText_.setVisibility(View.VISIBLE);
+        }
+    }
+
     // ***************************************************************************
     //
     //         Private APIs
     //
     // ***************************************************************************
-
-    /** FIXME: Temporarily used for testing. */
-    private static class MessageBadgeTester {
-        private int badgeCount_ = 0;
-        private final TextView messageBadgeText_;
-
-        public MessageBadgeTester(TextView messageBadgeText) {
-            messageBadgeText_ = messageBadgeText;
-        }
-
-        public void setBadgeCount(int count) {
-            badgeCount_ = count;
-            if (count <= 0) {
-                messageBadgeText_.setVisibility(View.INVISIBLE);
-                messageBadgeText_.setText("");
-            }
-        }
-        private void increment() {
-            if (badgeCount_ > 10) { badgeCount_ += 10; }
-            else badgeCount_++;
-            if (badgeCount_ > 99) {
-                messageBadgeText_.setText("99+");
-            } else {
-                messageBadgeText_.setText(Integer.valueOf(badgeCount_).toString());
-            }
-            messageBadgeText_.setVisibility(View.VISIBLE);
-        }
-        private void decrement() {
-            if (badgeCount_ > 10) { badgeCount_ -= 10; }
-            else if (badgeCount_ > 0) badgeCount_--;
-            else return; // Do nothing
-            if (badgeCount_ <= 0) {
-                messageBadgeText_.setVisibility(View.INVISIBLE);
-            } else {
-                messageBadgeText_.setText(Integer.valueOf(badgeCount_).toString());
-                messageBadgeText_.setVisibility(View.VISIBLE);
-            }
-        }
-    }
 
     private void setOnClickHandlers(View view) {
         final View messageBadgeView = view.findViewById(R.id.message_badge_image);
@@ -336,7 +305,6 @@ public class BoardFragment extends Fragment {
             messageBadgeView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (badgeTester_ != null) badgeTester_.setBadgeCount(0);;
                     listener_.onShowMessageViewClick(v);
                 }
             });
@@ -391,7 +359,6 @@ public class BoardFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     boardView_.onReplay_PREV(true);
-                    if (badgeTester_ != null) badgeTester_.increment();
                 }
             });
 
@@ -410,7 +377,6 @@ public class BoardFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     boardView_.onReplay_NEXT(true);
-                    if (badgeTester_ != null) badgeTester_.decrement();
                 }
             });
 
