@@ -179,6 +179,15 @@ public class TablePlayerTracker {
         }
     }
 
+    public void onPlayerRatingUpdate(String pid, String newRating) {
+        if (blackPlayer_.hasPid(pid)) blackPlayer_.rating = newRating;
+        else if (redPlayer_.hasPid(pid)) redPlayer_.rating = newRating;
+        else {
+            PlayerInfo foundObserver = observers_.get(pid);
+            if (foundObserver != null) foundObserver.rating = newRating;
+        }
+    }
+
     private void syncSeatLabels() {
         if (!hasUI_) return;
 

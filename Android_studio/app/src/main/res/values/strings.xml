@@ -114,5 +114,7 @@
     <string name="action_send_personal_message">Send message</string>
     <string name="title_table_ai">Table: AI</string>
     <string name="action_table_menu">Table menu</string>
+    <string name="table_network_info">Table: #%1$s (%2$s)</string>
+    <string name="logged_in_player_info">Logged in: %1$s (%2$s)</string>
 
 </resources>

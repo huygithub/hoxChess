@@ -106,6 +106,9 @@ public class BaseTableController implements BoardView.BoardEventListener {
     public void onPlayerInfoReceived(String pid, String rating, String wins, String draws, String losses) {
     }
 
+    public void onPlayerRatingUpdate(String pid, String newRating) {
+    }
+
     public void setTableTitle() {
     }
 

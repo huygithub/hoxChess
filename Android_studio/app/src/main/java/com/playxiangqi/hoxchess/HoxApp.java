@@ -54,8 +54,7 @@ public class HoxApp extends Application {
         BaseTableController.getCurrentController().setupNewTable();
 
         aiEngine_.setAILevel(SettingsActivity.getAILevel(this));
-
-        networkController_ = new NetworkController(referee_);
+        networkController_ = new NetworkController();
     }
 
     public static HoxApp getApp() {

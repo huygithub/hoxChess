@@ -200,6 +200,13 @@ public class NetworkTableController extends BaseTableController {
     }
 
     @Override
+    public void onPlayerRatingUpdate(String pid, String newRating) {
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.onPlayerRatingUpdate(pid, newRating);
+        playerTracker.syncUI();
+    }
+
+    @Override
     public void setTableTitle() {
         MainActivity mainActivity = mainActivity_.get();
         if (mainActivity != null) {
@@ -249,7 +256,7 @@ public class NetworkTableController extends BaseTableController {
 
         MainActivity mainActivity = mainActivity_.get();
         final TableActionSheet actionSheet = new TableActionSheet(mainActivity);
-        actionSheet.setHeaderText(mainActivity.getString(R.string.title_table_ai));
+        actionSheet.setHeaderText(getTitleForTableActionSheet());
         super.setupListenersInTableActionSheet(actionSheet);
 
         if (isTableEmpty()) {
@@ -456,6 +463,22 @@ public class NetworkTableController extends BaseTableController {
 
     private boolean isTableEmpty() {
         return (myTableType_ == Enums.TableType.TABLE_TYPE_EMPTY);
+    }
+
+    private String getTitleForTableActionSheet() {
+        Context context = HoxApp.getApp();
+
+        String tableHeaderTitle;
+        if (isTableEmpty()) {
+            tableHeaderTitle = context.getString(R.string.logged_in_player_info,
+                    HoxApp.getApp().getMyPid(),
+                    HoxApp.getApp().getNetworkController().getMyRating_());
+        } else {
+            TableInfo tableInfo = HoxApp.getApp().getNetworkController().getMyTableInfo();
+            tableHeaderTitle = context.getString(R.string.table_network_info,
+                    tableInfo.tableId, tableInfo.itimes);
+        }
+        return tableHeaderTitle;
     }
 
     private void clearCurrentTableIfNeeded() {

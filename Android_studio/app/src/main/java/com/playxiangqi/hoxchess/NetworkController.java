@@ -39,11 +39,9 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
     private static final String TAG = "NetworkController";
     
-    private final Referee referee_;
-    
     private final NetworkPlayer networkPlayer_ = new NetworkPlayer();
     private boolean isLoginOK_ = false;
-    // (Not yet supported) private String myRating_ = "0";
+    private String myRating_ = "1500";
 
     private TableInfo myTable_ = new TableInfo();
     private ColorEnum myColor_ = ColorEnum.COLOR_UNKNOWN;
@@ -71,10 +69,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     /**
      * Constructor
      */
-    public NetworkController(Referee referee) {
+    public NetworkController() {
         Log.d(TAG, "[CONSTRUCTOR]: ...");
-        referee_ = referee;
-
         networkPlayer_.setNetworkEventListener(this);
         if (!networkPlayer_.isAlive()) {
             networkPlayer_.start();
@@ -135,6 +131,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     public GameStatus getGameStatus() { return gameStatus_; }
     public boolean isMyTableValid() { return myTable_.isValid(); }
     public String getMyTableId() { return myTable_.tableId; }
+    public TableInfo getMyTableInfo() { return myTable_; }
+    public String getMyRating_() { return myRating_; }
     //public List<ChatMessage> getNewMessages() { return newMessages_; }
 
     /**
@@ -190,6 +188,8 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             handleNetworkEvent_LOGOUT(content);
         } else if ("PLAYER_INFO".equals(op)) {
             handleNetworkEvent_PLAYER_INFO(content);
+        } else if ("E_SCORE".equals(op)) {
+            handleNetworkEvent_E_SCORE(content);
         }
     }
 
@@ -242,7 +242,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         final String myPid = HoxApp.getApp().getMyPid();
         if (myPid.equals(pid)) { // my LOGIN?
             Log.i(TAG, "Received my LOGIN info [" + pid + " " + rating + "].");
-            //myRating_ = rating;
+            myRating_ = rating;
 
             myColor_ = ColorEnum.COLOR_UNKNOWN;
             BaseTableController.getCurrentController().onNetworkLoginSuccess();
@@ -541,6 +541,23 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         final String losses = components[4];
 
         BaseTableController.getCurrentController().onPlayerInfoReceived(pid, rating, wins, draws, losses);
+    }
+
+    private void handleNetworkEvent_E_SCORE(String content) {
+        Log.d(TAG, "Handle event (E_SCORE): ENTER.");
+        final String[] components = content.split(";");
+        final String tableId = components[0];
+        final String pid = components[1];
+        final String rating = components[2];
+
+        if (HoxApp.getApp().getMyPid().equals(pid)) { // my new rating?
+            Log.i(TAG, "Received my new rating: " + myRating_ + " => " + rating);
+            myRating_ = rating;
+        }
+
+        if (myTable_.hasId(tableId)) {
+            BaseTableController.getCurrentController().onPlayerRatingUpdate(pid, rating);
+        }
     }
 
     public void logoutFromNetwork() {
