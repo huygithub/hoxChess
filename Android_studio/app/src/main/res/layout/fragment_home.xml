@@ -1,0 +1,142 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".HomeFragment"
+    android:gravity="center_vertical"
+    android:paddingLeft="@dimen/bottom_sheet_horizontal_margin"
+    android:paddingRight="@dimen/bottom_sheet_horizontal_margin">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".HomeFragment"
+        android:gravity="center_vertical"
+        android:paddingLeft="@dimen/bottom_sheet_horizontal_margin"
+        android:paddingRight="@dimen/bottom_sheet_horizontal_margin">
+
+        <LinearLayout
+            android:id="@+id/home_new_ai_table_view"
+            android:clickable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- TODO: Need to tint the drawable to make it darker until we replace the icon -->
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingRight="@dimen/bottom_sheet_horizontal_margin"
+                android:src="@drawable/ic_computer_black"
+                android:contentDescription="@string/action_new"
+                android:tint="@color/menu_button_material_dark" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:text="Practice with AI"
+                style="@style/Base.TextAppearance.AppCompat.Button" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/home_new_network_table_view"
+            android:clickable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingRight="@dimen/bottom_sheet_horizontal_margin"
+                android:src="@drawable/ic_action_new"
+                android:contentDescription="@string/action_new" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:text="Open new table"
+                style="@style/Base.TextAppearance.AppCompat.Button" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/home_join_existing_table_view"
+            android:clickable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingRight="@dimen/bottom_sheet_horizontal_margin"
+                android:src="@drawable/ic_action_tables"
+                android:contentDescription="@string/action_reverse_view" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:text="Join existing tables"
+                style="@style/Base.TextAppearance.AppCompat.Button" />
+        </LinearLayout>
+
+        <!-- Line separator -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#fff5f5f5"/>
+
+        <LinearLayout
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/home_login_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Logged in: coolplayer"
+                style="@style/Base.TextAppearance.AppCompat.Subhead" />
+
+            <ImageView
+                android:id="@+id/home_edit_account_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:paddingRight="@dimen/bottom_sheet_horizontal_margin"
+                android:padding="8dp"
+                android:src="@drawable/ic_mode_edit_black"
+                android:tint="@color/menu_button_material_dark"
+                android:contentDescription="@string/action_reverse_view" />
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/sheet_header_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center_horizontal"
+        android:text="PlayXiangqi.com"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        style="@style/Base.TextAppearance.AppCompat.Caption" />
+
+</RelativeLayout>

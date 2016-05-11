@@ -13,12 +13,12 @@
         -->
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
     <!-- NOT BEING USED -->
-    <style name="ToolbarTheme" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+    <style name="ToolbarTheme" parent="@style/ThemeOverlay.AppCompat.Light">
         <!-- This would set the toolbar's background color -->
-        <item name="android:background">?attr/colorPrimaryDark</item>
+        <!--<item name="android:background">?attr/colorPrimaryDark</item>-->
         <!-- android:textColorPrimary is the color of the title text in the Toolbar  -->
         <!-- <item name="android:textColorPrimary">@android:color/holo_blue_light</item> -->
         <!-- android:actionMenuTextColor is the color of the text of action (menu) items  -->

@@ -50,11 +50,13 @@ public class HoxApp extends Application {
         Log.i(TAG, "onCreate()...");
         thisApp_ = this;
 
+        loadPreferences_Account();
+
         BaseTableController.setCurrentController(TableType.TABLE_TYPE_LOCAL);
         BaseTableController.getCurrentController().setupNewTable();
 
         aiEngine_.setAILevel(SettingsActivity.getAILevel(this));
-        networkController_ = new NetworkController();
+        networkController_ = NetworkController.getInstance();
     }
 
     public static HoxApp getApp() {
@@ -67,6 +69,19 @@ public class HoxApp extends Application {
         Log.d(TAG, "On new AI level: " + aiLevel);
         aiEngine_.setAILevel(aiLevel);
     }
+
+//    public void onLoginWithAccountFlagChanged(boolean loginWithAccount) {
+//        Log.d(TAG, "On new login-with-account flag: " + loginWithAccount);
+//        //if (!TextUtils.equals(pid_, pid)) {
+//            if (this.isOnline() && networkController_.isLoginOK()) {
+//                Log.i(TAG, "... (online & LoginOK) Skip using the new flag: " + loginWithAccount + ".");
+//            } else {
+//                Log.i(TAG, "... (offline) Save new flag: " + loginWithAccount + ".");
+//                //pid_ = pid;
+//                loadPreferences_Account();
+//            }
+//        //}
+//    }
 
     public void onAccountPidChanged(String pid) {
         Log.d(TAG, "On new pid: " + pid);
@@ -92,7 +107,7 @@ public class HoxApp extends Application {
         }
     }
     
-    private void loadPreferences_Account() {
+    public void loadPreferences_Account() {
         boolean loginWithAccount = SettingsActivity.getLoginWithAccountFlag(this);
         if (loginWithAccount) {
             pid_ = SettingsActivity.getAccountPid(this);
@@ -128,6 +143,13 @@ public class HoxApp extends Application {
         loadPreferences_Account(); // to get pid_ and password_
         networkController_.setLoginInfo(pid_,  password_);
         networkController_.connectToServer();
+    }
+
+    public void disconnectAndLoginToServer() {
+        Log.i(TAG, "Disconnect and login again...");
+        loadPreferences_Account(); // to get pid_ and password_
+        networkController_.setLoginInfo(pid_,  password_);
+        networkController_.reconnectToServer();
     }
 
 }

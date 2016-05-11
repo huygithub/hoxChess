@@ -3,45 +3,43 @@
     package="com.playxiangqi.hoxchess">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    
+
     <application
-        android:allowBackup="true"
         android:name=".HoxApp"
+        android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name" >
+        android:label="@string/app_name">
 
         <!-- The main activity supports the new App Bar -->
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme" >
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
         <activity
             android:name=".SettingsActivity"
             android:label="@string/action_settings"
-            android:theme="@style/Theme.AppCompat.Light"
-            android:parentActivityName=".MainActivity" >
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.AppCompat.Light">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.playxiangqi.hoxchess.MainActivity" />
         </activity>
-        
         <activity
             android:name=".TablesActivity"
             android:label="@string/title_activity_tables"
-            android:theme="@style/Theme.AppCompat.Light"
-            android:parentActivityName=".MainActivity" >
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.AppCompat.Light">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.playxiangqi.hoxchess.MainActivity" />
         </activity>
-
         <activity
             android:name=".ChatBubbleActivity"
             android:label="@string/title_activity_notifications"
@@ -51,7 +49,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.playxiangqi.hoxchess.MainActivity" />
         </activity>
-
         <activity
             android:name=".AboutActivity"
             android:label="@string/about_title"
@@ -61,7 +58,24 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.playxiangqi.hoxchess.SettingsActivity" />
         </activity>
-        
+        <activity
+            android:name=".AITableActivity"
+            android:label="@string/ai_label"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.playxiangqi.hoxchess.MainActivity" />
+        </activity>
+        <activity
+            android:name=".NetworkTableActivity"
+            android:label="@string/label_table"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.playxiangqi.hoxchess.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

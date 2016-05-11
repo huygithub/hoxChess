@@ -42,58 +42,60 @@ import java.util.List;
 public class ChatFragment extends Fragment {
 
     private static final String TAG = "ChatFragment";
+    private boolean DEBUG_LIFE_CYCLE = true;
 
     private ChatArrayAdapter chatArrayAdapter;
     private ListView listView;
     private EditText chatText;
-    private Button buttonSend;
-    private View inputLayout;
 
     protected boolean inputEnabled_ = true;
 
-    // ------------------------------------------------
-    public interface MessageListener {
-        void onLocalMessage(ChatMessage chatMsg);
-    }
-    private MessageListener messageListener_;
+    private OnChatFragmentListener listener_;
 
-    public void setMessageListener(MessageListener listener) {
-        messageListener_ = listener;
+    /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     * <p/>
+     * See the Android Training lesson <a href=
+     * "http://developer.android.com/training/basics/fragments/communicating.html"
+     * >Communicating with Other Fragments</a> for more information.
+     */
+    public interface OnChatFragmentListener {
+        void onChatFragment_CreateView(ChatFragment fragment);
+        void onChatFragment_DestroyView(ChatFragment fragment);
     }
-    // ------------------------------------------------
 
     public ChatFragment() {
-        Log.d(TAG, "[CONSTRUCTOR]");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "[CONSTRUCTOR]");
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
-        // TODO: We hack it to support both types of fragments: Chat and Notification.
-        if (context instanceof MainActivity) {
-            Log.d(TAG, "onAttach: context = MainActivity. Register self with the activity.");
-            MainActivity activity = (MainActivity) context;
-            if (activity != null) {
-                activity.registerChatFragment(this);
-            }
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onAttach");
+        if (context instanceof OnChatFragmentListener) {
+            listener_ = (OnChatFragmentListener) context;
         } else {
-            Log.d(TAG, "onAttach: context != MainActivity. Do not register.");
+            throw new RuntimeException(context.toString()
+                    + " must implement OnChatFragmentListener");
         }
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onCreateView...");
         View view = inflater.inflate(R.layout.activity_chat, container, false);
 
         // -----
-        buttonSend = (Button) view.findViewById(R.id.buttonSend);
+        Button buttonSend = (Button) view.findViewById(R.id.buttonSend);
         listView = (ListView) view.findViewById(R.id.listView);
         listView.setEmptyView(view.findViewById(R.id.emptyView));
 
-        inputLayout = view.findViewById(R.id.input_layout);
+        View inputLayout = view.findViewById(R.id.input_layout);
 
         chatArrayAdapter = new ChatArrayAdapter(getActivity(), R.layout.activity_chat_singlemessage);
         listView.setAdapter(chatArrayAdapter);
@@ -130,37 +132,45 @@ public class ChatFragment extends Fragment {
 
         inputLayout.setVisibility(inputEnabled_ ? View.VISIBLE : View.GONE);
 
+        listener_.onChatFragment_CreateView(this);
         return view;
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        Log.d(TAG, "onActivityCreated...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onActivityCreated...");
     }
 
     @Override
     public void onResume () {
         super.onResume();
-        Log.i(TAG, "onResume...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onResume...");
     }
 
     @Override
     public void onPause () {
         super.onPause();
-        Log.i(TAG, "onPause...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onPause...");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDestroyView");
+        listener_.onChatFragment_DestroyView(this);
     }
 
     @Override
     public void onDestroy () {
         super.onDestroy();
-        Log.i(TAG, "onDestroy...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDestroy...");
     }
 
     @Override
     public void onDetach () {
         super.onDetach();
-        Log.i(TAG, "onDetach...");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDetach...");
     }
 
     public void addNewMessage(MessageInfo messageInfo) {

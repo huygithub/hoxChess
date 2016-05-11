@@ -26,12 +26,15 @@ import java.util.Map;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.drawable.LayerDrawable;
+import android.net.Network;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -60,12 +63,14 @@ public class MainActivity extends AppCompatActivity
                 ViewPager.OnPageChangeListener,
                 MessageManager.EventListener,
                 BoardFragment.OnFragmentInteractionListener,
-                PlayersFragment.OnFragmentInteractionListener {
+                PlayersFragment.OnFragmentInteractionListener,
+                HomeFragment.OnHomeFragmentListener {
 
     private static final String TAG = "MainActivity";
 
     // The request codes
     private static final int JOIN_TABLE_REQUEST = 1;
+    private static final int CHANGE_SETTINGS_REQUEST = 2;
 
     private DrawerLayout drawerLayout_;
     private ActionBarDrawerToggle drawerToggle_;
@@ -85,6 +90,11 @@ public class MainActivity extends AppCompatActivity
     // TODO: We should persist this counter somewhere else because it is lost when the
     //       device is rotated, for example.
     private int notifCount_ = 0;
+
+    private SettingsActivity.SettingsInfo settingsInfo_;
+
+     // A handler object, used for deferring UI operations.
+    private Handler handler_ = new Handler();
 
     private BaseTableController tableController_ = new BaseTableController();
 
@@ -119,11 +129,29 @@ public class MainActivity extends AppCompatActivity
 
         Log.d(TAG, "onCreate: savedInstanceState = " + savedInstanceState + ".");
 
-        pagerAdapter_ = new MainPagerAdapter(this, getSupportFragmentManager());
-        viewPager_ = (ViewPager) findViewById(R.id.main_view_pager);
-        viewPager_.setAdapter(pagerAdapter_);
-        viewPager_.setOffscreenPageLimit(2); // Performance: Keep the 3rd page from being destroyed!
-        viewPager_.addOnPageChangeListener(this);
+        // Check that the activity is using the layout version with
+        // the main_container FrameLayout
+        if (findViewById(R.id.main_container) != null) {
+            // However, if we're being restored from a previous state,
+            // then we don't need to do anything and should return or else
+            // we could end up with overlapping fragments.
+            if (savedInstanceState != null) {
+                return;
+            }
+
+            // Create a new Fragment to be placed in the activity layout
+            HomeFragment homeFragment = HomeFragment.newInstance();
+
+            // Add the fragment to the 'fragment_container' FrameLayout
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.main_container, homeFragment).commit();
+        }
+
+        //pagerAdapter_ = new MainPagerAdapter(this, getSupportFragmentManager());
+        //viewPager_ = (ViewPager) findViewById(R.id.main_view_pager);
+        //viewPager_.setAdapter(pagerAdapter_);
+        //viewPager_.setOffscreenPageLimit(2); // Performance: Keep the 3rd page from being destroyed!
+        //viewPager_.addOnPageChangeListener(this);
 
         // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
         // Reference:
@@ -131,7 +159,15 @@ public class MainActivity extends AppCompatActivity
         setVolumeControlStream(SoundManager.getInstance().getStreamType());
 
         SoundManager.getInstance().initialize(this);
-        BaseTableController.getCurrentController().onMainActivityCreate(this);
+        // FIXME: BaseTableController.getCurrentController().onMainActivityCreate(this);
+
+        handler_.post(new Runnable() {
+            @Override
+            public void run() {
+                Log.i(TAG, "In UI thread again (onCreate): Login to server...");
+                HoxApp.getApp().loginServer();
+            }
+        });
     }
 
     private void setupDrawer(Toolbar toolbar) {
@@ -243,7 +279,8 @@ public class MainActivity extends AppCompatActivity
                 break;
             }
             case R.id.action_logout:
-                tableController_.handleLogoutFromNetwork();
+                //tableController_.handleLogoutFromNetwork();
+                NetworkController.getInstance().logoutFromNetwork();
                 break;
             default:
                 break;
@@ -307,7 +344,7 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
-        BaseTableController.getCurrentController().onMainActivityDestroy(this);
+        // FIXME: BaseTableController.getCurrentController().onMainActivityDestroy(this);
     }
     
     @Override
@@ -330,7 +367,11 @@ public class MainActivity extends AppCompatActivity
     public boolean onPrepareOptionsMenu(Menu menu) {
         Log.d(TAG, "(ActionBar) onPrepareOptionsMenu");
         super.onPrepareOptionsMenu(menu);
-        return tableController_.onPrepareOptionsMenu(this, menu);
+        // FIXME: return tableController_.onPrepareOptionsMenu(this, menu);
+        menu.findItem(R.id.action_new_table).setVisible(false);
+        menu.findItem(R.id.action_close_table).setVisible(false);
+        menu.findItem(R.id.action_view_tables).setVisible(false);
+        return true;
     }
     
     @Override
@@ -370,8 +411,13 @@ public class MainActivity extends AppCompatActivity
 
     private void openSettingsView() {
         Log.d(TAG, "Open 'Settings' view...");
+        // Make a copy of the current settings.
+        settingsInfo_ = SettingsActivity.getCurrentSettingsInfo(this);
+
+        //Intent intent = new Intent(this, SettingsActivity.class);
+        //startActivity(intent);
         Intent intent = new Intent(this, SettingsActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, CHANGE_SETTINGS_REQUEST);
     }
 
     private void openWebsiteToServer() {
@@ -515,7 +561,8 @@ public class MainActivity extends AppCompatActivity
             playersFragment.clearAll();
         }
 
-        tableController_.onTableClear();
+        //tableController_.onTableClear();
+        MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
 
         adjustScreenOnFlagBasedOnGameStatus();
     }
@@ -608,12 +655,36 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == JOIN_TABLE_REQUEST) {
-            if (resultCode == RESULT_OK) {
-                final String tableId = data.getStringExtra("tid");
-                tableController_.handleTableSelection(tableId);
+        Log.d(TAG, "onActivityResult:...");
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+
+        if (requestCode == CHANGE_SETTINGS_REQUEST) {
+            Log.d(TAG, "onActivityResult: on Settings changed...");
+            SettingsActivity.SettingsInfo newSettings = SettingsActivity.getCurrentSettingsInfo(this);
+            if (newSettings.loginWithAccount != settingsInfo_.loginWithAccount
+                    || !TextUtils.equals(newSettings.myPid, settingsInfo_.myPid)
+                    || !TextUtils.equals(newSettings.myPassword, settingsInfo_.myPassword)) {
+                HoxApp.getApp().disconnectAndLoginToServer();;
+                /*if (NetworkController.getInstance().isOnline() ) {
+                    NetworkController.getInstance().logoutFromNetwork();
+                    //HoxApp.getApp().loginServer();
+                } else {
+                    HoxApp.getApp().loadPreferences_Account();
+                    //refreshLoginState();
+                }*/
             }
         }
+
+//        if (requestCode == JOIN_TABLE_REQUEST) {
+//            if (resultCode == RESULT_OK) {
+//                final String tableId = data.getStringExtra("tid");
+//                tableController_.handleTableSelection(tableId);
+//            }
+//        }
     }
 
     /**
@@ -621,7 +692,7 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void onTableMenuClick(View view) {
-        tableController_.handleTableMenuOnClick(this, view);
+        tableController_.handleTableMenuOnClick(this);
     }
 
     @Override
@@ -716,6 +787,15 @@ public class MainActivity extends AppCompatActivity
         tableController_.handlePlayerOnClickInTable(playerInfo, tableId);
     }
 
+    // **** Implementation of HomeFragment.OnHomeFragmentListener ***
+    @Override
+    public void OnEditAccountViewClick() {
+        Log.d(TAG, "OnEditAccountViewClick");
+        //Intent intent = new Intent(this, SettingsActivity.class);
+        //startActivityForResult(intent, CHANGE_SETTINGS_REQUEST);
+        openSettingsView();
+    }
+
     /**
      * Implementation ViewPager.OnPageChangeListener
      */
@@ -763,10 +843,10 @@ public class MainActivity extends AppCompatActivity
 
     // ******
 
-    public void registerChatFragment(final ChatFragment fragment) {
-        Log.d(TAG, "registerChatFragment: old:" + myChatFragment_.get() + " => new:" + fragment);
-        myChatFragment_ = new WeakReference<ChatFragment>(fragment);
-    }
+//    public void registerChatFragment(final ChatFragment fragment) {
+//        Log.d(TAG, "registerChatFragment: old:" + myChatFragment_.get() + " => new:" + fragment);
+//        myChatFragment_ = new WeakReference<ChatFragment>(fragment);
+//    }
 
     public void setAndShowTitle(String title) {
         if (getSupportActionBar() == null) {

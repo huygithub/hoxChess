@@ -22,6 +22,7 @@ import java.lang.ref.WeakReference;
 
 import com.playxiangqi.hoxchess.Enums.TableType;
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
@@ -46,6 +47,31 @@ public class BaseTableController implements BoardView.BoardEventListener {
     private static BaseTableController currentController_;
 
     protected WeakReference<MainActivity> mainActivity_ = new WeakReference<MainActivity>(null);
+
+    protected BoardController boardController_;
+
+    // ***************************
+    public interface BoardController {
+        // APIs that are required for AI/Practice tables.
+        void reverseBoardView();
+        void updateBoardWithNewMove(MoveInfo move);
+        void openNewPracticeTable();
+
+        // APIs that are required for Network tables.
+        void updateBoardWithNewTableInfo(TableInfo tableInfo);
+        void resetBoardWithNewMoves(MoveInfo[] moves);
+        void clearTable();
+        void onLocalPlayerJoined(Enums.ColorEnum myColor);
+        void onPlayerJoin(String pid, String rating, Enums.ColorEnum playerColor);
+        void onPlayerLeave(String pid);
+        void showGameMessage_DRAW(String pid);
+        void onGameEnded(Enums.GameStatus gameStatus);
+        void onGameReset();
+    }
+    public void setBoardController(BoardController controller) {
+        boardController_ = controller;
+    }
+    // ***************************
 
     /**
      * Constructor
@@ -120,7 +146,7 @@ public class BaseTableController implements BoardView.BoardEventListener {
         return false; // Do not display the menu
     }
 
-    public void handleTableMenuOnClick(final Context context, View view) {
+    public void handleTableMenuOnClick(Activity activity) {
     }
 
     public void handlePlayerOnClickInTable(PlayerInfo playerInfo, String tableId) {
@@ -145,8 +171,8 @@ public class BaseTableController implements BoardView.BoardEventListener {
     public void handleLogoutFromNetwork() {
     }
 
-    public void onTableClear() {
-    }
+    //public void onTableClear() {
+    //}
 
     public void onNetworkMove(MoveInfo move) {
     }
@@ -207,9 +233,12 @@ public class BaseTableController implements BoardView.BoardEventListener {
         actionSheet.setOnClickListener_ReverseBoard(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity mainActivity = mainActivity_.get();
-                if (mainActivity != null) {
-                    mainActivity.reverseBoardView();
+                //MainActivity mainActivity = mainActivity_.get();
+                //if (mainActivity != null) {
+                //    mainActivity.reverseBoardView();
+                //}
+                if (boardController_ != null) {
+                    boardController_.reverseBoardView();
                 }
                 actionSheet.dismiss();
             }
@@ -314,6 +343,10 @@ public class BaseTableController implements BoardView.BoardEventListener {
 
     public static BaseTableController getCurrentController() {
         return currentController_;
+    }
+
+    public static NetworkTableController getNetworkController() {
+        return (NetworkTableController) getTableController(TableType.TABLE_TYPE_NETWORK);
     }
 
 }

@@ -22,7 +22,9 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
@@ -38,7 +40,10 @@ import android.util.Log;
 public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
     private static final String TAG = "NetworkController";
-    
+
+    // The singleton instance.
+    private static NetworkController instance_;
+
     private final NetworkPlayer networkPlayer_ = new NetworkPlayer();
     private boolean isLoginOK_ = false;
     private String myRating_ = "1500";
@@ -47,29 +52,70 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     private ColorEnum myColor_ = ColorEnum.COLOR_UNKNOWN;
     
     private GameStatus gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
-    
-    //private List<ChatMessage> newMessages_ = new ArrayList<ChatMessage>();
 
     // *************************************************************************************
-    public interface EventListener {
-        void onMessageReceived(ChatMessage chatMsg);
+    public interface NetworkEventListener {
+        void onLoginSuccess();
+        void onLogout();
     }
-    private Set<EventListener> listeners_ = new HashSet<EventListener>();
+    private Set<NetworkEventListener> listeners_ = new HashSet<NetworkEventListener>();
+    public void addListener(NetworkEventListener listener) { listeners_.add(listener); }
+    public void removeListener(NetworkEventListener listener) { listeners_.remove(listener); }
 
-    public void addListener(EventListener listener) {
-        listeners_.add(listener);
+    // *************************************************************************************
+    public static class Request {
+        final public String op; // The operation (e.g., "list", "new_table").
+        public Map<String, String> params; // Pairs of <key, value> if needed.
+        public Request(String operation) { this.op = operation; }
+    }
+    private LinkedList<Request> pendingRequestsQueue_ = new LinkedList<Request>();
+
+    private void addPendingRequest(Request request) {
+        pendingRequestsQueue_.addLast(request);
     }
 
-    public void removeListener(EventListener listener) {
-        listeners_.remove(listener);
+    private Request getAndRemoveFirstPendingRequest() {
+        if (pendingRequestsQueue_.size() == 0) { return null; }
+        return pendingRequestsQueue_.removeFirst();
+    }
+
+    private void processRequest(Request request) {
+        final String op = request.op;
+        if ("list".equals(op)) {
+            networkPlayer_.sendRequest_LIST();
+        } else if ("new".equals(op)) {
+            networkPlayer_.sendRequest_NEW(Enums.DEFAULT_INITIAL_GAME_TIMES);
+        } else if ("connect".equals(op)) {
+            networkPlayer_.connectToServer();
+        } else {
+            throw new RuntimeException("Unsupported request:" + op);
+        }
+    }
+
+    private void processFirstPendingRequest() {
+        Request firstRequest = getAndRemoveFirstPendingRequest();
+        if (firstRequest != null) {
+            Log.d(TAG, "Process a pending request:" + firstRequest.op);
+            processRequest(firstRequest);
+        }
     }
 
     // *************************************************************************************
 
     /**
+     * Singleton API to return the instance.
+     */
+    public static NetworkController getInstance() {
+        if (instance_ == null) {
+            instance_ = new NetworkController();
+        }
+        return instance_;
+    }
+
+    /**
      * Constructor
      */
-    public NetworkController() {
+    private NetworkController() {
         Log.d(TAG, "[CONSTRUCTOR]: ...");
         networkPlayer_.setNetworkEventListener(this);
         if (!networkPlayer_.isAlive()) {
@@ -133,7 +179,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     public String getMyTableId() { return myTable_.tableId; }
     public TableInfo getMyTableInfo() { return myTable_; }
     public String getMyRating_() { return myRating_; }
-    //public List<ChatMessage> getNewMessages() { return newMessages_; }
 
     /**
      * The main handler to handle ALL incoming network events.
@@ -208,9 +253,16 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             case NetworkPlayer.NETWORK_CODE_UNRESOLVED_ADDRESS:
                 resId = R.string.msg_connection_failed_unresolved_address_exception;
                 break;
-            case NetworkPlayer.NETWORK_CODE_DISCONNECTED:
+            case NetworkPlayer.NETWORK_CODE_DISCONNECTED: {
                 resId = R.string.msg_connection_disconnected;
+                // NOTE: The special LOGOUT event!
+                Log.i(TAG, "On Network code: I just logged out the server.");
+                for (NetworkEventListener listener : listeners_) {
+                    listener.onLogout();
+                }
+                processFirstPendingRequest();
                 break;
+            }
             default:
                 break;
         }
@@ -245,7 +297,12 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             myRating_ = rating;
 
             myColor_ = ColorEnum.COLOR_UNKNOWN;
-            BaseTableController.getCurrentController().onNetworkLoginSuccess();
+            // FIXME...
+            BaseTableController.getNetworkController().onNetworkLoginSuccess();
+            for (NetworkEventListener listener : listeners_) {
+                listener.onLoginSuccess();
+            }
+            processFirstPendingRequest();
 
         } else { // Other player 's LOGIN?
             Log.d(TAG, "Received other player LOGIN info [" + pid + " " + rating + "].");
@@ -282,7 +339,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
         Log.i(TAG, "Set my table Id: " + myTable_.tableId + ", myColor: " + myColor_);
 
-        BaseTableController.getCurrentController().onNetworkTableEnter(myTable_);
+        BaseTableController.getNetworkController().onNetworkTableEnter(myTable_);
     }
 
     private void handleNetworkEvent_I_MOVES(String content) {
@@ -297,7 +354,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         final MoveInfo[] moves = MoveInfo.parseForListOfNetworkMoves(movesStr);
-        BaseTableController.getCurrentController().onResetBoardWithMoves(moves);
+        BaseTableController.getNetworkController().onResetBoardWithMoves(moves);
     }
 
     private void handleNetworkEvent_MOVE(String content) {
@@ -312,7 +369,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         final MoveInfo moveInfo = MoveInfo.parseForNetworkMove(move);
-        BaseTableController.getCurrentController().onNetworkMove(moveInfo);
+        BaseTableController.getNetworkController().onNetworkMove(moveInfo);
     }
 
     private void handleNetworkEvent_LEAVE(String content) {
@@ -338,7 +395,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             myTable_.onPlayerLeft(pid);
         }
 
-        BaseTableController.getCurrentController().onNetworkPlayerLeave(pid);
+        BaseTableController.getNetworkController().onNetworkPlayerLeave(pid);
     }
 
     private void handleNetworkEvent_E_JOIN(String content) {
@@ -372,7 +429,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             myColor_ = myNewColor;
         }
 
-        BaseTableController.getCurrentController().onNetworkPlayerJoin(
+        BaseTableController.getNetworkController().onNetworkPlayerJoin(
                 new PlayerInfo(pid, rating), playerColor, myNewColor);
     }
 
@@ -398,7 +455,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
         gameStatus_ = gameStatus;
 
-        BaseTableController.getCurrentController().onGameEnded(gameStatus);
+        BaseTableController.getNetworkController().onGameEnded(gameStatus);
     }
 
     private void handleNetworkEvent_RESET(String content) {
@@ -412,7 +469,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
-        BaseTableController.getCurrentController().onGameReset();
+        BaseTableController.getNetworkController().onGameReset();
     }
 
     private void handleNetworkEvent_DRAW(String content) {
@@ -426,7 +483,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             return;
         }
 
-        BaseTableController.getCurrentController().onGameDrawnRequested(pid);
+        BaseTableController.getNetworkController().onGameDrawnRequested(pid);
     }
 
     private void handleNetworkEvent_MSG(String content, String tableId) {
@@ -444,25 +501,11 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         //   (2) For private messages, "tid" is missing.
         //
 
-        String newMessage;
-
-        if (TextUtils.isEmpty(tableId)) { // TODO: a private message. Need to improve...
-            newMessage = "(PRIVATE) " + sender + ": " + message;
-        } else if (myTable_.hasId(tableId)) { // a "table" message?
-            newMessage = sender + ": " + message;
-        } else {
+        if (!TextUtils.isEmpty(tableId) && !myTable_.hasId(tableId)) {
             Log.w(TAG, "I am no longer in table: " + tableId + ". Ignore MSG from : " + sender);
             return; // Do nothing.
         }
 
-        //ChatMessage chatMsg = new ChatMessage(true, newMessage);
-        //newMessages_.add(chatMsg);
-
-        //for (EventListener listener : listeners_) {
-        //    listener.onMessageReceived(chatMsg);
-        //}
-
-        // ----
         MessageInfo.MessageType msgType = (TextUtils.isEmpty(tableId)
                 ? MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE
                 :  MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
@@ -470,7 +513,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         messageInfo.content = message;
         messageInfo.tableId = tableId;
         MessageManager.getInstance().addMessage(messageInfo);
-        // ----
     }
 
     private void handleNetworkEvent_INVITE(String content, String tableId) {
@@ -488,24 +530,13 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         final String tableIdString = (TextUtils.isEmpty(tableId) ? "?" : tableId);
-        final String inviteString = "From [" + sender + " (" + senderRating + ")]"
-                + " @ [" + tableIdString + "]";
-        final String newMessage = "*INVITE: " + inviteString;
 
-        //ChatMessage chatMsg = new ChatMessage(true, newMessage);
-        //newMessages_.add(chatMsg);
-
-        //for (EventListener listener : listeners_) {
-        //    listener.onMessageReceived(chatMsg);
-        //}
-
-        // ----
         MessageInfo messageInfo = new MessageInfo(
                 MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY,
                 sender);
         messageInfo.tableId = tableIdString;
+        messageInfo.senderRating = senderRating;
         MessageManager.getInstance().addMessage(messageInfo);
-        // ----
     }
 
     private void handleNetworkEvent_I_PLAYERS(String content) {
@@ -656,7 +687,6 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             Log.i(TAG, "No network table. Ignore the local message.");
             return;
         }
-        //newMessages_.add(chatMsg);
         networkPlayer_.sendRequest_MSG(myTable_.tableId, chatMsg.message);
     }
 
@@ -756,7 +786,25 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     }
 
     public void sendRequestForTableList() {
-        networkPlayer_.sendRequest_LIST();
+        Log.d(TAG, "Send request to get 'LIST-of-tables'...");
+        if (networkPlayer_.isOnline() && isLoginOK_) {
+            networkPlayer_.sendRequest_LIST();
+        } else {
+            Request listRequest = new Request("list");
+            addPendingRequest(listRequest);
+            HoxApp.getApp().loginServer();
+        }
+    }
+
+    public void sendRequestToOpenNewTable() {
+        Log.d(TAG, "Send request to open 'NEW-table'...");
+        if (networkPlayer_.isOnline() && isLoginOK_) {
+            networkPlayer_.sendRequest_NEW(Enums.DEFAULT_INITIAL_GAME_TIMES);
+        } else {
+            Request listRequest = new Request("new");
+            addPendingRequest(listRequest);
+            HoxApp.getApp().loginServer();
+        }
     }
 
     public void setLoginInfo(String pid, String password) {
@@ -765,6 +813,16 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
     public void connectToServer() {
         networkPlayer_.connectToServer();
+    }
+
+    public void reconnectToServer() {
+        Log.d(TAG, "Re-connect to server...");
+        if (networkPlayer_.isOnline() ) {
+            networkPlayer_.disconnectFromServer();
+            addPendingRequest(new Request("connect"));
+        } else {
+            networkPlayer_.connectToServer();
+        }
     }
 
     public boolean isGameOver() {

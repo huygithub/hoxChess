@@ -52,12 +52,12 @@ public class NetworkTableController extends BaseTableController {
         playerTracker.clearAllPlayers();
         playerTracker.syncUI();
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.setTableController(this);
-            mainActivity.clearTable();
-            mainActivity.onLoginSuccess();
-        }
+        //MainActivity mainActivity = mainActivity_.get();
+        //if (mainActivity != null) {
+        //    mainActivity.setTableController(this);
+        //    mainActivity.clearTable();
+        //    mainActivity.onLoginSuccess();
+        //}
     }
 
     @Override
@@ -99,9 +99,14 @@ public class NetworkTableController extends BaseTableController {
         playerTracker.setObservers(tableInfo.observers);
         playerTracker.syncUI();
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.updateBoardWithNewTableInfo(tableInfo);
+        //MainActivity mainActivity = mainActivity_.get();
+        //if (mainActivity != null) {
+        //    mainActivity.updateBoardWithNewTableInfo(tableInfo);
+        //}
+
+        //NetworkTableActivity.start(HoxApp.getApp(), tableInfo.tableId);
+        if (boardController_ != null) {
+            boardController_.updateBoardWithNewTableInfo(tableInfo);
         }
     }
 
@@ -112,13 +117,19 @@ public class NetworkTableController extends BaseTableController {
         MainActivity mainActivity = mainActivity_.get();
 
         if (myNewColor != ColorEnum.COLOR_UNKNOWN) { // my role has changed?
-            if (mainActivity != null) {
-                mainActivity.onLocalPlayerJoined(myNewColor);
+            //if (mainActivity != null) {
+            //    mainActivity.onLocalPlayerJoined(myNewColor);
+            //}
+            if (boardController_ != null) {
+                boardController_.onLocalPlayerJoined(myNewColor);
             }
         }
 
-        if (mainActivity != null) {
-            mainActivity.onPlayerJoin(playerInfo.pid, playerInfo.rating, playerColor);
+        //if (mainActivity != null) {
+        //    mainActivity.onPlayerJoin(playerInfo.pid, playerInfo.rating, playerColor);
+        //}
+        if (boardController_ != null) {
+            boardController_.onPlayerJoin(playerInfo.pid, playerInfo.rating, playerColor);
         }
 
         TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
@@ -143,14 +154,20 @@ public class NetworkTableController extends BaseTableController {
             HoxApp.getApp().getTimeTracker().stop();
             playerTracker.setTableType(myTableType_);
             playerTracker.clearAllPlayers();
-            if (mainActivity != null) {
-                mainActivity.clearTable();
+            //if (mainActivity != null) {
+            //    mainActivity.clearTable();
+            //}
+            if (boardController_ != null) {
+                boardController_.clearTable();
             }
 
         } else { // Other player left my table?
             playerTracker.onPlayerLeave(pid);
-            if (mainActivity != null) {
-                mainActivity.onPlayerLeave(pid);
+            //if (mainActivity != null) {
+            //    mainActivity.onPlayerLeave(pid);
+            //}
+            if (boardController_ != null) {
+                boardController_.onPlayerLeave(pid);
             }
         }
 
@@ -160,9 +177,12 @@ public class NetworkTableController extends BaseTableController {
     @Override
     public void onGameEnded(Enums.GameStatus gameStatus) {
         Log.d(TAG, "onGameEnded: gameStatus = "  + gameStatus);
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.onGameEnded(gameStatus);
+        //MainActivity mainActivity = mainActivity_.get();
+        //if (mainActivity != null) {
+        //    mainActivity.onGameEnded(gameStatus);
+        //}
+        if (boardController_ != null) {
+            boardController_.onGameEnded(gameStatus);
         }
         HoxApp.getApp().getTimeTracker().stop();
         HoxApp.getApp().getPlayerTracker().syncUI();
@@ -171,9 +191,12 @@ public class NetworkTableController extends BaseTableController {
     @Override
     public void onGameReset() {
         Log.d(TAG, "onGameEnded:...");
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.onGameReset();
+        //MainActivity mainActivity = mainActivity_.get();
+        //if (mainActivity != null) {
+        //    mainActivity.onGameReset();
+        //}
+        if (boardController_ != null) {
+            boardController_.onGameReset();
         }
         TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
         timeTracker.stop();
@@ -183,9 +206,12 @@ public class NetworkTableController extends BaseTableController {
     @Override
     public void onGameDrawnRequested(String pid) {
         Log.d(TAG, "onGameDrawnRequested: pid = " + pid);
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.showGameMessage_DRAW(pid);
+        //MainActivity mainActivity = mainActivity_.get();
+        //if (mainActivity != null) {
+        //    mainActivity.showGameMessage_DRAW(pid);
+        //}
+        if (boardController_ != null) {
+            boardController_.showGameMessage_DRAW(pid);
         }
     }
 
@@ -249,13 +275,13 @@ public class NetworkTableController extends BaseTableController {
     }
 
     @Override
-    public void handleTableMenuOnClick(final Context context, View view) {
-        if (mainActivity_ == null || context != mainActivity_.get()) {
-            throw new RuntimeException("The context must be the Main Activity");
-        }
+    public void handleTableMenuOnClick(Activity activity) {
+        //if (mainActivity_ == null || context != mainActivity_.get()) {
+        //    throw new RuntimeException("The context must be the Main Activity");
+        //}
 
-        MainActivity mainActivity = mainActivity_.get();
-        final TableActionSheet actionSheet = new TableActionSheet(mainActivity);
+        //MainActivity mainActivity = mainActivity_.get();
+        final TableActionSheet actionSheet = new TableActionSheet(activity);
         actionSheet.setHeaderText(getTitleForTableActionSheet());
         super.setupListenersInTableActionSheet(actionSheet);
 
@@ -361,10 +387,10 @@ public class NetworkTableController extends BaseTableController {
         HoxApp.getApp().getNetworkController().logoutFromNetwork();
     }
 
-    @Override
-    public void onTableClear() {
-        MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
-    }
+    //@Override
+    //public void onTableClear() {
+    //    MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
+    //}
 
     @Override
     public void onNetworkMove(MoveInfo move) {
@@ -377,9 +403,12 @@ public class NetworkTableController extends BaseTableController {
             return;
         }
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.updateBoardWithNewMove(move);
+        //MainActivity mainActivity = mainActivity_.get();
+        //if (mainActivity != null) {
+        //    mainActivity.updateBoardWithNewMove(move);
+        //}
+        if (boardController_ != null) {
+            boardController_.updateBoardWithNewMove(move);
         }
 
         TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
@@ -400,9 +429,12 @@ public class NetworkTableController extends BaseTableController {
             }
         }
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.resetBoardWithNewMoves(moves);
+        //MainActivity mainActivity = mainActivity_.get();
+        //if (mainActivity != null) {
+        //    mainActivity.resetBoardWithNewMoves(moves);
+        //}
+        if (boardController_ != null) {
+            boardController_.resetBoardWithNewMoves(moves);
         }
 
         TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();

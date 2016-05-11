@@ -25,8 +25,10 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MenuItem;
 
-public class ChatBubbleActivity extends AppCompatActivity {
+public class ChatBubbleActivity extends AppCompatActivity
+                    implements ChatFragment.OnChatFragmentListener {
 
     private static final String TAG = "ChatBubbleActivity";
 
@@ -69,6 +71,28 @@ public class ChatBubbleActivity extends AppCompatActivity {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d(TAG, "(ActionBar) onOptionsItemSelected");
+
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long);
+        // as you specify a parent activity in AndroidManifest.xml.
+        switch (item.getItemId()) {
+            case android.R.id.home: // To handle the BACK button!
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    /** Implementation of ChatFragment.OnChatFragmentListener */
+    @Override
+    public void onChatFragment_CreateView(ChatFragment fragment) {}
+    @Override
+    public void onChatFragment_DestroyView(ChatFragment fragment) {}
 
     /**
      * The fragment that handles notifications.

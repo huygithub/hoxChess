@@ -18,6 +18,8 @@
  */
 package com.playxiangqi.hoxchess;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.preference.CheckBoxPreference;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -30,6 +32,7 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.MenuItem;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -40,7 +43,25 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String KEY_PREF_ACCOUNT_LOGIN = "pref_key_playxiangqi_login_with_account";
     private static final String KEY_PREF_ACCOUNT_USERNAME = "pref_key_playxiangqi_username";
     private static final String KEY_PREF_ACCOUNT_PASSWORD = "pref_key_playxiangqi_password";
-    
+
+    public static class SettingsInfo {
+        public int aiLevel;
+        public boolean soundEnabled;
+        public boolean loginWithAccount;
+        public String myPid;
+        public String myPassword;
+    }
+
+    public static SettingsInfo getCurrentSettingsInfo(Context context) {
+        SettingsInfo settingsInfo = new SettingsInfo();
+        settingsInfo.aiLevel = getAILevel(context);
+        settingsInfo.soundEnabled = getSoundEnabledFlag(context);
+        settingsInfo.loginWithAccount = getLoginWithAccountFlag(context);
+        settingsInfo.myPid = getAccountPid(context);
+        settingsInfo.myPassword = getAccountPassword(context);
+        return settingsInfo;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,7 +73,26 @@ public class SettingsActivity extends AppCompatActivity {
             .add(R.id.container, new SettingsFragment())
             .commit();
     }
-    
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d(TAG, "(ActionBar) onOptionsItemSelected");
+
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long);
+        // as you specify a parent activity in AndroidManifest.xml.
+        switch (item.getItemId()) {
+            case android.R.id.home: // To handle the BACK button!
+                Intent result = new Intent();
+                //result.putExtra("changed", true);
+                setResult(Activity.RESULT_OK, result);
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     public static int getAILevel(Context context) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         int aiLevel = Integer.parseInt(sharedPreferences.getString(KEY_PREF_AI_LEVEL,
@@ -151,6 +191,10 @@ public class SettingsActivity extends AppCompatActivity {
           } else if (key.equals(KEY_PREF_SOUND_ENABLED)) {
               CheckBoxPreference soundPref = (CheckBoxPreference) pref;
               SoundManager.getInstance().setSoundEnabled(getActivity(), soundPref.isChecked());
+
+          } else if (key.equals(KEY_PREF_ACCOUNT_LOGIN)) {
+              boolean loginWithAccount = sharedPreferences.getBoolean(key, false);
+              //HoxApp.getApp().onLoginWithAccountFlagChanged(loginWithAccount);
 
           } else if (key.equals(KEY_PREF_ACCOUNT_USERNAME)) {
               String pid = sharedPreferences.getString(key, "");

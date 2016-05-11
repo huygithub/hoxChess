@@ -116,5 +116,7 @@
     <string name="action_table_menu">Table menu</string>
     <string name="table_network_info">Table: #%1$s (%2$s)</string>
     <string name="logged_in_player_info">Logged in: %1$s (%2$s)</string>
+    <string name="logged_in_as_player">Logged in as &lt;font color="#0033b5e5">%1$s (%2$s)&lt;/font></string>
+    <string name="will_log_in_as_player">Username: &lt;font color="#0033b5e5">%1$s&lt;/font></string>
 
 </resources>

@@ -20,6 +20,7 @@ package com.playxiangqi.hoxchess;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
@@ -125,11 +126,6 @@ public class LocalTableController extends BaseTableController {
     }
 
     @Override
-    public boolean handleBackPressed() {
-        return false;
-    }
-
-    @Override
     public boolean onPrepareOptionsMenu(Context context, Menu menu) {
         menu.findItem(R.id.action_new_table).setVisible(false);
         menu.findItem(R.id.action_close_table).setVisible(false);
@@ -137,14 +133,14 @@ public class LocalTableController extends BaseTableController {
     }
 
     @Override
-    public void handleTableMenuOnClick(final Context context, View view) {
-        if (mainActivity_ == null || context != mainActivity_.get()) {
-            throw new RuntimeException("The context must be the Main Activity");
-        }
+    public void handleTableMenuOnClick(Activity activity) {
+        //if (mainActivity_ == null || context != mainActivity_.get()) {
+        //    throw new RuntimeException("The context must be the Main Activity");
+        //}
 
-        MainActivity mainActivity = mainActivity_.get();
-        final TableActionSheet actionSheet = new TableActionSheet(mainActivity);
-        actionSheet.setHeaderText(mainActivity.getString(R.string.title_table_ai));
+        //MainActivity mainActivity = mainActivity_.get();
+        final TableActionSheet actionSheet = new TableActionSheet(activity);
+        actionSheet.setHeaderText(activity.getString(R.string.title_table_ai));
         super.setupListenersInTableActionSheet(actionSheet);
 
         actionSheet.hideAction(TableActionSheet.Action.ACTION_CLOSE_TABLE);
@@ -231,11 +227,17 @@ public class LocalTableController extends BaseTableController {
         timeTracker.stop();
         timeTracker.reset();
         MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.openNewPracticeTable();
-            Snackbar.make(mainActivity.findViewById(R.id.board_view), R.string.action_reset,
-                    Snackbar.LENGTH_SHORT)
-                    .show();
+//        if (mainActivity != null) {
+//            mainActivity.openNewPracticeTable();
+//            Snackbar.make(mainActivity.findViewById(R.id.board_view), R.string.action_reset,
+//                    Snackbar.LENGTH_SHORT)
+//                    .show();
+//        }
+        if (boardController_ != null) {
+            boardController_.openNewPracticeTable();
+            //Snackbar.make(mainActivity.findViewById(R.id.board_view), R.string.action_reset,
+            //        Snackbar.LENGTH_SHORT)
+            //        .show();
         }
     }
 
@@ -269,9 +271,12 @@ public class LocalTableController extends BaseTableController {
             return;
         }
 
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.updateBoardWithNewAIMove(move);
+//        MainActivity mainActivity = mainActivity_.get();
+//        if (mainActivity != null) {
+//            mainActivity.updateBoardWithNewAIMove(move);
+//        }
+        if (boardController_ != null) {
+            boardController_.updateBoardWithNewMove(move);
         }
 
         timeTracker.nextColor();
