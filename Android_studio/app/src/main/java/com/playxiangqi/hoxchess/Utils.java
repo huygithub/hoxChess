@@ -78,6 +78,17 @@ public class Utils {
         return "ORIENTATION_UNDEFINED";
     }
 
+    public static String gameStatusToString(Enums.GameStatus gameStatus) {
+        switch (gameStatus) {
+            case GAME_STATUS_UNKNOWN:     return "Unknown";
+            case GAME_STATUS_IN_PROGRESS: return "Progress";
+            case GAME_STATUS_RED_WIN:     return "Red_win";
+            case GAME_STATUS_BLACK_WIN:   return "Black_win";
+            case GAME_STATUS_DRAWN:       return "Drawn";
+            default: return "__BUG_Not_Supported_Game_Status__:" + gameStatus;
+        }
+    }
+
     /**
      * Move the ViewPager to a direction (forward or backward) in certain speed.
      *

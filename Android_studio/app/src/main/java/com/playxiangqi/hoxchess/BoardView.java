@@ -118,7 +118,7 @@ public class BoardView extends ImageView
      * The Container of this Board must implement this interface.
      */
     public interface BoardEventListener {
-        void onLocalMove(Position fromPos, Position toPos);
+        void onLocalMove(Position fromPos, Position toPos, Enums.GameStatus gameStatus);
         boolean isMyTurn();
     }
 
@@ -681,7 +681,8 @@ public class BoardView extends ImageView
         addMoveToHistory(fromPos, toPos, capture);
         didMoveOccur(capture, gameStatus, true);
         if (boardEventListener_ != null) {
-            boardEventListener_.onLocalMove(fromPos, toPos);
+            Enums.GameStatus gameStatusEnum = Referee.gameStatusToEnum(gameStatus);
+            boardEventListener_.onLocalMove(fromPos, toPos, gameStatusEnum);
         }
     }
 

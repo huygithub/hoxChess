@@ -190,7 +190,7 @@ public class NetworkTableController extends BaseTableController {
 
     @Override
     public void onGameReset() {
-        Log.d(TAG, "onGameEnded:...");
+        Log.d(TAG, "onGameReset:...");
         //MainActivity mainActivity = mainActivity_.get();
         //if (mainActivity != null) {
         //    mainActivity.onGameReset();
@@ -274,49 +274,49 @@ public class NetworkTableController extends BaseTableController {
         return true; // display the menu
     }
 
-    @Override
-    public void handleTableMenuOnClick(Activity activity) {
-        //if (mainActivity_ == null || context != mainActivity_.get()) {
-        //    throw new RuntimeException("The context must be the Main Activity");
-        //}
-
-        //MainActivity mainActivity = mainActivity_.get();
-        final TableActionSheet actionSheet = new TableActionSheet(activity);
-        actionSheet.setHeaderText(getTitleForTableActionSheet());
-        super.setupListenersInTableActionSheet(actionSheet);
-
-        if (isTableEmpty()) {
-            actionSheet.hideAction(TableActionSheet.Action.ACTION_RESET_TABLE);
-            actionSheet.hideAction(TableActionSheet.Action.ACTION_REVERSE_BOARD);
-            actionSheet.hideAction(TableActionSheet.Action.ACTION_CLOSE_TABLE);
-            actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
-            actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
-
-        } else {
-            final boolean isGameOver = HoxApp.getApp().isGameOver();
-            final ColorEnum myColor = HoxApp.getApp().getNetworkController().getMyColor();
-            final boolean amIPlaying = (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED);
-            final int moveCount = HoxApp.getApp().getReferee().getMoveCount();
-
-            actionSheet.hideAction(TableActionSheet.Action.ACTION_NEW_TABLE);
-            if (isGameOver) {
-                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
-                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
-            } else if (!amIPlaying) {
-                actionSheet.hideAction(TableActionSheet.Action.ACTION_RESET_TABLE);
-                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
-                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
-            } else if (moveCount >= 2) { // game has started?
-                actionSheet.hideAction(TableActionSheet.Action.ACTION_RESET_TABLE);
-                actionSheet.hideAction(TableActionSheet.Action.ACTION_CLOSE_TABLE);
-            } else {
-                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
-                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
-            }
-        }
-
-        actionSheet.show();
-    }
+//    @Override
+//    public void handleTableMenuOnClick(Activity activity) {
+//        //if (mainActivity_ == null || context != mainActivity_.get()) {
+//        //    throw new RuntimeException("The context must be the Main Activity");
+//        //}
+//
+//        //MainActivity mainActivity = mainActivity_.get();
+//        final TableActionSheet actionSheet = new TableActionSheet(activity);
+//        actionSheet.setHeaderText(getTitleForTableActionSheet());
+//        super.setupListenersInTableActionSheet(actionSheet);
+//
+//        if (isTableEmpty()) {
+//            actionSheet.hideAction(TableActionSheet.Action.ACTION_RESET_TABLE);
+//            actionSheet.hideAction(TableActionSheet.Action.ACTION_REVERSE_BOARD);
+//            actionSheet.hideAction(TableActionSheet.Action.ACTION_CLOSE_TABLE);
+//            actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
+//            actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
+//
+//        } else {
+//            final boolean isGameOver = HoxApp.getApp().isGameOver();
+//            final ColorEnum myColor = HoxApp.getApp().getNetworkController().getMyColor();
+//            final boolean amIPlaying = (myColor == ColorEnum.COLOR_BLACK || myColor == ColorEnum.COLOR_RED);
+//            final int moveCount = HoxApp.getApp().getReferee().getMoveCount();
+//
+//            actionSheet.hideAction(TableActionSheet.Action.ACTION_NEW_TABLE);
+//            if (isGameOver) {
+//                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
+//                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
+//            } else if (!amIPlaying) {
+//                actionSheet.hideAction(TableActionSheet.Action.ACTION_RESET_TABLE);
+//                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
+//                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
+//            } else if (moveCount >= 2) { // game has started?
+//                actionSheet.hideAction(TableActionSheet.Action.ACTION_RESET_TABLE);
+//                actionSheet.hideAction(TableActionSheet.Action.ACTION_CLOSE_TABLE);
+//            } else {
+//                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
+//                actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
+//            }
+//        }
+//
+//        actionSheet.show();
+//    }
 
     @Override
     public void handlePlayerOnClickInTable(PlayerInfo playerInfo, String tableId) {
@@ -329,25 +329,25 @@ public class NetworkTableController extends BaseTableController {
         }
     }
 
-    @Override
-    public void handleRequestToOpenNewTable() {
-        Log.d(TAG, "Request to open a new table...");
-
-        NetworkController networkController = HoxApp.getApp().getNetworkController();
-
-        // Case 1: I am not online at all.
-        if (!networkController.isOnline() && !networkController.isMyTableValid()) {
-            BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_LOCAL);
-            BaseTableController.getCurrentController().handleRequestToOpenNewTable();
-        }
-        // Case 2: I am online and am not playing in any table.
-        else if (networkController.isOnline()) {
-            networkController.handleMyRequestToOpenNewTable();
-        }
-        else {
-            Log.w(TAG, "Either offline or not playing. Ignore this 'open new table request'.");
-        }
-    }
+//    @Override
+//    public void handleRequestToOpenNewTable() {
+//        Log.d(TAG, "Request to open a new table...");
+//
+//        NetworkController networkController = HoxApp.getApp().getNetworkController();
+//
+//        // Case 1: I am not online at all.
+//        if (!networkController.isOnline() && !networkController.isMyTableValid()) {
+//            BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_LOCAL);
+//            BaseTableController.getCurrentController().handleRequestToOpenNewTable();
+//        }
+//        // Case 2: I am online and am not playing in any table.
+//        else if (networkController.isOnline()) {
+//            networkController.handleMyRequestToOpenNewTable();
+//        }
+//        else {
+//            Log.w(TAG, "Either offline or not playing. Ignore this 'open new table request'.");
+//        }
+//    }
 
     @Override
     public boolean isMyTurn() {
@@ -443,7 +443,7 @@ public class NetworkTableController extends BaseTableController {
     }
 
     @Override
-    public void onLocalMove(Position fromPos, Position toPos) {
+    public void onLocalMove(Position fromPos, Position toPos, Enums.GameStatus gameStatus) {
         Referee referee = HoxApp.getApp().getReferee();
         Log.i(TAG, "Handle local move: referee 's moveCount = " + referee.getMoveCount());
 
@@ -497,21 +497,21 @@ public class NetworkTableController extends BaseTableController {
         return (myTableType_ == Enums.TableType.TABLE_TYPE_EMPTY);
     }
 
-    private String getTitleForTableActionSheet() {
-        Context context = HoxApp.getApp();
-
-        String tableHeaderTitle;
-        if (isTableEmpty()) {
-            tableHeaderTitle = context.getString(R.string.logged_in_player_info,
-                    HoxApp.getApp().getMyPid(),
-                    HoxApp.getApp().getNetworkController().getMyRating_());
-        } else {
-            TableInfo tableInfo = HoxApp.getApp().getNetworkController().getMyTableInfo();
-            tableHeaderTitle = context.getString(R.string.table_network_info,
-                    tableInfo.tableId, tableInfo.itimes);
-        }
-        return tableHeaderTitle;
-    }
+//    private String getTitleForTableActionSheet() {
+//        Context context = HoxApp.getApp();
+//
+//        String tableHeaderTitle;
+//        if (isTableEmpty()) {
+//            tableHeaderTitle = context.getString(R.string.logged_in_player_info,
+//                    HoxApp.getApp().getMyPid(),
+//                    HoxApp.getApp().getNetworkController().getMyRating_());
+//        } else {
+//            TableInfo tableInfo = HoxApp.getApp().getNetworkController().getMyTableInfo();
+//            tableHeaderTitle = context.getString(R.string.table_network_info,
+//                    tableInfo.tableId, tableInfo.itimes);
+//        }
+//        return tableHeaderTitle;
+//    }
 
     private void clearCurrentTableIfNeeded() {
         if (!isTableEmpty()) { // Are we in a network table?

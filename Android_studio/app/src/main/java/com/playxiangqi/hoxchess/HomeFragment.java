@@ -45,7 +45,6 @@ public class HomeFragment extends Fragment
     private boolean DEBUG_LIFE_CYCLE = true;
 
     private static final int JOIN_TABLE_REQUEST = 1;
-    private static final int CHANGE_SETTINGS_REQUEST = 2;
 
     private OnHomeFragmentListener listener_;
 
@@ -100,7 +99,6 @@ public class HomeFragment extends Fragment
         View editView = view.findViewById(R.id.home_edit_account_view);
         editView.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                //displayAccountView();
                 listener_.OnEditAccountViewClick();
             }
         });
@@ -164,22 +162,7 @@ public class HomeFragment extends Fragment
 
         if (requestCode == JOIN_TABLE_REQUEST) {
             final String tableId = data.getStringExtra("tid");
-            //tableController_.handleTableSelection(tableId);
-            //NetworkController.getInstance().handleTableSelection(tableId);
             NetworkTableActivity.start(getActivity(), tableId);
-
-        } else if (requestCode == CHANGE_SETTINGS_REQUEST) {
-            Log.d(TAG, "onActivityResult: on Settings changed...");
-            SettingsActivity.SettingsInfo newSettings = SettingsActivity.getCurrentSettingsInfo(getActivity());
-            if (newSettings.loginWithAccount != settingsInfo_.loginWithAccount) {
-                if (NetworkController.getInstance().isOnline() ) {
-                    NetworkController.getInstance().logoutFromNetwork();
-                    HoxApp.getApp().loginServer();
-                } else {
-                    HoxApp.getApp().loadPreferences_Account();
-                    refreshLoginState();
-                }
-            }
         }
     }
 
@@ -206,36 +189,19 @@ public class HomeFragment extends Fragment
             loginText = Html.fromHtml(getString(R.string.logged_in_as_player,
                     HoxApp.getApp().getMyPid(),
                     NetworkController.getInstance().getMyRating_()));
-            //loginTextView_.setText(Html.fromHtml(getString(R.string.logged_in_as_player,
-            //        HoxApp.getApp().getMyPid(),
-            //        NetworkController.getInstance().getMyRating_())));
-
         } else {
             loginText = Html.fromHtml(getString(R.string.will_log_in_as_player,
                     HoxApp.getApp().getMyPid()));
-            //loginTextView_.setText(Html.fromHtml(getString(R.string.will_log_in_as_player,
-            //        HoxApp.getApp().getMyPid())));
         }
         loginTextView_.setText(loginText);
     }
 
     private void displayAITable() {
-//        // Create a new Fragment to be placed in the activity layout
-//        AITableFragment aiTableFragment = AITableFragment.newInstance();
-//
-//        // Add the fragment to the 'fragment_container' FrameLayout
-//        getActivity().getSupportFragmentManager().beginTransaction()
-//                .replace(R.id.main_container, aiTableFragment, "ai_fragment")
-//                .addToBackStack(null) // Add this transaction to the back stack
-//                .commit();
-
         Intent intent = new Intent(getActivity(), AITableActivity.class);
         startActivity(intent);
     }
 
     private void displayNetworkTable() {
-        //Intent intent = new Intent(getActivity(), NetworkTableActivity.class);
-        //startActivity(intent);
         final String tableId = ""; // NOTE: Empty means "not yet assigned".
         NetworkTableActivity.start(getActivity(), tableId);
     }
@@ -246,15 +212,5 @@ public class HomeFragment extends Fragment
 
         Intent intent = new Intent(getActivity(), TablesActivity.class);
         startActivityForResult(intent, JOIN_TABLE_REQUEST);
-    }
-
-    private void displayAccountView() {
-        settingsInfo_ = SettingsActivity.getCurrentSettingsInfo(getActivity());
-        //SettingsActivity.start(getActivity(), CHANGE_SETTINGS_REQUEST);
-
-        Intent intent = new Intent(getActivity(), SettingsActivity.class);
-        // NOTE: For onActivityResult() to be called back, we must call startActivityForResult
-        //       in the Fragment instead of in the containing activity!
-        this.startActivityForResult(intent, CHANGE_SETTINGS_REQUEST);
     }
 }

@@ -91,155 +91,44 @@ public class LocalTableController extends BaseTableController {
         }
     }
 
-    @Override
-    public void setupNewTable() {
-        Log.d(TAG, "setupNewTable:...");
-        HoxApp.getApp().getAiEngine().initGame();
-
-        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-        final TimeInfo initialTime = new TimeInfo(Enums.DEFAULT_INITIAL_GAME_TIMES);
-        timeTracker.setInitialColor(ColorEnum.COLOR_RED);
-        timeTracker.setInitialTime(initialTime);
-        timeTracker.setBlackTime(initialTime);
-        timeTracker.setRedTime(initialTime);
-
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.setTableType(Enums.TableType.TABLE_TYPE_LOCAL); // A new practice table.
-        playerTracker.setRedInfo(HoxApp.getApp().getString(R.string.you_label), "1501");
-        playerTracker.setBlackInfo(HoxApp.getApp().getString(R.string.ai_label), "1502");
-    }
-
-    @Override
-    public void onNetworkLoginSuccess() {
-        Log.d(TAG, "onNetworkLoginSuccess:...");
-
-        BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_EMPTY);
-        BaseTableController.getCurrentController().onNetworkLoginSuccess();
-    }
-
-    @Override
-    public void setTableTitle() {
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.setAndShowTitle("AI");
-        }
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Context context, Menu menu) {
-        menu.findItem(R.id.action_new_table).setVisible(false);
-        menu.findItem(R.id.action_close_table).setVisible(false);
-        return true; // display the menu
-    }
-
-    @Override
-    public void handleTableMenuOnClick(Activity activity) {
-        //if (mainActivity_ == null || context != mainActivity_.get()) {
-        //    throw new RuntimeException("The context must be the Main Activity");
-        //}
-
-        //MainActivity mainActivity = mainActivity_.get();
-        final TableActionSheet actionSheet = new TableActionSheet(activity);
-        actionSheet.setHeaderText(activity.getString(R.string.title_table_ai));
-        super.setupListenersInTableActionSheet(actionSheet);
-
-        actionSheet.hideAction(TableActionSheet.Action.ACTION_CLOSE_TABLE);
-        actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
-        actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
-        actionSheet.hideAction(TableActionSheet.Action.ACTION_NEW_TABLE);
-
-        actionSheet.show();
-    }
-
-    @Override
-    public void handleRequestToOpenNewTable() {
-        Log.d(TAG, "Request to open a new table...");
-
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.setTableType(Enums.TableType.TABLE_TYPE_LOCAL); // A new practice table.
-
-        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-        timeTracker.stop();
-
-        setupNewTable();
-
-        timeTracker.syncUI();
-        playerTracker.syncUI();
-
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.setTableController(this);
-            mainActivity.openNewPracticeTable();
-            mainActivity.invalidateOptionsMenu(); // Recreate the options menu
-        }
-    }
-
-    @Override
-    public boolean isMyTurn() {
-        Referee referee = HoxApp.getApp().getReferee();
-        return (myColorInLocalTable_ == referee.getNextColor());
-    }
-
-    @Override
-    public void onLocalMove(Position fromPos, Position toPos) {
-        Referee referee = HoxApp.getApp().getReferee();
-        Log.i(TAG, "On local move: referee 's moveCount = " + referee.getMoveCount());
-
-        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        AIEngine aiEngine = HoxApp.getApp().getAiEngine();
-
-        timeTracker.nextColor();
-
-        if (referee.getMoveCount() == 2) {
-            timeTracker.start();
-            MainActivity mainActivity = mainActivity_.get();
-            if (mainActivity != null) {
-                mainActivity.onGameStatusChanged();
-            }
-        }
-
-        if (referee.getMoveCount() > 1) { // The game has started?
-            playerTracker.syncUI();
-        }
-
-        aiEngine.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
-        if (!referee.isGameInProgress()) {
-            onGameEnded(); // The game has ended. Do nothing
-        } else {
-            final long delayMillis = 2000; // Add delay so we have time to observe the move.
-            Log.d(TAG, "Will ask AI to generate a move after some delay:" + delayMillis);
-            messageHandler_.postAIRequest(aiEngine, delayMillis);
-        }
-    }
-
-    @Override
-    protected void handleRequestToResetTable() {
-        Log.i(TAG, "Handle request to 'Reset Table'...");
-
-        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        AIEngine aiEngine = HoxApp.getApp().getAiEngine();
-
-        messageHandler_.cancelPendingAIRequest();
-        playerTracker.syncUI();
-        aiEngine.initGame();
-        timeTracker.stop();
-        timeTracker.reset();
-        MainActivity mainActivity = mainActivity_.get();
-//        if (mainActivity != null) {
-//            mainActivity.openNewPracticeTable();
-//            Snackbar.make(mainActivity.findViewById(R.id.board_view), R.string.action_reset,
-//                    Snackbar.LENGTH_SHORT)
-//                    .show();
+//    @Override
+//    public boolean isMyTurn() {
+//        Referee referee = HoxApp.getApp().getReferee();
+//        return (myColorInLocalTable_ == referee.getNextColor());
+//    }
+//
+//    @Override
+//    public void onLocalMove(Position fromPos, Position toPos, Enums.GameStatus gameStatus) {
+//        Referee referee = HoxApp.getApp().getReferee();
+//        Log.i(TAG, "On local move: referee 's moveCount = " + referee.getMoveCount());
+//
+//        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
+//        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+//        AIEngine aiEngine = HoxApp.getApp().getAiEngine();
+//
+//        timeTracker.nextColor();
+//
+//        if (referee.getMoveCount() == 2) {
+//            timeTracker.start();
+//            MainActivity mainActivity = mainActivity_.get();
+//            if (mainActivity != null) {
+//                mainActivity.onGameStatusChanged();
+//            }
 //        }
-        if (boardController_ != null) {
-            boardController_.openNewPracticeTable();
-            //Snackbar.make(mainActivity.findViewById(R.id.board_view), R.string.action_reset,
-            //        Snackbar.LENGTH_SHORT)
-            //        .show();
-        }
-    }
+//
+//        if (referee.getMoveCount() > 1) { // The game has started?
+//            playerTracker.syncUI();
+//        }
+//
+//        aiEngine.onHumanMove(fromPos.row, fromPos.column, toPos.row, toPos.column);
+//        if (!referee.isGameInProgress()) {
+//            onGameEnded(); // The game has ended. Do nothing
+//        } else {
+//            final long delayMillis = 2000; // Add delay so we have time to observe the move.
+//            Log.d(TAG, "Will ask AI to generate a move after some delay:" + delayMillis);
+//            messageHandler_.postAIRequest(aiEngine, delayMillis);
+//        }
+//    }
 
     private void onGameEnded() {
         Log.d(TAG, "On game-ended...");
@@ -271,10 +160,6 @@ public class LocalTableController extends BaseTableController {
             return;
         }
 
-//        MainActivity mainActivity = mainActivity_.get();
-//        if (mainActivity != null) {
-//            mainActivity.updateBoardWithNewAIMove(move);
-//        }
         if (boardController_ != null) {
             boardController_.updateBoardWithNewMove(move);
         }

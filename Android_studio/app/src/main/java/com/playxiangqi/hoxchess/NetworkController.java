@@ -295,10 +295,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         if (myPid.equals(pid)) { // my LOGIN?
             Log.i(TAG, "Received my LOGIN info [" + pid + " " + rating + "].");
             myRating_ = rating;
-
             myColor_ = ColorEnum.COLOR_UNKNOWN;
-            // FIXME...
-            BaseTableController.getNetworkController().onNetworkLoginSuccess();
             for (NetworkEventListener listener : listeners_) {
                 listener.onLoginSuccess();
             }

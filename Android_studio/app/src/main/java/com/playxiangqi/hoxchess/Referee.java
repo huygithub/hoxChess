@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
+import com.playxiangqi.hoxchess.Enums.GameStatus;
 import com.playxiangqi.hoxchess.Piece.Move;
 
 import android.util.Log;
@@ -86,7 +87,7 @@ public class Referee {
     }
     
     public boolean isGameInProgress() {
-        return (   gameStatus_ == Referee.hoxGAME_STATUS_READY 
+        return (   gameStatus_ == Referee.hoxGAME_STATUS_READY
                 || gameStatus_ == Referee.hoxGAME_STATUS_IN_PROGRESS);
     }
 
@@ -100,6 +101,19 @@ public class Referee {
             case Referee.hoxGAME_STATUS_BLACK_WIN:   return "Black_win";
             case Referee.hoxGAME_STATUS_DRAWN:       return "Drawn";
             default: return "__BUG_Not_Supported_Game_Status__:" + gameStatus;
+        }
+    }
+
+    public static Enums.GameStatus gameStatusToEnum(int gameStatus) {
+        switch (gameStatus) {
+            case Referee.hoxGAME_STATUS_UNKNOWN:     return GameStatus.GAME_STATUS_UNKNOWN;
+            //case Referee.hoxGAME_STATUS_OPEN:      return "Open";
+            case Referee.hoxGAME_STATUS_READY:       return GameStatus.GAME_STATUS_IN_PROGRESS;
+            case Referee.hoxGAME_STATUS_IN_PROGRESS: return GameStatus.GAME_STATUS_IN_PROGRESS;
+            case Referee.hoxGAME_STATUS_RED_WIN:     return GameStatus.GAME_STATUS_RED_WIN;
+            case Referee.hoxGAME_STATUS_BLACK_WIN:   return GameStatus.GAME_STATUS_BLACK_WIN;
+            case Referee.hoxGAME_STATUS_DRAWN:       return GameStatus.GAME_STATUS_DRAWN;
+            default: return Enums.GameStatus.GAME_STATUS_UNKNOWN;
         }
     }
 

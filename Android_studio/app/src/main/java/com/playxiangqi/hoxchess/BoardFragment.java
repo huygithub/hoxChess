@@ -41,7 +41,6 @@ import java.util.List;
 public class BoardFragment extends Fragment {
 
     private static final String TAG = "BoardFragment";
-
     private boolean DEBUG_LIFE_CYCLE = true;
 
     // Parameter arguments.
@@ -54,6 +53,11 @@ public class BoardFragment extends Fragment {
 
     private BoardView boardView_;
     private TextView messageBadgeText_;
+
+    private TextView topGameTimeView;
+    private TextView topMoveTimeView;
+    private TextView bottomGameTimeView;
+    private TextView bottomMoveTimeView;
 
     private boolean isBlackOnTop_ = true; // Normal view. Black player is at the top position.
 
@@ -136,15 +140,15 @@ public class BoardFragment extends Fragment {
         Button bottomPlayerButton = (Button) view.findViewById(R.id.bottom_button);
 
         // Game timers.
-        TextView topGameTimeView = (TextView) view.findViewById(R.id.top_game_time);
-        TextView topMoveTimeView = (TextView) view.findViewById(R.id.top_move_time);
-        TextView bottomGameTimeView = (TextView) view.findViewById(R.id.bottom_game_time);
-        TextView bottomMoveTimeView = (TextView) view.findViewById(R.id.bottom_move_time);
+        topGameTimeView = (TextView) view.findViewById(R.id.top_game_time);
+        topMoveTimeView = (TextView) view.findViewById(R.id.top_move_time);
+        bottomGameTimeView = (TextView) view.findViewById(R.id.bottom_game_time);
+        bottomMoveTimeView = (TextView) view.findViewById(R.id.bottom_move_time);
 
-        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-        timeTracker.setUITextViews(
-                topGameTimeView, topMoveTimeView, bottomGameTimeView, bottomMoveTimeView);
-        timeTracker.syncUI();
+        //TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
+        //timeTracker.setUITextViews(
+        //        topGameTimeView, topMoveTimeView, bottomGameTimeView, bottomMoveTimeView);
+        //timeTracker.syncUI();
 
         // Player tracker.
         TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
@@ -242,6 +246,11 @@ public class BoardFragment extends Fragment {
         if (boardView_ != null) {
             boardView_.setBoardEventListener(listener);
         }
+    }
+
+    public void setupUIForTimeTracker(TableTimeTracker timeTracker) {
+        timeTracker.setUITextViews(
+                topGameTimeView, topMoveTimeView, bottomGameTimeView, bottomMoveTimeView);
     }
 
     public void makeMove(MoveInfo move, boolean animated) {

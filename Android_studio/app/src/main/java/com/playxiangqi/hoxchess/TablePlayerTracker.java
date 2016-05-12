@@ -100,9 +100,9 @@ public class TablePlayerTracker {
         tableType_ = tableType;
     }
     
-    public TableType getTableType() {
-        return tableType_;
-    }
+    //public TableType getTableType() {
+    //    return tableType_;
+    //}
     
     public void setBlackInfo(String pid, String rating) {
         blackPlayer_ = new PlayerInfo(pid, rating);
@@ -275,7 +275,7 @@ public class TablePlayerTracker {
     }
     
     public void syncUI() {
-        Log.d(TAG, "Sync UI...");
+        Log.d(TAG, "Sync UI...: hasUI_=" + hasUI_ + ", tableType_=" + tableType_);
 
         syncSeatLabels();
         

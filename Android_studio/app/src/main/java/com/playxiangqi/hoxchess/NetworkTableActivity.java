@@ -255,6 +255,10 @@ public class NetworkTableActivity extends AppCompatActivity
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
             boardFragment.setBoardEventListener(tableController_);
+            // FIXME: Need to create a separate timer for this table.
+            TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
+            boardFragment.setupUIForTimeTracker(timeTracker);
+            timeTracker.syncUI();
         }
 
         //tableController_.setTableTitle();

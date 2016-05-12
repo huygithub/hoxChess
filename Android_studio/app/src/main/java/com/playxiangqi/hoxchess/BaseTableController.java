@@ -146,14 +146,14 @@ public class BaseTableController implements BoardView.BoardEventListener {
         return false; // Do not display the menu
     }
 
-    public void handleTableMenuOnClick(Activity activity) {
-    }
+    //public void handleTableMenuOnClick(Activity activity) {
+    //}
 
     public void handlePlayerOnClickInTable(PlayerInfo playerInfo, String tableId) {
     }
 
-    public void handleRequestToOpenNewTable() {
-    }
+    //public void handleRequestToOpenNewTable() {
+    //}
 
     public boolean isMyTurn() {
         return false;
@@ -181,7 +181,7 @@ public class BaseTableController implements BoardView.BoardEventListener {
     }
 
     @Override
-    public void onLocalMove(Position fromPos, Position toPos) {
+    public void onLocalMove(Position fromPos, Position toPos, Enums.GameStatus gameStatus) {
     }
 
     // ***************************************************************
@@ -221,73 +221,73 @@ public class BaseTableController implements BoardView.BoardEventListener {
         mainActivity_ = new WeakReference<MainActivity>(otherController.getMainActivity());
     }
 
-    protected void setupListenersInTableActionSheet(final TableActionSheet actionSheet) {
-        actionSheet.setOnClickListener_ResetTable(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleRequestToResetTable();
-                actionSheet.dismiss();
-            }
-        });
-
-        actionSheet.setOnClickListener_ReverseBoard(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //MainActivity mainActivity = mainActivity_.get();
-                //if (mainActivity != null) {
-                //    mainActivity.reverseBoardView();
-                //}
-                if (boardController_ != null) {
-                    boardController_.reverseBoardView();
-                }
-                actionSheet.dismiss();
-            }
-        });
-
-        actionSheet.setOnClickListener_Close(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleRequestToCloseCurrentTable();
-                actionSheet.dismiss();
-            }
-        });
-
-        actionSheet.setOnClickListener_OfferDrawn(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleRequestToOfferDraw();
-                MainActivity mainActivity = mainActivity_.get();
-                if (mainActivity != null) {
-                    Toast.makeText(HoxApp.getApp(),
-                            mainActivity.getString(R.string.action_draw),
-                            Toast.LENGTH_SHORT).show();
-                }
-                actionSheet.dismiss();
-            }
-        });
-
-        actionSheet.setOnClickListener_OfferResign(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleRequestToOfferResign();
-                MainActivity mainActivity = mainActivity_.get();
-                if (mainActivity != null) {
-                    Toast.makeText(HoxApp.getApp(),
-                            mainActivity.getString(R.string.action_resign),
-                            Toast.LENGTH_SHORT).show();
-                }
-                actionSheet.dismiss();
-            }
-        });
-
-        actionSheet.setOnClickListener_NewTable(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleRequestToOpenNewTable();
-                actionSheet.dismiss();
-            }
-        });
-    }
+//    protected void setupListenersInTableActionSheet(final TableActionSheet actionSheet) {
+//        actionSheet.setOnClickListener_ResetTable(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                handleRequestToResetTable();
+//                actionSheet.dismiss();
+//            }
+//        });
+//
+//        actionSheet.setOnClickListener_ReverseBoard(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                //MainActivity mainActivity = mainActivity_.get();
+//                //if (mainActivity != null) {
+//                //    mainActivity.reverseBoardView();
+//                //}
+//                if (boardController_ != null) {
+//                    boardController_.reverseBoardView();
+//                }
+//                actionSheet.dismiss();
+//            }
+//        });
+//
+//        actionSheet.setOnClickListener_Close(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                handleRequestToCloseCurrentTable();
+//                actionSheet.dismiss();
+//            }
+//        });
+//
+//        actionSheet.setOnClickListener_OfferDrawn(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                handleRequestToOfferDraw();
+//                MainActivity mainActivity = mainActivity_.get();
+//                if (mainActivity != null) {
+//                    Toast.makeText(HoxApp.getApp(),
+//                            mainActivity.getString(R.string.action_draw),
+//                            Toast.LENGTH_SHORT).show();
+//                }
+//                actionSheet.dismiss();
+//            }
+//        });
+//
+//        actionSheet.setOnClickListener_OfferResign(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                handleRequestToOfferResign();
+//                MainActivity mainActivity = mainActivity_.get();
+//                if (mainActivity != null) {
+//                    Toast.makeText(HoxApp.getApp(),
+//                            mainActivity.getString(R.string.action_resign),
+//                            Toast.LENGTH_SHORT).show();
+//                }
+//                actionSheet.dismiss();
+//            }
+//        });
+//
+//        actionSheet.setOnClickListener_NewTable(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                handleRequestToOpenNewTable();
+//                actionSheet.dismiss();
+//            }
+//        });
+//    }
 
     protected void handleRequestToResetTable() {
     }
@@ -332,6 +332,7 @@ public class BaseTableController implements BoardView.BoardEventListener {
     }
 
     public static void setCurrentController(TableType tableType) {
+        Log.d(TAG, "setCurrentController: type=" + tableType);
         BaseTableController oldController = currentController_;
         currentController_ = getTableController(tableType);
 

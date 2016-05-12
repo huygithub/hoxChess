@@ -392,9 +392,9 @@ public class MainActivity extends AppCompatActivity
             case android.R.id.home:
                 tableController_.handleRequestToCloseCurrentTable();
                 return true;
-            case R.id.action_new_table:
-                tableController_.handleRequestToOpenNewTable();
-                return true;
+            //case R.id.action_new_table:
+            //    tableController_.handleRequestToOpenNewTable();
+            //    return true;
             case R.id.action_close_table:
                 tableController_.handleRequestToCloseCurrentTable();
                 return true;
@@ -692,7 +692,7 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void onTableMenuClick(View view) {
-        tableController_.handleTableMenuOnClick(this);
+        //tableController_.handleTableMenuOnClick(this);
     }
 
     @Override

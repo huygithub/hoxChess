@@ -53,7 +53,7 @@ public class HoxApp extends Application {
         loadPreferences_Account();
 
         BaseTableController.setCurrentController(TableType.TABLE_TYPE_LOCAL);
-        BaseTableController.getCurrentController().setupNewTable();
+        //BaseTableController.getCurrentController().setupNewTable();
 
         aiEngine_.setAILevel(SettingsActivity.getAILevel(this));
         networkController_ = NetworkController.getInstance();

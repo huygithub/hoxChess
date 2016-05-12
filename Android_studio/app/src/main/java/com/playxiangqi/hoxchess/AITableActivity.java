@@ -34,10 +34,12 @@ import java.lang.ref.WeakReference;
 
 public class AITableActivity extends AppCompatActivity
                 implements BoardFragment.OnFragmentInteractionListener,
+                           BoardView.BoardEventListener,
                            MessageManager.EventListener,
-                           BaseTableController.BoardController {
+                           AIController.AIListener {
 
     private static final String TAG = "AITableActivity";
+    private boolean DEBUG_LIFE_CYCLE = true;
 
     private WeakReference<BoardFragment> myBoardFragment_ = new WeakReference<BoardFragment>(null);
 
@@ -45,10 +47,17 @@ public class AITableActivity extends AppCompatActivity
     //       device is rotated, for example.
     private int notifCount_ = 0;
 
+    // My color in the local table (ie. to practice with AI).
+    // NOTE: Currently, we cannot change my role in this type of table.
+    private final Enums.ColorEnum myColorInLocalTable_ = Enums.ColorEnum.COLOR_RED;
+
+    private final AIController aiController_ = new AIController();
+    private TableTimeTracker timeTracker_ = new TableTimeTracker();
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "onCreate");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onCreate");
         setContentView(R.layout.activity_ai_table);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.my_toolbar);
@@ -75,13 +84,15 @@ public class AITableActivity extends AppCompatActivity
         }
 
         BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_LOCAL);
-        BaseTableController.getCurrentController().setBoardController(this);
+        aiController_.setBoardController(this);
+
+        setupNewTable();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onResume");
         MessageManager.getInstance().addListener(this);
         adjustScreenOnFlagBasedOnGameStatus();
     }
@@ -89,7 +100,7 @@ public class AITableActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(TAG, "onPause");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onPause");
         MessageManager.getInstance().removeListener(this);
         adjustScreenOnFlagBasedOnGameStatus();
     }
@@ -97,7 +108,8 @@ public class AITableActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.v(TAG, "onDestroy");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDestroy");
+        timeTracker_.stop();
     }
 
     @Override
@@ -130,29 +142,10 @@ public class AITableActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.d(TAG, "(ActionBar) onOptionsItemSelected");
 
-        // Pass the event to ActionBarDrawerToggle, if it returns
-        // true, then it has handled the app icon touch event
-        //if (drawerToggle_.onOptionsItemSelected(item)) {
-        //    return true;
-        //}
-        // Handle your other action bar items...
-
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
-            //case android.R.id.home:
-            //    tableController_.handleRequestToCloseCurrentTable();
-            //    return true;
-            //case R.id.action_new_table:
-            //    tableController_.handleRequestToOpenNewTable();
-            //    return true;
-            //case R.id.action_close_table:
-            //    tableController_.handleRequestToCloseCurrentTable();
-            //    return true;
-            //case R.id.action_view_tables:
-            //    onViewTablesClicked();
-            //    return true;
             case R.id.action_notifications:
                 openNotificationView();
                 return true;
@@ -182,13 +175,10 @@ public class AITableActivity extends AppCompatActivity
 
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
-            boardFragment.setBoardEventListener(
-                    BaseTableController.getCurrentController()
-                    //this /*tableController_*/
-            );
+            boardFragment.setBoardEventListener(this);
+            boardFragment.setupUIForTimeTracker(timeTracker_);
+            timeTracker_.syncUI();
         }
-
-        //tableController_.setTableTitle();
     }
 
     @Override
@@ -201,72 +191,110 @@ public class AITableActivity extends AppCompatActivity
     }
     @Override
     public void onTableMenuClick(View view) {
-        BaseTableController.getCurrentController().handleTableMenuOnClick(this);
+        final TableActionSheet actionSheet = new TableActionSheet(this);
+        actionSheet.setHeaderText(getString(R.string.title_table_ai));
+        setupListenersInTableActionSheet(actionSheet);
+
+        actionSheet.hideAction(TableActionSheet.Action.ACTION_CLOSE_TABLE);
+        actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_DRAW);
+        actionSheet.hideAction(TableActionSheet.Action.ACTION_OFFER_RESIGN);
+        actionSheet.hideAction(TableActionSheet.Action.ACTION_NEW_TABLE);
+
+        actionSheet.show();
     }
+
     public void onShowMessageViewClick(View v) {}
     public void onChangeRoleRequest(Enums.ColorEnum clickedColor) {}
 
     // **** Implementation of BoardView.BoardEventListener ****
-    //public void onLocalMove(Position fromPos, Position toPos) {}
-    //public boolean isMyTurn() { return true; }
-
-    // **** Implementation of BaseTableController.BoardController ****
     @Override
-    public void updateBoardWithNewMove(MoveInfo move) {
+    public void onLocalMove(Position fromPos, Position toPos, Enums.GameStatus gameStatus) {
+        Referee referee = HoxApp.getApp().getReferee();
+        Log.d(TAG, "On local move: referee 's moveCount = " + referee.getMoveCount());
+
+        timeTracker_.nextColor();
+
+        if (referee.getMoveCount() == 2) {
+            timeTracker_.start();
+            adjustScreenOnFlagBasedOnGameStatus();
+        }
+
+        if (referee.getMoveCount() > 1) { // The game has started?
+            HoxApp.getApp().getPlayerTracker().syncUI();
+        }
+
+        if (referee.isGameInProgress()) {
+            aiController_.onHumanMove(fromPos, toPos);
+        } else {
+            onGameEnded(gameStatus); // The game has ended. Do nothing
+        }
+    }
+
+    @Override
+    public boolean isMyTurn() {
+        return (myColorInLocalTable_ == HoxApp.getApp().getReferee().getNextColor());
+    }
+
+    // **** Implementation of AIController.AIListener ****
+    @Override
+    public void onAINewMove(MoveInfo move) {
         Log.d(TAG, "Update board with a new AI move = " + move);
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
             boardFragment.makeMove(move, true);
         }
 
+        timeTracker_.nextColor();
+
         if (HoxApp.getApp().getReferee().getMoveCount() == 2) { // The game has started?
+            timeTracker_.start();
             adjustScreenOnFlagBasedOnGameStatus();
+        }
+
+        if (!HoxApp.getApp().getReferee().isGameInProgress()) {
+            Log.i(TAG, "... after AI move => the game has ended.");
+            Enums.GameStatus gameStatus = Referee.gameStatusToEnum(move.gameStatus);
+            onGameEnded(gameStatus);
         }
     }
 
-    @Override
-    public void reverseBoardView() {
+    // ***************************************************************
+    //
+    //              Private APIs
+    //
+    // ***************************************************************
+
+    private void reverseBoardView() {
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
             boardFragment.reverseView();
         }
     }
 
-    @Override
-    public void openNewPracticeTable() {
+    private void openNewPracticeTable() {
         Log.d(TAG, "Open a new practice table");
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
             boardFragment.resetBoard();
         }
-        BaseTableController.getCurrentController().setTableTitle();
         Snackbar.make(findViewById(R.id.board_view), R.string.action_reset,
                 Snackbar.LENGTH_SHORT)
                 .show();
     }
 
-    @Override
-    public void updateBoardWithNewTableInfo(TableInfo tableInfo) {}
-    @Override
-    public void resetBoardWithNewMoves(MoveInfo[] moves) {}
-    @Override
-    public void clearTable() {}
-    @Override
-    public void onLocalPlayerJoined(Enums.ColorEnum myColor) {}
-    @Override
-    public void onPlayerJoin(String pid, String rating, Enums.ColorEnum playerColor) {}
-    @Override
-    public void onPlayerLeave(String pid) {}
-    @Override
-    public void showGameMessage_DRAW(String pid) {}
-    @Override
-    public void onGameEnded(Enums.GameStatus gameStatus) {}
-    @Override
-    public void onGameReset() {}
+    private void onGameEnded(Enums.GameStatus gameStatus) {
+        Log.d(TAG, "onGameEnded: gameStatus = " + Utils.gameStatusToString(gameStatus));
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.onGameEnded(gameStatus);
+        }
+        adjustScreenOnFlagBasedOnGameStatus();
+    }
 
-    // *****
     private void adjustScreenOnFlagBasedOnGameStatus() {
-        if (HoxApp.getApp().isGameInProgress()) {
+        Referee referee = HoxApp.getApp().getReferee();
+        if (referee.getMoveCount() > 1
+                && referee.isGameInProgress()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -280,5 +308,49 @@ public class AITableActivity extends AppCompatActivity
 
         notifCount_ = 0;
         invalidateOptionsMenu();
+    }
+
+    private void setupNewTable() {
+        Log.d(TAG, "setupNewTable:...");
+        HoxApp.getApp().getAiEngine().initGame();
+
+        timeTracker_.stop();
+        final TimeInfo initialTime = new TimeInfo(Enums.DEFAULT_INITIAL_GAME_TIMES);
+        timeTracker_.setInitialColor(Enums.ColorEnum.COLOR_RED);
+        timeTracker_.setInitialTime(initialTime);
+        timeTracker_.setBlackTime(initialTime);
+        timeTracker_.setRedTime(initialTime);
+
+        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        playerTracker.setTableType(Enums.TableType.TABLE_TYPE_LOCAL); // A new practice table.
+        playerTracker.setRedInfo(HoxApp.getApp().getString(R.string.you_label), "1501");
+        playerTracker.setBlackInfo(HoxApp.getApp().getString(R.string.ai_label), "1502");
+
+        HoxApp.getApp().getReferee().resetGame();
+    }
+
+    private void setupListenersInTableActionSheet(final TableActionSheet actionSheet) {
+        actionSheet.setOnClickListener_ResetTable(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                aiController_.resetGame();
+
+                HoxApp.getApp().getPlayerTracker().syncUI();
+
+                timeTracker_.stop();
+                timeTracker_.reset();
+
+                openNewPracticeTable();
+                actionSheet.dismiss();
+            }
+        });
+
+        actionSheet.setOnClickListener_ReverseBoard(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                reverseBoardView();
+                actionSheet.dismiss();
+            }
+        });
     }
 }
