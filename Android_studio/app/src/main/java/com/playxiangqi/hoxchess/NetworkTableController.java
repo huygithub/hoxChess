@@ -38,22 +38,23 @@ public class NetworkTableController extends BaseTableController {
 
     private Enums.TableType myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
     private TableTimeTracker timeTracker_ = new TableTimeTracker();
+    private TablePlayerTracker playerTracker_ = new TablePlayerTracker(Enums.TableType.TABLE_TYPE_EMPTY);
 
     public NetworkTableController() {
         Log.v(TAG, "[CONSTRUCTOR]: ...");
     }
 
     public TableTimeTracker getTimeTracker() { return timeTracker_; }
+    public TablePlayerTracker getPlayerTracker() { return playerTracker_; }
 
     @Override
     public void onNetworkLoginSuccess() {
         Log.d(TAG, "onNetworkLoginSuccess: Set table-type to EMPTY...");
         myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
 
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.setTableType(myTableType_);
-        playerTracker.clearAllPlayers();
-        playerTracker.syncUI();
+        playerTracker_.setTableType(myTableType_);
+        playerTracker_.clearAllPlayers();
+        playerTracker_.syncUI();
 
         //MainActivity mainActivity = mainActivity_.get();
         //if (mainActivity != null) {
@@ -94,12 +95,11 @@ public class NetworkTableController extends BaseTableController {
         timeTracker_.setRedTime( new TimeInfo(tableInfo.redTimes) );
         timeTracker_.syncUI();
 
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.setTableType(myTableType_);
-        playerTracker.setBlackInfo(tableInfo.blackId, tableInfo.blackRating);
-        playerTracker.setRedInfo(tableInfo.redId, tableInfo.redRating);
-        playerTracker.setObservers(tableInfo.observers);
-        playerTracker.syncUI();
+        playerTracker_.setTableType(myTableType_);
+        playerTracker_.setBlackInfo(tableInfo.blackId, tableInfo.blackRating);
+        playerTracker_.setRedInfo(tableInfo.redId, tableInfo.redRating);
+        playerTracker_.setObservers(tableInfo.observers);
+        playerTracker_.syncUI();
 
         //MainActivity mainActivity = mainActivity_.get();
         //if (mainActivity != null) {
@@ -134,16 +134,14 @@ public class NetworkTableController extends BaseTableController {
             boardController_.onPlayerJoin(playerInfo.pid, playerInfo.rating, playerColor);
         }
 
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.onPlayerJoin(playerInfo.pid, playerInfo.rating, playerColor);
-        playerTracker.syncUI();
+        playerTracker_.onPlayerJoin(playerInfo.pid, playerInfo.rating, playerColor);
+        playerTracker_.syncUI();
     }
 
     @Override
     public void onNetworkPlayerLeave(String pid) {
         Log.d(TAG, "onNetworkPlayerLeave: PlayerId = "  + pid);
 
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
         MainActivity mainActivity = mainActivity_.get();
 
         // Check if I just left the Table.
@@ -154,8 +152,8 @@ public class NetworkTableController extends BaseTableController {
             myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
 
             timeTracker_.stop();
-            playerTracker.setTableType(myTableType_);
-            playerTracker.clearAllPlayers();
+            playerTracker_.setTableType(myTableType_);
+            playerTracker_.clearAllPlayers();
             //if (mainActivity != null) {
             //    mainActivity.clearTable();
             //}
@@ -164,7 +162,7 @@ public class NetworkTableController extends BaseTableController {
             }
 
         } else { // Other player left my table?
-            playerTracker.onPlayerLeave(pid);
+            playerTracker_.onPlayerLeave(pid);
             //if (mainActivity != null) {
             //    mainActivity.onPlayerLeave(pid);
             //}
@@ -173,7 +171,7 @@ public class NetworkTableController extends BaseTableController {
             }
         }
 
-        playerTracker.syncUI();
+        playerTracker_.syncUI();
     }
 
     @Override
@@ -187,7 +185,7 @@ public class NetworkTableController extends BaseTableController {
             boardController_.onGameEnded(gameStatus);
         }
         timeTracker_.stop();
-        HoxApp.getApp().getPlayerTracker().syncUI();
+        playerTracker_.syncUI();
     }
 
     @Override
@@ -218,19 +216,21 @@ public class NetworkTableController extends BaseTableController {
 
     @Override
     public void onPlayerInfoReceived(String pid, String rating, String wins, String draws, String losses) {
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.showBriefMessage(
-                    mainActivity.getString(R.string.msg_player_record, pid, rating, wins, draws, losses),
-                    Snackbar.LENGTH_LONG);
+//        MainActivity mainActivity = mainActivity_.get();
+//        if (mainActivity != null) {
+//            mainActivity.showBriefMessage(
+//                    mainActivity.getString(R.string.msg_player_record, pid, rating, wins, draws, losses),
+//                    Snackbar.LENGTH_LONG);
+//        }
+        if (boardController_ != null) {
+            boardController_.onPlayerInfoReceived(pid, rating, wins, draws, losses);
         }
     }
 
     @Override
     public void onPlayerRatingUpdate(String pid, String newRating) {
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.onPlayerRatingUpdate(pid, newRating);
-        playerTracker.syncUI();
+        playerTracker_.onPlayerRatingUpdate(pid, newRating);
+        playerTracker_.syncUI();
     }
 
     @Override
@@ -321,13 +321,13 @@ public class NetworkTableController extends BaseTableController {
 
     @Override
     public void handlePlayerOnClickInTable(PlayerInfo playerInfo, String tableId) {
-        HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
-
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            PlayersInTableSheetDialog dialog = new PlayersInTableSheetDialog(mainActivity, playerInfo);
-            dialog.show();
-        }
+//        HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
+//
+//        MainActivity mainActivity = mainActivity_.get();
+//        if (mainActivity != null) {
+//            PlayersInTableSheetDialog dialog = new PlayersInTableSheetDialog(mainActivity, playerInfo);
+//            dialog.show();
+//        }
     }
 
 //    @Override
@@ -353,12 +353,11 @@ public class NetworkTableController extends BaseTableController {
     @Override
     public boolean isMyTurn() {
         Referee referee = HoxApp.getApp().getReferee();
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
         NetworkController networkController = HoxApp.getApp().getNetworkController();
 
         final ColorEnum myColor = networkController.getMyColor();
         return ((myColor == ColorEnum.COLOR_RED || myColor == ColorEnum.COLOR_BLACK) &&
-                playerTracker.hasEnoughPlayers() &&
+                playerTracker_.hasEnoughPlayers() &&
                 myColor == referee.getNextColor());
     }
 
@@ -446,7 +445,6 @@ public class NetworkTableController extends BaseTableController {
         Referee referee = HoxApp.getApp().getReferee();
         Log.i(TAG, "Handle local move: referee 's moveCount = " + referee.getMoveCount());
 
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
         NetworkController networkController = HoxApp.getApp().getNetworkController();
 
         timeTracker_.nextColor();
@@ -460,7 +458,7 @@ public class NetworkTableController extends BaseTableController {
         }
 
         if (referee.getMoveCount() > 1) { // The game has started?
-            playerTracker.syncUI();
+            playerTracker_.syncUI();
         }
 
         networkController.handleRequestToSendMove(fromPos, toPos);
@@ -524,49 +522,48 @@ public class NetworkTableController extends BaseTableController {
         Log.d(TAG, "clearCurrentTableIfNeeded: Set table-type to EMPTY...");
         myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
 
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.setTableType(myTableType_);
-        playerTracker.clearAllPlayers();
-        playerTracker.syncUI();
+        playerTracker_.setTableType(myTableType_);
+        playerTracker_.clearAllPlayers();
+        playerTracker_.syncUI();
     }
 
-    private static class PlayersInTableSheetDialog extends BottomSheetDialog {
-        public PlayersInTableSheetDialog(final Activity activity, PlayerInfo playerInfo) {
-            super(activity);
-
-            final String playerId = playerInfo.pid;
-            View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_player, null);
-            setContentView(sheetView);
-
-            TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
-            View sendMessageView = sheetView.findViewById(R.id.sheet_send_private_message);
-            View inviteView = sheetView.findViewById(R.id.sheet_invite_to_play);
-            View joinView = sheetView.findViewById(R.id.sheet_join_table_of_player);
-
-            playerInfoView.setText(
-                    activity.getString(R.string.msg_player_info, playerId, playerInfo.rating));
-
-            sendMessageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (activity instanceof MainActivity) {
-                        ((MainActivity)activity).showBriefMessage("Not yet implement Send Personal Message",
-                                Snackbar.LENGTH_SHORT);
-                    }
-                    dismiss(); // this the dialog.
-                }
-            });
-
-            inviteView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
-                    dismiss(); // this the dialog.
-                }
-            });
-
-            joinView.setVisibility(View.GONE);
-        }
-    }
+//    private static class PlayersInTableSheetDialog extends BottomSheetDialog {
+//        public PlayersInTableSheetDialog(final Activity activity, PlayerInfo playerInfo) {
+//            super(activity);
+//
+//            final String playerId = playerInfo.pid;
+//            View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_player, null);
+//            setContentView(sheetView);
+//
+//            TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
+//            View sendMessageView = sheetView.findViewById(R.id.sheet_send_private_message);
+//            View inviteView = sheetView.findViewById(R.id.sheet_invite_to_play);
+//            View joinView = sheetView.findViewById(R.id.sheet_join_table_of_player);
+//
+//            playerInfoView.setText(
+//                    activity.getString(R.string.msg_player_info, playerId, playerInfo.rating));
+//
+//            sendMessageView.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    if (activity instanceof MainActivity) {
+//                        ((MainActivity)activity).showBriefMessage("Not yet implement Send Personal Message",
+//                                Snackbar.LENGTH_SHORT);
+//                    }
+//                    dismiss(); // this the dialog.
+//                }
+//            });
+//
+//            inviteView.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
+//                    dismiss(); // this the dialog.
+//                }
+//            });
+//
+//            joinView.setVisibility(View.GONE);
+//        }
+//    }
 
 }

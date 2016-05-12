@@ -768,18 +768,18 @@ public class MainActivity extends AppCompatActivity
     @Override
     public List<PlayerInfo> onRequestToRefreshPlayers() {
         List<PlayerInfo> players = new ArrayList<PlayerInfo>();
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-
-        PlayerInfo redPlayer = playerTracker.getRedPlayer();
-        if (redPlayer.isValid()) players.add(redPlayer);
-
-        PlayerInfo blackPlayer = playerTracker.getBlackPlayer();
-        if (blackPlayer.isValid()) players.add(blackPlayer);
-
-        Map<String, PlayerInfo> observers = playerTracker.getObservers();
-        for (HashMap.Entry<String, PlayerInfo> entry : observers.entrySet()) {
-            players.add(entry.getValue());
-        }
+//        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+//
+//        PlayerInfo redPlayer = playerTracker.getRedPlayer();
+//        if (redPlayer.isValid()) players.add(redPlayer);
+//
+//        PlayerInfo blackPlayer = playerTracker.getBlackPlayer();
+//        if (blackPlayer.isValid()) players.add(blackPlayer);
+//
+//        Map<String, PlayerInfo> observers = playerTracker.getObservers();
+//        for (HashMap.Entry<String, PlayerInfo> entry : observers.entrySet()) {
+//            players.add(entry.getValue());
+//        }
 
         return players;
     }

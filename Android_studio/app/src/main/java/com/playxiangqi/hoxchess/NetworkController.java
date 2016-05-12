@@ -568,7 +568,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         final String draws = components[3];
         final String losses = components[4];
 
-        BaseTableController.getCurrentController().onPlayerInfoReceived(pid, rating, wins, draws, losses);
+        BaseTableController.getNetworkController().onPlayerInfoReceived(pid, rating, wins, draws, losses);
     }
 
     private void handleNetworkEvent_E_SCORE(String content) {

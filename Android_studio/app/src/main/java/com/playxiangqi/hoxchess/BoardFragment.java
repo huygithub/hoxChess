@@ -55,6 +55,11 @@ public class BoardFragment extends Fragment {
     private View messageBadgeView_;
     private TextView messageBadgeText_;
 
+    private TextView topPlayerLabel;
+    private TextView bottomPlayerLabel;
+    private Button topPlayerButton;
+    private Button bottomPlayerButton;
+
     private TextView topGameTimeView;
     private TextView topMoveTimeView;
     private TextView bottomGameTimeView;
@@ -136,10 +141,10 @@ public class BoardFragment extends Fragment {
         boardView_ = (BoardView) view.findViewById(R.id.board_view);
         messageBadgeText_ = (TextView) view.findViewById(R.id.message_badge_text);
 
-        TextView topPlayerLabel = (TextView) view.findViewById(R.id.top_player_label);
-        TextView bottomPlayerLabel = (TextView) view.findViewById(R.id.bottom_player_label);
-        Button topPlayerButton = (Button) view.findViewById(R.id.top_button);
-        Button bottomPlayerButton = (Button) view.findViewById(R.id.bottom_button);
+        topPlayerLabel = (TextView) view.findViewById(R.id.top_player_label);
+        bottomPlayerLabel = (TextView) view.findViewById(R.id.bottom_player_label);
+        topPlayerButton = (Button) view.findViewById(R.id.top_button);
+        bottomPlayerButton = (Button) view.findViewById(R.id.bottom_button);
 
         // Game timers.
         topGameTimeView = (TextView) view.findViewById(R.id.top_game_time);
@@ -153,9 +158,9 @@ public class BoardFragment extends Fragment {
         //timeTracker.syncUI();
 
         // Player tracker.
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.setUIViews(
-                topPlayerLabel, topPlayerButton, bottomPlayerLabel, bottomPlayerButton);
+        //TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
+        //playerTracker.setUIViews(
+        //        topPlayerLabel, topPlayerButton, bottomPlayerLabel, bottomPlayerButton);
 
         // Restore the previous state of the board.
         List<Piece.Move> historyMoves = HoxApp.getApp().getReferee().getHistoryMoves();
@@ -204,7 +209,7 @@ public class BoardFragment extends Fragment {
     public void onResume () {
         super.onResume();
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onResume");
-        HoxApp.getApp().getPlayerTracker().syncUI(); // AI Level is one that needs to be updated.
+        //HoxApp.getApp().getPlayerTracker().syncUI(); // AI Level is one that needs to be updated.
     }
 
     @Override
@@ -212,7 +217,7 @@ public class BoardFragment extends Fragment {
         super.onDestroyView();
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDestroyView");
         listener_.onBoardFragment_DestroyView(this);
-        HoxApp.getApp().getPlayerTracker().unsetUIViews();
+        //HoxApp.getApp().getPlayerTracker().unsetUIViews();
     }
 
     @Override
@@ -252,6 +257,11 @@ public class BoardFragment extends Fragment {
     public void setupUIForTimeTracker(TableTimeTracker timeTracker) {
         timeTracker.setUITextViews(
                 topGameTimeView, topMoveTimeView, bottomGameTimeView, bottomMoveTimeView);
+    }
+
+    public void setupUIForPlayerTracker(TablePlayerTracker playerTracker) {
+        playerTracker.setUIViews(
+                topPlayerLabel, topPlayerButton, bottomPlayerLabel, bottomPlayerButton);
     }
 
     public void makeMove(MoveInfo move, boolean animated) {
@@ -316,7 +326,7 @@ public class BoardFragment extends Fragment {
         Log.d(TAG, "Reverse board view (INTERNAL): isBlackOnTop_=" + isBlackOnTop_);
         boardView_.reverseView();
         listener_.onBoardFragment_ReverseView();
-        HoxApp.getApp().getPlayerTracker().reverseView();
+        //HoxApp.getApp().getPlayerTracker().reverseView();
     }
 
     private void setOnClickHandlers(View view) {

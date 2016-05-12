@@ -18,10 +18,12 @@
  */
 package com.playxiangqi.hoxchess;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
+import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -36,11 +38,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class NetworkTableActivity extends AppCompatActivity
                     implements ViewPager.OnPageChangeListener,
@@ -62,6 +67,7 @@ public class NetworkTableActivity extends AppCompatActivity
 
     private BaseTableController tableController_;
     private TableTimeTracker timeTracker_;
+    private TablePlayerTracker playerTracker_;
 
     private String tableId_;
 
@@ -100,6 +106,7 @@ public class NetworkTableActivity extends AppCompatActivity
         tableController_.setBoardController(this);
 
         timeTracker_ = BaseTableController.getNetworkController().getTimeTracker();
+        playerTracker_ = BaseTableController.getNetworkController().getPlayerTracker();
 
         tableId_ = getIntent().getStringExtra(EXTRA_TABLE_ID);
         Log.d(TAG, "onCreate: tableId = [" + tableId_ + "]");
@@ -259,7 +266,9 @@ public class NetworkTableActivity extends AppCompatActivity
         if (boardFragment != null) {
             boardFragment.setBoardEventListener(tableController_);
             boardFragment.setupUIForTimeTracker(timeTracker_);
+            boardFragment.setupUIForPlayerTracker(playerTracker_);
             timeTracker_.syncUI();
+            playerTracker_.syncUI();
         }
 
         //tableController_.setTableTitle();
@@ -272,12 +281,14 @@ public class NetworkTableActivity extends AppCompatActivity
             Log.d(TAG, "Board fragment view destroyed. Release weak reference.");
             myBoardFragment_ = new WeakReference<BoardFragment>(null);
             timeTracker_.unsetUITextViews();
+            playerTracker_.unsetUIViews();
         }
     }
 
     @Override
     public void onBoardFragment_ReverseView() {
         timeTracker_.reverseView();
+        playerTracker_.reverseView();
     }
 
     @Override
@@ -345,12 +356,32 @@ public class NetworkTableActivity extends AppCompatActivity
         }
     }
 
+    @Override
     public List<PlayerInfo> onRequestToRefreshPlayers() {
         List<PlayerInfo> players = new ArrayList<PlayerInfo>();
+        TablePlayerTracker playerTracker = BaseTableController.getNetworkController().getPlayerTracker();
+
+        PlayerInfo redPlayer = playerTracker.getRedPlayer();
+        if (redPlayer.isValid()) players.add(redPlayer);
+
+        PlayerInfo blackPlayer = playerTracker.getBlackPlayer();
+        if (blackPlayer.isValid()) players.add(blackPlayer);
+
+        Map<String, PlayerInfo> observers = playerTracker.getObservers();
+        for (HashMap.Entry<String, PlayerInfo> entry : observers.entrySet()) {
+            players.add(entry.getValue());
+        }
+
         return players;
     }
-    public void onPlayerClick(PlayerInfo playerInfo, String tableId) {
 
+    @Override
+    public void onPlayerClick(PlayerInfo playerInfo, String tableId) {
+        // tableController_.handlePlayerOnClickInTable(playerInfo, tableId);
+        HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
+
+        PlayersInTableSheetDialog dialog = new PlayersInTableSheetDialog(this, playerInfo);
+        dialog.show();
     }
 
     // **** Implementation of ChatFragment.OnChatFragmentListener
@@ -397,6 +428,8 @@ public class NetworkTableActivity extends AppCompatActivity
     @Override
     public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
         Log.d(TAG, "Update board with new network Table info (I_TABLE)...");
+
+        tableId_ = tableInfo.tableId;
 
         setAndShowTitle(tableInfo.tableId);
         invalidateOptionsMenu(); // Recreate the options menu
@@ -502,6 +535,13 @@ public class NetworkTableActivity extends AppCompatActivity
         if (boardFragment != null) {
             boardFragment.resetBoard();
         }
+    }
+
+    @Override
+    public void onPlayerInfoReceived(String pid, String rating, String wins, String draws, String losses) {
+        showBriefMessage(
+                getString(R.string.msg_player_record, pid, rating, wins, draws, losses),
+                Snackbar.LENGTH_LONG);
     }
 
     // **** Implementation of MessageManager.EventListener ****
@@ -662,6 +702,10 @@ public class NetworkTableActivity extends AppCompatActivity
         });
     }
 
+    private void showBriefMessage(CharSequence text, int duration) {
+        Snackbar.make(viewPager_, text, duration).show();
+    }
+
     /**
      * The ViewPager adapter for the main page.
      */
@@ -709,6 +753,42 @@ public class NetworkTableActivity extends AppCompatActivity
                 case 1: return 1f; // 0.9f;
                 default: return 1f;
             }
+        }
+    }
+
+    private static class PlayersInTableSheetDialog extends BottomSheetDialog {
+        public PlayersInTableSheetDialog(final Activity activity, PlayerInfo playerInfo) {
+            super(activity);
+
+            final String playerId = playerInfo.pid;
+            View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_player, null);
+            setContentView(sheetView);
+
+            TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
+            View sendMessageView = sheetView.findViewById(R.id.sheet_send_private_message);
+            View inviteView = sheetView.findViewById(R.id.sheet_invite_to_play);
+            View joinView = sheetView.findViewById(R.id.sheet_join_table_of_player);
+
+            playerInfoView.setText(
+                    activity.getString(R.string.msg_player_info, playerId, playerInfo.rating));
+
+            sendMessageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(activity, "Not yet implement Send Personal Message", Toast.LENGTH_LONG).show();
+                    dismiss(); // this the dialog.
+                }
+            });
+
+            inviteView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
+                    dismiss(); // this the dialog.
+                }
+            });
+
+            joinView.setVisibility(View.GONE);
         }
     }
 }

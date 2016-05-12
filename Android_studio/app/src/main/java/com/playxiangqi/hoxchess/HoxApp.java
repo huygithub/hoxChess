@@ -37,8 +37,6 @@ public class HoxApp extends Application {
     private final Referee referee_ = new Referee();
     private final AIEngine aiEngine_ = new AIEngine();
 
-    private TablePlayerTracker playerTracker_ = new TablePlayerTracker(TableType.TABLE_TYPE_LOCAL);
-
     private NetworkController networkController_;
 
     public HoxApp() { /* Empty */ }
@@ -120,7 +118,6 @@ public class HoxApp extends Application {
     }
 
     public String getMyPid() { return pid_; }
-    public TablePlayerTracker getPlayerTracker() { return playerTracker_; }
     public Referee getReferee() { return referee_; }
     public AIEngine getAiEngine() { return aiEngine_; }
     public NetworkController getNetworkController() { return networkController_; }

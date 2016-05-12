@@ -52,7 +52,8 @@ public class AITableActivity extends AppCompatActivity
     private final Enums.ColorEnum myColorInLocalTable_ = Enums.ColorEnum.COLOR_RED;
 
     private final AIController aiController_ = new AIController();
-    private TableTimeTracker timeTracker_ = new TableTimeTracker();
+    private final TableTimeTracker timeTracker_ = new TableTimeTracker();
+    private final TablePlayerTracker playerTracker_ = new TablePlayerTracker(Enums.TableType.TABLE_TYPE_LOCAL);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -89,6 +90,7 @@ public class AITableActivity extends AppCompatActivity
         super.onResume();
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onResume");
         MessageManager.getInstance().addListener(this);
+        //playerTracker_.syncUI(); // AI Level is one that needs to be updated.
         adjustScreenOnFlagBasedOnGameStatus();
     }
 
@@ -171,8 +173,13 @@ public class AITableActivity extends AppCompatActivity
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
             boardFragment.setBoardEventListener(this);
+
             boardFragment.setupUIForTimeTracker(timeTracker_);
             timeTracker_.syncUI();
+
+            boardFragment.setupUIForPlayerTracker(playerTracker_);
+            playerTracker_.syncUI();
+
             boardFragment.hideMessageBadgeView();
         }
     }
@@ -184,12 +191,14 @@ public class AITableActivity extends AppCompatActivity
             Log.d(TAG, "Board fragment view destroyed. Release weak reference.");
             myBoardFragment_ = new WeakReference<BoardFragment>(null);
             timeTracker_.unsetUITextViews();
+            playerTracker_.unsetUIViews();
         }
     }
 
     @Override
     public void onBoardFragment_ReverseView() {
         timeTracker_.reverseView();
+        playerTracker_.reverseView();
     }
 
     @Override
@@ -223,7 +232,7 @@ public class AITableActivity extends AppCompatActivity
         }
 
         if (referee.getMoveCount() > 1) { // The game has started?
-            HoxApp.getApp().getPlayerTracker().syncUI();
+            playerTracker_.syncUI();
         }
 
         if (referee.isGameInProgress()) {
@@ -324,10 +333,9 @@ public class AITableActivity extends AppCompatActivity
         timeTracker_.setBlackTime(initialTime);
         timeTracker_.setRedTime(initialTime);
 
-        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        playerTracker.setTableType(Enums.TableType.TABLE_TYPE_LOCAL); // A new practice table.
-        playerTracker.setRedInfo(HoxApp.getApp().getString(R.string.you_label), "1501");
-        playerTracker.setBlackInfo(HoxApp.getApp().getString(R.string.ai_label), "1502");
+        playerTracker_.setTableType(Enums.TableType.TABLE_TYPE_LOCAL); // A new practice table.
+        playerTracker_.setRedInfo(HoxApp.getApp().getString(R.string.you_label), "1501");
+        playerTracker_.setBlackInfo(HoxApp.getApp().getString(R.string.ai_label), "1502");
 
         HoxApp.getApp().getReferee().resetGame();
     }
@@ -338,7 +346,7 @@ public class AITableActivity extends AppCompatActivity
             public void onClick(View v) {
                 aiController_.resetGame();
 
-                HoxApp.getApp().getPlayerTracker().syncUI();
+                playerTracker_.syncUI();
 
                 timeTracker_.stop();
                 timeTracker_.reset();

@@ -67,6 +67,7 @@ public class BaseTableController implements BoardView.BoardEventListener {
         void showGameMessage_DRAW(String pid);
         void onGameEnded(Enums.GameStatus gameStatus);
         void onGameReset();
+        void onPlayerInfoReceived(String pid, String rating, String wins, String draws, String losses);
     }
     public void setBoardController(BoardController controller) {
         boardController_ = controller;
