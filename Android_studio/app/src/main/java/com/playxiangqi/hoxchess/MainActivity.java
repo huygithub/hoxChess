@@ -567,41 +567,41 @@ public class MainActivity extends AppCompatActivity
         adjustScreenOnFlagBasedOnGameStatus();
     }
     
-    public void onLocalPlayerJoined(ColorEnum myColor) {
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.onLocalPlayerJoined(myColor);
-        }
-    }
-
-    public void onPlayerJoin(String pid, String rating, Enums.ColorEnum playerColor) {
-        PlayersFragment playersFragment = myPlayersFragment_.get();
-        if (playersFragment != null) {
-            playersFragment.onPlayerJoin(pid, rating, playerColor);
-        }
-    }
-
-    public void onPlayerLeave(String pid) {
-        PlayersFragment playersFragment = myPlayersFragment_.get();
-        if (playersFragment != null) {
-            playersFragment.onPlayerLeave(pid);
-        }
-    }
-
-    public void onGameEnded(Enums.GameStatus gameStatus) {
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.onGameEnded(gameStatus);
-        }
-        adjustScreenOnFlagBasedOnGameStatus();
-    }
-
-    public void onGameReset() {
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.resetBoard();
-        }
-    }
+//    public void onLocalPlayerJoined(ColorEnum myColor) {
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.onLocalPlayerJoined(myColor);
+//        }
+//    }
+//
+//    public void onPlayerJoin(String pid, String rating, Enums.ColorEnum playerColor) {
+//        PlayersFragment playersFragment = myPlayersFragment_.get();
+//        if (playersFragment != null) {
+//            playersFragment.onPlayerJoin(pid, rating, playerColor);
+//        }
+//    }
+//
+//    public void onPlayerLeave(String pid) {
+//        PlayersFragment playersFragment = myPlayersFragment_.get();
+//        if (playersFragment != null) {
+//            playersFragment.onPlayerLeave(pid);
+//        }
+//    }
+//
+//    public void onGameEnded(Enums.GameStatus gameStatus) {
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.onGameEnded(gameStatus);
+//        }
+//        adjustScreenOnFlagBasedOnGameStatus();
+//    }
+//
+//    public void onGameReset() {
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.resetBoard();
+//        }
+//    }
 
     @Override
     public void onMessageReceived(MessageInfo messageInfo) {
@@ -735,6 +735,11 @@ public class MainActivity extends AppCompatActivity
             Log.d(TAG, "Board fragment view destroyed. Release weak reference.");
             myBoardFragment_ = new WeakReference<BoardFragment>(null);
         }
+    }
+
+    @Override
+    public void onBoardFragment_ReverseView() {
+        //timeTracker_.reverseView();
     }
 
     /**

@@ -69,18 +69,13 @@ public class AITableActivity extends AppCompatActivity
         // the main_container FrameLayout
         if (findViewById(R.id.board_container) != null) {
             // However, if we're being restored from a previous state,
-            // then we don't need to do anything and should return or else
-            // we could end up with overlapping fragments.
-            if (savedInstanceState != null) {
-                return;
+            // then we don't want to create another fragment, which would create the problem
+            // of overlapping fragments.
+            if (savedInstanceState == null) {
+                BoardFragment boardFragment = BoardFragment.newInstance("AI");
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.board_container, boardFragment).commit();
             }
-
-            // Create a new Fragment to be placed in the activity layout
-            BoardFragment boardFragment = BoardFragment.newInstance("AI");
-
-            // Add the fragment to the 'fragment_container' FrameLayout
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.board_container, boardFragment).commit();
         }
 
         BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_LOCAL);
@@ -178,6 +173,7 @@ public class AITableActivity extends AppCompatActivity
             boardFragment.setBoardEventListener(this);
             boardFragment.setupUIForTimeTracker(timeTracker_);
             timeTracker_.syncUI();
+            boardFragment.hideMessageBadgeView();
         }
     }
 
@@ -187,8 +183,15 @@ public class AITableActivity extends AppCompatActivity
         if (boardFragment != null && boardFragment == fragment) {
             Log.d(TAG, "Board fragment view destroyed. Release weak reference.");
             myBoardFragment_ = new WeakReference<BoardFragment>(null);
+            timeTracker_.unsetUITextViews();
         }
     }
+
+    @Override
+    public void onBoardFragment_ReverseView() {
+        timeTracker_.reverseView();
+    }
+
     @Override
     public void onTableMenuClick(View view) {
         final TableActionSheet actionSheet = new TableActionSheet(this);

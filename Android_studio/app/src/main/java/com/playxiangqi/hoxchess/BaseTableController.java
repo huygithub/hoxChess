@@ -41,7 +41,7 @@ public class BaseTableController implements BoardView.BoardEventListener {
     private boolean DEBUG_LIFE_CYCLE = false;
 
     // Shared table controllers.
-    private static LocalTableController localTableController_;
+    //private static LocalTableController localTableController_;
     private static NetworkTableController networkTableController_;
 
     private static BaseTableController currentController_;
@@ -310,6 +310,7 @@ public class BaseTableController implements BoardView.BoardEventListener {
     private static BaseTableController getTableController(TableType tableType) {
         BaseTableController controller;
         switch (tableType) {
+            case TABLE_TYPE_LOCAL: // FIXME: falls through. We need to remove this.
             case TABLE_TYPE_EMPTY:
                 // falls through. Network controller will take care the empty table!
             case TABLE_TYPE_NETWORK:
@@ -319,13 +320,15 @@ public class BaseTableController implements BoardView.BoardEventListener {
                 controller = networkTableController_;
                 break;
 
-            case TABLE_TYPE_LOCAL: // falls through
+//            case TABLE_TYPE_LOCAL: // falls through
+//            default:
+//                if (localTableController_ == null) {
+//                    localTableController_ = new LocalTableController();
+//                }
+//                controller = localTableController_;
+//                break;
             default:
-                if (localTableController_ == null) {
-                    localTableController_ = new LocalTableController();
-                }
-                controller = localTableController_;
-                break;
+                throw new RuntimeException("Unsupported table-type = " + tableType);
         }
 
         return controller;

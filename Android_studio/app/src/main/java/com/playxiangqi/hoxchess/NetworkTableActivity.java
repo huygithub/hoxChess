@@ -61,6 +61,7 @@ public class NetworkTableActivity extends AppCompatActivity
     private WeakReference<PlayersFragment> myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
 
     private BaseTableController tableController_;
+    private TableTimeTracker timeTracker_;
 
     private String tableId_;
 
@@ -97,6 +98,8 @@ public class NetworkTableActivity extends AppCompatActivity
         BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_NETWORK);
         tableController_ = BaseTableController.getNetworkController();
         tableController_.setBoardController(this);
+
+        timeTracker_ = BaseTableController.getNetworkController().getTimeTracker();
 
         tableId_ = getIntent().getStringExtra(EXTRA_TABLE_ID);
         Log.d(TAG, "onCreate: tableId = [" + tableId_ + "]");
@@ -255,10 +258,8 @@ public class NetworkTableActivity extends AppCompatActivity
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
             boardFragment.setBoardEventListener(tableController_);
-            // FIXME: Need to create a separate timer for this table.
-            TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-            boardFragment.setupUIForTimeTracker(timeTracker);
-            timeTracker.syncUI();
+            boardFragment.setupUIForTimeTracker(timeTracker_);
+            timeTracker_.syncUI();
         }
 
         //tableController_.setTableTitle();
@@ -270,7 +271,13 @@ public class NetworkTableActivity extends AppCompatActivity
         if (boardFragment != null && boardFragment == fragment) {
             Log.d(TAG, "Board fragment view destroyed. Release weak reference.");
             myBoardFragment_ = new WeakReference<BoardFragment>(null);
+            timeTracker_.unsetUITextViews();
         }
+    }
+
+    @Override
+    public void onBoardFragment_ReverseView() {
+        timeTracker_.reverseView();
     }
 
     @Override
@@ -677,7 +684,7 @@ public class NetworkTableActivity extends AppCompatActivity
         @Override
         public Fragment getItem(int position) {
             switch (position) {
-                case 0: return BoardFragment.newInstance("AI"); //PlaceholderFragment();
+                case 0: return BoardFragment.newInstance("NETWORK");
                 case 1: return new ChatFragment();
                 default: return new PlayersFragment();
             }

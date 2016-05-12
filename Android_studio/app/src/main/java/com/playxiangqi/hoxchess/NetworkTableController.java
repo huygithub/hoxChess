@@ -37,10 +37,13 @@ public class NetworkTableController extends BaseTableController {
     private static final String TAG = "NetworkTableController";
 
     private Enums.TableType myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
+    private TableTimeTracker timeTracker_ = new TableTimeTracker();
 
     public NetworkTableController() {
         Log.v(TAG, "[CONSTRUCTOR]: ...");
     }
+
+    public TableTimeTracker getTimeTracker() { return timeTracker_; }
 
     @Override
     public void onNetworkLoginSuccess() {
@@ -84,13 +87,12 @@ public class NetworkTableController extends BaseTableController {
         Log.d(TAG, "onNetworkTableEnter: Set table-type to NETWORK...");
         myTableType_ = Enums.TableType.TABLE_TYPE_NETWORK;
 
-        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-        timeTracker.stop();
-        timeTracker.setInitialColor(ColorEnum.COLOR_RED);
-        timeTracker.setInitialTime( new TimeInfo(tableInfo.itimes) );
-        timeTracker.setBlackTime( new TimeInfo(tableInfo.blackTimes) );
-        timeTracker.setRedTime( new TimeInfo(tableInfo.redTimes) );
-        timeTracker.syncUI();
+        timeTracker_.stop();
+        timeTracker_.setInitialColor(ColorEnum.COLOR_RED);
+        timeTracker_.setInitialTime( new TimeInfo(tableInfo.itimes) );
+        timeTracker_.setBlackTime( new TimeInfo(tableInfo.blackTimes) );
+        timeTracker_.setRedTime( new TimeInfo(tableInfo.redTimes) );
+        timeTracker_.syncUI();
 
         TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
         playerTracker.setTableType(myTableType_);
@@ -151,7 +153,7 @@ public class NetworkTableController extends BaseTableController {
             Log.d(TAG, "onNetworkPlayerLeave: Set table-type to EMPTY...");
             myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
 
-            HoxApp.getApp().getTimeTracker().stop();
+            timeTracker_.stop();
             playerTracker.setTableType(myTableType_);
             playerTracker.clearAllPlayers();
             //if (mainActivity != null) {
@@ -184,7 +186,7 @@ public class NetworkTableController extends BaseTableController {
         if (boardController_ != null) {
             boardController_.onGameEnded(gameStatus);
         }
-        HoxApp.getApp().getTimeTracker().stop();
+        timeTracker_.stop();
         HoxApp.getApp().getPlayerTracker().syncUI();
     }
 
@@ -198,9 +200,8 @@ public class NetworkTableController extends BaseTableController {
         if (boardController_ != null) {
             boardController_.onGameReset();
         }
-        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-        timeTracker.stop();
-        timeTracker.reset();
+        timeTracker_.stop();
+        timeTracker_.reset();
     }
 
     @Override
@@ -411,9 +412,8 @@ public class NetworkTableController extends BaseTableController {
             boardController_.updateBoardWithNewMove(move);
         }
 
-        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-        timeTracker.nextColor();
-        timeTracker.start();
+        timeTracker_.nextColor();
+        timeTracker_.start();
     }
 
     @Override
@@ -437,9 +437,8 @@ public class NetworkTableController extends BaseTableController {
             boardController_.resetBoardWithNewMoves(moves);
         }
 
-        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-        timeTracker.setInitialColor(HoxApp.getApp().getReferee().getNextColor());
-        timeTracker.start();
+        timeTracker_.setInitialColor(HoxApp.getApp().getReferee().getNextColor());
+        timeTracker_.start();
     }
 
     @Override
@@ -447,14 +446,13 @@ public class NetworkTableController extends BaseTableController {
         Referee referee = HoxApp.getApp().getReferee();
         Log.i(TAG, "Handle local move: referee 's moveCount = " + referee.getMoveCount());
 
-        TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
         TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
         NetworkController networkController = HoxApp.getApp().getNetworkController();
 
-        timeTracker.nextColor();
+        timeTracker_.nextColor();
 
         if (referee.getMoveCount() == 2) {
-            timeTracker.start();
+            timeTracker_.start();
             MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
                 mainActivity.onGameStatusChanged();
@@ -516,7 +514,7 @@ public class NetworkTableController extends BaseTableController {
     private void clearCurrentTableIfNeeded() {
         if (!isTableEmpty()) { // Are we in a network table?
             Log.d(TAG, "Clear the current table...");
-            HoxApp.getApp().getTimeTracker().stop();
+            timeTracker_.stop();
             MainActivity mainActivity = mainActivity_.get();
             if (mainActivity != null) {
                 mainActivity.clearTable();

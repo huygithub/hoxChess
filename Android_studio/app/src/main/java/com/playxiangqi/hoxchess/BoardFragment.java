@@ -52,6 +52,7 @@ public class BoardFragment extends Fragment {
     private OnFragmentInteractionListener listener_;
 
     private BoardView boardView_;
+    private View messageBadgeView_;
     private TextView messageBadgeText_;
 
     private TextView topGameTimeView;
@@ -76,6 +77,7 @@ public class BoardFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         void onBoardFragment_CreateView(BoardFragment fragment);
         void onBoardFragment_DestroyView(BoardFragment fragment);
+        void onBoardFragment_ReverseView();
         void onTableMenuClick(View v);
         void onShowMessageViewClick(View v);
         void onChangeRoleRequest(Enums.ColorEnum clickedColor);
@@ -194,7 +196,7 @@ public class BoardFragment extends Fragment {
         if (!isBlackOnTop_) {
             // NOTE: Just reverse the view only WITHOUT changing the variable isBlackOnTop_
             //       because the instance is the same!
-            reverseView();
+            reverseViewInternal();
         }
     }
 
@@ -210,7 +212,6 @@ public class BoardFragment extends Fragment {
         super.onDestroyView();
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDestroyView");
         listener_.onBoardFragment_DestroyView(this);
-        HoxApp.getApp().getTimeTracker().unsetUITextViews();
         HoxApp.getApp().getPlayerTracker().unsetUIViews();
     }
 
@@ -230,7 +231,7 @@ public class BoardFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onSaveInstanceState");
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onSaveInstanceState: isBlackOnTop_=" + isBlackOnTop_);
 
         // Save the table's current game state
         outState.putBoolean(STATE_IS_BLACK_ON_TOP, isBlackOnTop_);
@@ -275,9 +276,8 @@ public class BoardFragment extends Fragment {
 
     public void reverseView() {
         Log.d(TAG, "Reverse board view: isBlackOnTop_=" + isBlackOnTop_);
-        boardView_.reverseView();
-        HoxApp.getApp().getTimeTracker().reverseView();
-        HoxApp.getApp().getPlayerTracker().reverseView();
+        isBlackOnTop_ = !isBlackOnTop_;
+        reverseViewInternal();
     }
 
     public void onLocalPlayerJoined(Enums.ColorEnum myColor) {
@@ -285,7 +285,6 @@ public class BoardFragment extends Fragment {
         // Reverse the board view so that my seat is always at the bottom of the screen.
         if (  (myColor == Enums.ColorEnum.COLOR_RED && !isBlackOnTop_) ||
                 (myColor == Enums.ColorEnum.COLOR_BLACK && isBlackOnTop_) ) {
-            isBlackOnTop_ = !isBlackOnTop_;
             reverseView();
         }
     }
@@ -302,16 +301,28 @@ public class BoardFragment extends Fragment {
         }
     }
 
+    public void hideMessageBadgeView() {
+        messageBadgeView_.setVisibility(View.GONE);
+    }
+
     // ***************************************************************************
     //
     //         Private APIs
     //
     // ***************************************************************************
 
+    /** Reverse view WITHOUT changing the internal variable to track the view state. */
+    private void reverseViewInternal() {
+        Log.d(TAG, "Reverse board view (INTERNAL): isBlackOnTop_=" + isBlackOnTop_);
+        boardView_.reverseView();
+        listener_.onBoardFragment_ReverseView();
+        HoxApp.getApp().getPlayerTracker().reverseView();
+    }
+
     private void setOnClickHandlers(View view) {
-        final View messageBadgeView = view.findViewById(R.id.message_badge_image);
-        if (messageBadgeView != null) {
-            messageBadgeView.setOnClickListener(new View.OnClickListener() {
+        messageBadgeView_ = view.findViewById(R.id.message_badge_image);
+        if (messageBadgeView_ != null) {
+            messageBadgeView_.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     listener_.onShowMessageViewClick(v);

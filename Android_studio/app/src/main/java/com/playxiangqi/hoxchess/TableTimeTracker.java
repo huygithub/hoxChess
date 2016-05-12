@@ -56,6 +56,7 @@ public class TableTimeTracker {
     private boolean isRunning = false;
     
     public TableTimeTracker() {
+        Log.d(TAG, "[CONSTRUCTOR]");
         myTimer_.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -100,7 +101,7 @@ public class TableTimeTracker {
     }
     
     public void syncUI() {
-        Log.d(TAG, "Sync UI...");
+        Log.d(TAG, "Sync UI: hasUI_ = " + hasUI_);
 
         if (!hasUI_) return;
 
