@@ -179,6 +179,12 @@ public class HomeFragment extends Fragment
         refreshLoginState();
     }
 
+    @Override
+    public void onLoginFailure(int errorMessageResId) {
+        Log.d(TAG, "onLoginFailure:...");
+        //Snackbar.make(loginTextView_, errorMessageResId, Snackbar.LENGTH_LONG).show();
+    }
+
     // *************
 
     private void refreshLoginState() {

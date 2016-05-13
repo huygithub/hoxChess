@@ -18,35 +18,20 @@
  */
 package com.playxiangqi.hoxchess;
 
-import java.lang.ref.WeakReference;
-
 import com.playxiangqi.hoxchess.Enums.TableType;
 
-import android.app.Activity;
-import android.content.Context;
-import android.support.design.widget.Snackbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.PopupMenu;
-import android.widget.Toast;
 
 /**
  * The base controller to manage a table.
  */
-public class BaseTableController implements BoardView.BoardEventListener {
+public class BaseTableController {
 
     private static final String TAG = "BaseTableController";
     private boolean DEBUG_LIFE_CYCLE = false;
 
     // Shared table controllers.
-    //private static LocalTableController localTableController_;
     private static NetworkTableController networkTableController_;
-
-    //private static BaseTableController currentController_;
-
-    protected WeakReference<MainActivity> mainActivity_ = new WeakReference<MainActivity>(null);
 
     protected BoardController boardController_;
 
@@ -55,7 +40,6 @@ public class BaseTableController implements BoardView.BoardEventListener {
         // APIs that are required for AI/Practice tables.
         void reverseBoardView();
         void updateBoardWithNewMove(MoveInfo move);
-        void openNewPracticeTable();
 
         // APIs that are required for Network tables.
         void updateBoardWithNewTableInfo(TableInfo tableInfo);
@@ -87,25 +71,12 @@ public class BaseTableController implements BoardView.BoardEventListener {
     //
     // ***************************************************************
 
-    public void setupNewTable() {
-    }
-
-//    public void onNetworkLoginSuccess() {
-//    }
-
-    public void onNetworkLoginFailure(int errorMessageResId) {
-        Log.d(TAG, "onNetworkLoginFailure:...");
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.showBriefMessage(errorMessageResId, Snackbar.LENGTH_LONG);
-        }
-    }
-
     public void onNetworkCode(int errorMessageResId) {
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.showBriefMessage(errorMessageResId, Snackbar.LENGTH_SHORT);
-        }
+        Log.w(TAG, "onNetworkCode:...");
+        // TODO: MainActivity mainActivity = mainActivity_.get();
+        //if (mainActivity != null) {
+        //    mainActivity.showBriefMessage(errorMessageResId, Snackbar.LENGTH_SHORT);
+        //}
     }
 
     public void onNetworkError() {
@@ -136,53 +107,13 @@ public class BaseTableController implements BoardView.BoardEventListener {
     public void onPlayerRatingUpdate(String pid, String newRating) {
     }
 
-    public void setTableTitle() {
-    }
-
-    public boolean handleBackPressed() {
-        return false;
-    }
-
-    public boolean onPrepareOptionsMenu(Context context, Menu menu) {
-        return false; // Do not display the menu
-    }
-
-    //public void handleTableMenuOnClick(Activity activity) {
-    //}
-
-    public void handlePlayerOnClickInTable(PlayerInfo playerInfo, String tableId) {
-    }
-
-    //public void handleRequestToOpenNewTable() {
-    //}
-
-    public boolean isMyTurn() {
-        return false;
-    }
-
     public void handlePlayerButtonClick(Enums.ColorEnum clickedColor) {
     }
-
-    public void handleTableSelection(String tableId) {
-    }
-
-    public void handleRequestToCloseCurrentTable() {
-    }
-
-    public void handleLogoutFromNetwork() {
-    }
-
-    //public void onTableClear() {
-    //}
 
     public void onNetworkMove(MoveInfo move) {
     }
 
     public void onResetBoardWithMoves(MoveInfo[] moves) {
-    }
-
-    @Override
-    public void onLocalMove(Position fromPos, Position toPos, Enums.GameStatus gameStatus) {
     }
 
     // ***************************************************************
@@ -191,18 +122,7 @@ public class BaseTableController implements BoardView.BoardEventListener {
     //
     // ***************************************************************
 
-    public void onMainActivityCreate(MainActivity activity) {
-        Log.d(TAG, "onMainActivityCreate:...");
-        mainActivity_ = new WeakReference<MainActivity>(activity);
-        activity.setTableController(this);
-    }
 
-    public void onMainActivityDestroy(MainActivity activity) {
-        Log.d(TAG, "onMainActivityDestroy:...");
-        if (mainActivity_.get() == activity) {
-            mainActivity_ = new WeakReference<MainActivity>(null);
-        }
-    }
 
     // ***************************************************************
     //
@@ -210,94 +130,6 @@ public class BaseTableController implements BoardView.BoardEventListener {
     //
     // ***************************************************************
 
-    protected void setMainActivity(MainActivity activity) {
-        mainActivity_ = new WeakReference<MainActivity>(activity);
-    }
-
-    /* default */ MainActivity getMainActivity() {
-        return mainActivity_.get();
-    }
-
-    /* default */ void setMainActivityFromController(BaseTableController otherController) {
-        mainActivity_ = new WeakReference<MainActivity>(otherController.getMainActivity());
-    }
-
-//    protected void setupListenersInTableActionSheet(final TableActionSheet actionSheet) {
-//        actionSheet.setOnClickListener_ResetTable(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                handleRequestToResetTable();
-//                actionSheet.dismiss();
-//            }
-//        });
-//
-//        actionSheet.setOnClickListener_ReverseBoard(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //MainActivity mainActivity = mainActivity_.get();
-//                //if (mainActivity != null) {
-//                //    mainActivity.reverseBoardView();
-//                //}
-//                if (boardController_ != null) {
-//                    boardController_.reverseBoardView();
-//                }
-//                actionSheet.dismiss();
-//            }
-//        });
-//
-//        actionSheet.setOnClickListener_Close(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                handleRequestToCloseCurrentTable();
-//                actionSheet.dismiss();
-//            }
-//        });
-//
-//        actionSheet.setOnClickListener_OfferDrawn(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                handleRequestToOfferDraw();
-//                MainActivity mainActivity = mainActivity_.get();
-//                if (mainActivity != null) {
-//                    Toast.makeText(HoxApp.getApp(),
-//                            mainActivity.getString(R.string.action_draw),
-//                            Toast.LENGTH_SHORT).show();
-//                }
-//                actionSheet.dismiss();
-//            }
-//        });
-//
-//        actionSheet.setOnClickListener_OfferResign(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                handleRequestToOfferResign();
-//                MainActivity mainActivity = mainActivity_.get();
-//                if (mainActivity != null) {
-//                    Toast.makeText(HoxApp.getApp(),
-//                            mainActivity.getString(R.string.action_resign),
-//                            Toast.LENGTH_SHORT).show();
-//                }
-//                actionSheet.dismiss();
-//            }
-//        });
-//
-//        actionSheet.setOnClickListener_NewTable(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                handleRequestToOpenNewTable();
-//                actionSheet.dismiss();
-//            }
-//        });
-//    }
-
-    protected void handleRequestToResetTable() {
-    }
-
-    protected void handleRequestToOfferDraw() {
-    }
-
-    protected void handleRequestToOfferResign() {
-    }
 
     // ***************************************************************
     //
@@ -320,35 +152,12 @@ public class BaseTableController implements BoardView.BoardEventListener {
                 }
                 controller = networkTableController_;
                 break;
-
-//            case TABLE_TYPE_LOCAL: // falls through
-//            default:
-//                if (localTableController_ == null) {
-//                    localTableController_ = new LocalTableController();
-//                }
-//                controller = localTableController_;
-//                break;
             default:
                 throw new RuntimeException("Unsupported table-type = " + tableType);
         }
 
         return controller;
     }
-
-//    public static void setCurrentController(TableType tableType) {
-//        Log.d(TAG, "setCurrentController: type=" + tableType);
-//        BaseTableController oldController = currentController_;
-//        currentController_ = getTableController(tableType);
-//
-//        // Transfer the UI control to the new controller.
-//        if (oldController != null && oldController != currentController_) {
-//            currentController_.setMainActivityFromController(oldController);
-//        }
-//    }
-
-//    public static BaseTableController getCurrentController() {
-//        return currentController_;
-//    }
 
     public static NetworkTableController getNetworkController() {
         return (NetworkTableController) getTableController(TableType.TABLE_TYPE_NETWORK);

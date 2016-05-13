@@ -28,7 +28,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.BottomSheetDialog;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -38,6 +37,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class TablesActivity extends AppCompatActivity
                 implements TablesFragment.OnFragmentInteractionListener,
@@ -233,10 +233,8 @@ public class TablesActivity extends AppCompatActivity
             sendMessageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (activity instanceof MainActivity) {
-                        ((MainActivity)activity).showBriefMessage("Not yet implement Send Personal Message",
-                                Snackbar.LENGTH_SHORT);
-                    }
+                    Toast.makeText(activity, "Not yet implement Send Personal Message",
+                            Toast.LENGTH_SHORT).show();
                     dismiss(); // this the dialog.
                 }
             });

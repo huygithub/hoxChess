@@ -18,7 +18,6 @@
  */
 package com.playxiangqi.hoxchess;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,11 +28,9 @@ import java.util.Set;
 
 import com.playxiangqi.hoxchess.Enums.ColorEnum;
 import com.playxiangqi.hoxchess.Enums.GameStatus;
-import com.playxiangqi.hoxchess.Enums.TableType;
 
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -57,6 +54,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     public interface NetworkEventListener {
         void onLoginSuccess();
         void onLogout();
+        void onLoginFailure(int errorMessageResId);
     }
     private Set<NetworkEventListener> listeners_ = new HashSet<NetworkEventListener>();
     public void addListener(NetworkEventListener listener) { listeners_.add(listener); }
@@ -279,7 +277,9 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
         if (!isLoginOK_) {  // Error
             Log.w(TAG, "Login failed. Code: [" + code + "], Error: [" + content + "]");
-            BaseTableController.getNetworkController().onNetworkLoginFailure(getLocalizedLoginError(code));
+            for (NetworkEventListener listener : listeners_) {
+                listener.onLoginFailure(getLocalizedLoginError(code));
+            }
             networkPlayer_.disconnectFromServer();
             return;
         }

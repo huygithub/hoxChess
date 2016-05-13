@@ -53,7 +53,8 @@ public class NetworkTableActivity extends AppCompatActivity
                                PlayersFragment.OnFragmentInteractionListener,
                                ChatFragment.OnChatFragmentListener,
                                BaseTableController.BoardController,
-                               MessageManager.EventListener {
+                               MessageManager.EventListener,
+                               BoardView.BoardEventListener {
 
     private static final String TAG = "NetworkTableActivity";
 
@@ -264,7 +265,7 @@ public class NetworkTableActivity extends AppCompatActivity
 
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
-            boardFragment.setBoardEventListener(tableController_);
+            boardFragment.setBoardEventListener(this);
             boardFragment.setupUIForTimeTracker(timeTracker_);
             boardFragment.setupUIForPlayerTracker(playerTracker_);
             timeTracker_.syncUI();
@@ -422,10 +423,6 @@ public class NetworkTableActivity extends AppCompatActivity
     }
 
     @Override
-    public void openNewPracticeTable() {
-    }
-
-    @Override
     public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
         Log.d(TAG, "Update board with new network Table info (I_TABLE)...");
 
@@ -572,6 +569,34 @@ public class NetworkTableActivity extends AppCompatActivity
                 MessageManager.getInstance().removeMessage(messageInfo);
             }
         }
+    }
+
+    // **** Implementation of BoardView.BoardEventListener ****
+    @Override
+    public void onLocalMove(Position fromPos, Position toPos, Enums.GameStatus gameStatus) {
+        Referee referee = HoxApp.getApp().getReferee();
+        Log.d(TAG, "Handle local move: referee 's moveCount = " + referee.getMoveCount());
+
+        timeTracker_.nextColor();
+
+        if (referee.getMoveCount() == 2) {
+            timeTracker_.start();
+            adjustScreenOnFlagBasedOnGameStatus();
+        }
+
+        if (referee.getMoveCount() > 1) { // The game has started?
+            playerTracker_.syncUI();
+        }
+
+        HoxApp.getApp().getNetworkController().handleRequestToSendMove(fromPos, toPos);
+    }
+
+    @Override
+    public boolean isMyTurn() {
+        final Enums.ColorEnum myColor = HoxApp.getApp().getNetworkController().getMyColor();
+        return ((myColor == Enums.ColorEnum.COLOR_RED || myColor == Enums.ColorEnum.COLOR_BLACK) &&
+                playerTracker_.hasEnoughPlayers() &&
+                myColor == HoxApp.getApp().getReferee().getNextColor());
     }
 
     // *****
