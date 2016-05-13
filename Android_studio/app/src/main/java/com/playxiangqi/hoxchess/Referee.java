@@ -44,6 +44,7 @@ public class Referee {
     }
     
     public void resetGame() {
+        Log.d(TAG, "Reset the game...");
         nativeResetGame();
         gameStatus_ = Referee.hoxGAME_STATUS_READY;
         historyMoves_.clear();
@@ -59,7 +60,7 @@ public class Referee {
     public int validateMove(int row1, int col1, int row2, int col2) {
         final int status = nativeValidateMove(row1, col1, row2, col2);
         if (status == Referee.hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
-            Log.i(TAG, " This move [" + row1 + ", " + col1
+            Log.w(TAG, " This move [" + row1 + ", " + col1
                     + "] => [" + row2 + ", " + col2 + "] is NOT valid.");
             return status;
         }

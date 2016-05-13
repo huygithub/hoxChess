@@ -23,7 +23,7 @@ import android.os.Message;
 import android.util.Log;
 
 /**
- * The controller that controlls the AI engine in the AI table.
+ * The controller that controls the AI engine in the AI table.
  */
 public class AIController {
 
@@ -35,8 +35,20 @@ public class AIController {
         void onAINewMove(MoveInfo move);
     }
 
-    public AIController() {
+    // The singleton instance.
+    private static AIController instance_;
+
+    public static AIController getInstance() {
+        if (instance_ == null) {
+            instance_ = new AIController();
+        }
+        return instance_;
+    }
+
+    /** The default constructor */
+    private AIController() {
         Log.v(TAG, "[CONSTRUCTOR]: ...");
+        HoxApp.getApp().getAiEngine().initGame();
     }
 
     public void setBoardController(AIListener controller) {

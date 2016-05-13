@@ -70,7 +70,7 @@ public class NetworkTableController {
     }
 
     /** Constructor */
-    public NetworkTableController() {
+    private NetworkTableController() {
         Log.v(TAG, "[CONSTRUCTOR]: ...");
     }
 

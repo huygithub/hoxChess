@@ -51,7 +51,7 @@ public class AITableActivity extends AppCompatActivity
     // NOTE: Currently, we cannot change my role in this type of table.
     private final Enums.ColorEnum myColorInLocalTable_ = Enums.ColorEnum.COLOR_RED;
 
-    private final AIController aiController_ = new AIController();
+    private final AIController aiController_ = AIController.getInstance();
     private final TableTimeTracker timeTracker_ = new TableTimeTracker();
     private final TablePlayerTracker playerTracker_ = new TablePlayerTracker(Enums.TableType.TABLE_TYPE_LOCAL);
 
