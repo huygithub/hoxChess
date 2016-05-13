@@ -266,7 +266,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         if (resId != -1) {
-            BaseTableController.getNetworkController().onNetworkCode(resId);
+            NetworkTableController.getInstance().onNetworkCode(resId);
         }
     }
 
@@ -336,7 +336,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
         Log.i(TAG, "Set my table Id: " + myTable_.tableId + ", myColor: " + myColor_);
 
-        BaseTableController.getNetworkController().onNetworkTableEnter(myTable_);
+        NetworkTableController.getInstance().onNetworkTableEnter(myTable_);
     }
 
     private void handleNetworkEvent_I_MOVES(String content) {
@@ -351,7 +351,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         final MoveInfo[] moves = MoveInfo.parseForListOfNetworkMoves(movesStr);
-        BaseTableController.getNetworkController().onResetBoardWithMoves(moves);
+        NetworkTableController.getInstance().onResetBoardWithMoves(moves);
     }
 
     private void handleNetworkEvent_MOVE(String content) {
@@ -366,7 +366,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         final MoveInfo moveInfo = MoveInfo.parseForNetworkMove(move);
-        BaseTableController.getNetworkController().onNetworkMove(moveInfo);
+        NetworkTableController.getInstance().onNetworkMove(moveInfo);
     }
 
     private void handleNetworkEvent_LEAVE(String content) {
@@ -392,7 +392,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             myTable_.onPlayerLeft(pid);
         }
 
-        BaseTableController.getNetworkController().onNetworkPlayerLeave(pid);
+        NetworkTableController.getInstance().onNetworkPlayerLeave(pid);
     }
 
     private void handleNetworkEvent_E_JOIN(String content) {
@@ -426,7 +426,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             myColor_ = myNewColor;
         }
 
-        BaseTableController.getNetworkController().onNetworkPlayerJoin(
+        NetworkTableController.getInstance().onNetworkPlayerJoin(
                 new PlayerInfo(pid, rating), playerColor, myNewColor);
     }
 
@@ -452,7 +452,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
         gameStatus_ = gameStatus;
 
-        BaseTableController.getNetworkController().onGameEnded(gameStatus);
+        NetworkTableController.getInstance().onGameEnded(gameStatus);
     }
 
     private void handleNetworkEvent_RESET(String content) {
@@ -466,7 +466,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
-        BaseTableController.getNetworkController().onGameReset();
+        NetworkTableController.getInstance().onGameReset();
     }
 
     private void handleNetworkEvent_DRAW(String content) {
@@ -480,7 +480,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             return;
         }
 
-        BaseTableController.getNetworkController().onGameDrawnRequested(pid);
+        NetworkTableController.getInstance().onGameDrawnRequested(pid);
     }
 
     private void handleNetworkEvent_MSG(String content, String tableId) {
@@ -568,7 +568,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         final String draws = components[3];
         final String losses = components[4];
 
-        BaseTableController.getNetworkController().onPlayerInfoReceived(pid, rating, wins, draws, losses);
+        NetworkTableController.getInstance().onPlayerInfoReceived(pid, rating, wins, draws, losses);
     }
 
     private void handleNetworkEvent_E_SCORE(String content) {
@@ -584,7 +584,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         if (myTable_.hasId(tableId)) {
-            BaseTableController.getNetworkController().onPlayerRatingUpdate(pid, rating);
+            NetworkTableController.getInstance().onPlayerRatingUpdate(pid, rating);
         }
     }
 
@@ -614,7 +614,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
         }
 
-        BaseTableController.getNetworkController().onNetworkError();
+        NetworkTableController.getInstance().onNetworkError();
     }
 
     public void handleRequestToSendMove(Position fromPos, Position toPos) {

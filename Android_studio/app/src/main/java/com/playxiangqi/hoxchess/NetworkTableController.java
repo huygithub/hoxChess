@@ -25,7 +25,7 @@ import android.util.Log;
 /**
  * The controller that manages a network table.
  */
-public class NetworkTableController extends BaseTableController {
+public class NetworkTableController {
 
     private static final String TAG = "NetworkTableController";
 
@@ -33,6 +33,43 @@ public class NetworkTableController extends BaseTableController {
     private TableTimeTracker timeTracker_ = new TableTimeTracker();
     private TablePlayerTracker playerTracker_ = new TablePlayerTracker(Enums.TableType.TABLE_TYPE_EMPTY);
 
+    // ***************************
+    private BoardController boardController_;
+
+    public interface BoardController {
+        // APIs that are required for AI/Practice tables.
+        //void reverseBoardView();
+        void updateBoardWithNewMove(MoveInfo move);
+
+        // APIs that are required for Network tables.
+        void updateBoardWithNewTableInfo(TableInfo tableInfo);
+        void resetBoardWithNewMoves(MoveInfo[] moves);
+        void clearTable();
+        void onLocalPlayerJoined(Enums.ColorEnum myColor);
+        void onPlayerJoin(String pid, String rating, Enums.ColorEnum playerColor);
+        void onPlayerLeave(String pid);
+        void showGameMessage_DRAW(String pid);
+        void onGameEnded(Enums.GameStatus gameStatus);
+        void onGameReset();
+        void onPlayerInfoReceived(String pid, String rating, String wins, String draws, String losses);
+    }
+    public void setBoardController(BoardController controller) {
+        boardController_ = controller;
+    }
+    // ***************************
+
+    // The singleton instance.
+    private static NetworkTableController instance_;
+
+    /** Singleton API to return the instance. */
+    public static NetworkTableController getInstance() {
+        if (instance_ == null) {
+            instance_ = new NetworkTableController();
+        }
+        return instance_;
+    }
+
+    /** Constructor */
     public NetworkTableController() {
         Log.v(TAG, "[CONSTRUCTOR]: ...");
     }
@@ -40,7 +77,6 @@ public class NetworkTableController extends BaseTableController {
     public TableTimeTracker getTimeTracker() { return timeTracker_; }
     public TablePlayerTracker getPlayerTracker() { return playerTracker_; }
 
-    @Override
     public void onNetworkTableEnter(TableInfo tableInfo) {
         Log.d(TAG, "onNetworkTableEnter: Set table-type to NETWORK...");
         myTableType_ = Enums.TableType.TABLE_TYPE_NETWORK;
@@ -63,7 +99,6 @@ public class NetworkTableController extends BaseTableController {
         }
     }
 
-    @Override
     public void onNetworkPlayerJoin(PlayerInfo playerInfo, Enums.ColorEnum playerColor,
                                     Enums.ColorEnum myNewColor) {
         Log.d(TAG, "onNetworkPlayerJoin: playerInfo = "  + playerInfo);
@@ -82,7 +117,6 @@ public class NetworkTableController extends BaseTableController {
         playerTracker_.syncUI();
     }
 
-    @Override
     public void onNetworkPlayerLeave(String pid) {
         Log.d(TAG, "onNetworkPlayerLeave: PlayerId = "  + pid);
 
@@ -110,7 +144,6 @@ public class NetworkTableController extends BaseTableController {
         playerTracker_.syncUI();
     }
 
-    @Override
     public void onGameEnded(Enums.GameStatus gameStatus) {
         Log.d(TAG, "onGameEnded: gameStatus = "  + gameStatus);
         if (boardController_ != null) {
@@ -120,7 +153,6 @@ public class NetworkTableController extends BaseTableController {
         playerTracker_.syncUI();
     }
 
-    @Override
     public void onGameReset() {
         Log.d(TAG, "onGameReset:...");
         if (boardController_ != null) {
@@ -130,7 +162,6 @@ public class NetworkTableController extends BaseTableController {
         timeTracker_.reset();
     }
 
-    @Override
     public void onGameDrawnRequested(String pid) {
         Log.d(TAG, "onGameDrawnRequested: pid = " + pid);
         if (boardController_ != null) {
@@ -138,27 +169,23 @@ public class NetworkTableController extends BaseTableController {
         }
     }
 
-    @Override
     public void onPlayerInfoReceived(String pid, String rating, String wins, String draws, String losses) {
         if (boardController_ != null) {
             boardController_.onPlayerInfoReceived(pid, rating, wins, draws, losses);
         }
     }
 
-    @Override
     public void onPlayerRatingUpdate(String pid, String newRating) {
         playerTracker_.onPlayerRatingUpdate(pid, newRating);
         playerTracker_.syncUI();
     }
 
-    @Override
     public void handlePlayerButtonClick(Enums.ColorEnum clickedColor) {
         Log.d(TAG, "Handle player-button click. clickedColor = " + clickedColor);
         NetworkController networkController = HoxApp.getApp().getNetworkController();
         networkController.handleMyRequestToChangeRole(clickedColor);
     }
 
-    @Override
     public void onNetworkMove(MoveInfo move) {
         move.gameStatus = HoxApp.getApp().getReferee().validateMove(
                 move.fromPosition.row, move.fromPosition.column,
@@ -177,7 +204,6 @@ public class NetworkTableController extends BaseTableController {
         timeTracker_.start();
     }
 
-    @Override
     public void onResetBoardWithMoves(MoveInfo[] moves) {
         for (MoveInfo move : moves) {
             move.gameStatus = HoxApp.getApp().getReferee().validateMove(
@@ -196,6 +222,14 @@ public class NetworkTableController extends BaseTableController {
 
         timeTracker_.setInitialColor(HoxApp.getApp().getReferee().getNextColor());
         timeTracker_.start();
+    }
+
+    public void onNetworkCode(int errorMessageResId) {
+        Log.w(TAG, "onNetworkCode:..."); // FIXME
+    }
+
+    public void onNetworkError() {
+        Log.w(TAG, "onNetworkCode:..."); // FIXME
     }
 
     // ***************************************************************************

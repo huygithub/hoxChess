@@ -52,7 +52,7 @@ public class NetworkTableActivity extends AppCompatActivity
                                BoardFragment.OnFragmentInteractionListener,
                                PlayersFragment.OnFragmentInteractionListener,
                                ChatFragment.OnChatFragmentListener,
-                               BaseTableController.BoardController,
+                               NetworkTableController.BoardController,
                                MessageManager.EventListener,
                                BoardView.BoardEventListener {
 
@@ -66,7 +66,7 @@ public class NetworkTableActivity extends AppCompatActivity
     private WeakReference<ChatFragment> myChatFragment_ = new WeakReference<ChatFragment>(null);
     private WeakReference<PlayersFragment> myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
 
-    private BaseTableController tableController_;
+    private final NetworkTableController tableController_ = NetworkTableController.getInstance();
     private TableTimeTracker timeTracker_;
     private TablePlayerTracker playerTracker_;
 
@@ -102,11 +102,10 @@ public class NetworkTableActivity extends AppCompatActivity
         viewPager_.setOffscreenPageLimit(2); // Performance: Keep the 3rd page from being destroyed!
         viewPager_.addOnPageChangeListener(this);
 
-        tableController_ = BaseTableController.getNetworkController();
         tableController_.setBoardController(this);
 
-        timeTracker_ = BaseTableController.getNetworkController().getTimeTracker();
-        playerTracker_ = BaseTableController.getNetworkController().getPlayerTracker();
+        timeTracker_ = tableController_.getTimeTracker();
+        playerTracker_ = tableController_.getPlayerTracker();
 
         tableId_ = getIntent().getStringExtra(EXTRA_TABLE_ID);
         Log.d(TAG, "onCreate: tableId = [" + tableId_ + "]");
@@ -275,8 +274,6 @@ public class NetworkTableActivity extends AppCompatActivity
             timeTracker_.syncUI();
             playerTracker_.syncUI();
         }
-
-        //tableController_.setTableTitle();
     }
 
     @Override
@@ -298,8 +295,6 @@ public class NetworkTableActivity extends AppCompatActivity
 
     @Override
     public void onTableMenuClick(View view) {
-        //tableController_.handleTableMenuOnClick(this);
-
         final TableActionSheet actionSheet = new TableActionSheet(this);
         actionSheet.setHeaderText(getTitleForTableActionSheet());
         setupListenersInTableActionSheet(actionSheet);
@@ -364,15 +359,14 @@ public class NetworkTableActivity extends AppCompatActivity
     @Override
     public List<PlayerInfo> onRequestToRefreshPlayers() {
         List<PlayerInfo> players = new ArrayList<PlayerInfo>();
-        TablePlayerTracker playerTracker = BaseTableController.getNetworkController().getPlayerTracker();
 
-        PlayerInfo redPlayer = playerTracker.getRedPlayer();
+        PlayerInfo redPlayer = playerTracker_.getRedPlayer();
         if (redPlayer.isValid()) players.add(redPlayer);
 
-        PlayerInfo blackPlayer = playerTracker.getBlackPlayer();
+        PlayerInfo blackPlayer = playerTracker_.getBlackPlayer();
         if (blackPlayer.isValid()) players.add(blackPlayer);
 
-        Map<String, PlayerInfo> observers = playerTracker.getObservers();
+        Map<String, PlayerInfo> observers = playerTracker_.getObservers();
         for (HashMap.Entry<String, PlayerInfo> entry : observers.entrySet()) {
             players.add(entry.getValue());
         }
@@ -382,7 +376,6 @@ public class NetworkTableActivity extends AppCompatActivity
 
     @Override
     public void onPlayerClick(PlayerInfo playerInfo, String tableId) {
-        // tableController_.handlePlayerOnClickInTable(playerInfo, tableId);
         HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
 
         PlayersInTableSheetDialog dialog = new PlayersInTableSheetDialog(this, playerInfo);
@@ -418,8 +411,7 @@ public class NetworkTableActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void reverseBoardView() {
+    private void reverseBoardView() {
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
             boardFragment.reverseView();
@@ -485,7 +477,6 @@ public class NetworkTableActivity extends AppCompatActivity
             playersFragment.clearAll();
         }
 
-        //tableController_.onTableClear();
         MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
 
         adjustScreenOnFlagBasedOnGameStatus();

@@ -50,7 +50,7 @@ import java.util.List;
 public class ChatInTableSheet extends BottomSheetDialog {
     private FloatingActionButton editModeButton;
 
-    public ChatInTableSheet(final Activity activity, final BaseTableController tableController, TableInfo tableInfo) {
+    public ChatInTableSheet(final Activity activity, final NetworkTableController tableController, TableInfo tableInfo) {
         super(activity);
 
         View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_table_chat, null);
