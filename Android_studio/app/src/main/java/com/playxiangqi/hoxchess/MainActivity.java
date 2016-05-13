@@ -60,24 +60,25 @@ import android.widget.TextView;
  */
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-                ViewPager.OnPageChangeListener,
+                //ViewPager.OnPageChangeListener,
                 MessageManager.EventListener,
-                BoardFragment.OnFragmentInteractionListener,
-                PlayersFragment.OnFragmentInteractionListener,
+                NetworkController.NetworkEventListener,
+                //BoardFragment.OnFragmentInteractionListener,
+                //PlayersFragment.OnFragmentInteractionListener,
                 HomeFragment.OnHomeFragmentListener {
 
     private static final String TAG = "MainActivity";
 
     // The request codes
-    private static final int JOIN_TABLE_REQUEST = 1;
+    //private static final int JOIN_TABLE_REQUEST = 1;
     private static final int CHANGE_SETTINGS_REQUEST = 2;
 
     private DrawerLayout drawerLayout_;
     private ActionBarDrawerToggle drawerToggle_;
-    private MainPagerAdapter pagerAdapter_;
-    private ViewPager viewPager_;
+    //private MainPagerAdapter pagerAdapter_;
+    //private ViewPager viewPager_;
 
-    private boolean isWaitingForTables = false;
+    //private boolean isWaitingForTables = false;
 
     // Keep a reference to fragments because I don't know when they are destroyed or created.
     // Also, the way ViewPager handles fragments makes it hard to retain references to fragments.
@@ -161,13 +162,14 @@ public class MainActivity extends AppCompatActivity
         SoundManager.getInstance().initialize(this);
         // FIXME: BaseTableController.getCurrentController().onMainActivityCreate(this);
 
-        handler_.post(new Runnable() {
+        // Auto login the server.
+        /*handler_.post(new Runnable() {
             @Override
             public void run() {
                 Log.i(TAG, "In UI thread again (onCreate): Login to server...");
                 HoxApp.getApp().loginServer();
             }
-        });
+        });*/
     }
 
     private void setupDrawer(Toolbar toolbar) {
@@ -243,7 +245,8 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         MenuItem logoutItem = navigationView.getMenu().findItem(R.id.action_logout);
         if (logoutItem != null) {
-            logoutItem.setVisible(HoxApp.getApp().isOnline());
+            //logoutItem.setVisible(HoxApp.getApp().isOnline());
+            logoutItem.setTitle(HoxApp.getApp().isOnline() ? R.string.action_logout : R.string.action_login);
         }
     }
 
@@ -263,9 +266,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_view_tables:
-                onViewTablesClicked();
-                break;
+            //case R.id.action_view_tables:
+            //    onViewTablesClicked();
+            //    break;
             case R.id.action_settings:
                 openSettingsView();
                 break;
@@ -280,7 +283,11 @@ public class MainActivity extends AppCompatActivity
             }
             case R.id.action_logout:
                 //tableController_.handleLogoutFromNetwork();
-                NetworkController.getInstance().logoutFromNetwork();
+                if (HoxApp.getApp().isOnline()) {
+                    NetworkController.getInstance().logoutFromNetwork();
+                } else {
+                    HoxApp.getApp().loginServer();
+                }
                 break;
             default:
                 break;
@@ -294,6 +301,7 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
+        NetworkController.getInstance().addListener(this);
         MessageManager.getInstance().addListener(this);
         adjustScreenOnFlagBasedOnGameStatus();
     }
@@ -316,6 +324,7 @@ public class MainActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
+        NetworkController.getInstance().removeListener(this);
         MessageManager.getInstance().removeListener(this);
         adjustScreenOnFlagBasedOnGameStatus();
     }
@@ -398,9 +407,9 @@ public class MainActivity extends AppCompatActivity
             case R.id.action_close_table:
                 tableController_.handleRequestToCloseCurrentTable();
                 return true;
-            case R.id.action_view_tables:
-                onViewTablesClicked();
-                return true;
+            //case R.id.action_view_tables:
+            //    onViewTablesClicked();
+            //    return true;
             case R.id.action_notifications:
                 openChatView();
                 return true;
@@ -414,8 +423,6 @@ public class MainActivity extends AppCompatActivity
         // Make a copy of the current settings.
         settingsInfo_ = SettingsActivity.getCurrentSettingsInfo(this);
 
-        //Intent intent = new Intent(this, SettingsActivity.class);
-        //startActivity(intent);
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivityForResult(intent, CHANGE_SETTINGS_REQUEST);
     }
@@ -454,119 +461,119 @@ public class MainActivity extends AppCompatActivity
         HoxApp.getApp().getNetworkController().sendRequestForTableList();
     }
 
-    private void onViewTablesClicked() {
-        Log.d(TAG, "On ViewTables clicked...");
+//    private void onViewTablesClicked() {
+//        Log.d(TAG, "On ViewTables clicked...");
+//
+//        PlayerManager.getInstance().clearTables(); // will get a new list
+//
+//        if (HoxApp.getApp().isOnlineAndLoginOK()) {
+//            askNetworkControllerForTableList();
+//        } else {
+//            isWaitingForTables = true;
+//            HoxApp.getApp().loginServer();
+//        }
+//
+//        startActivityToListTables();
+//    }
 
-        PlayerManager.getInstance().clearTables(); // will get a new list
+//    private void startActivityToListTables() {
+//        Log.d(TAG, "Start activity (TABLES): ENTER.");
+//        Intent intent = new Intent(this, TablesActivity.class);
+//        startActivityForResult(intent, JOIN_TABLE_REQUEST);
+//    }
 
-        if (HoxApp.getApp().isOnlineAndLoginOK()) {
-            askNetworkControllerForTableList();
-        } else {
-            isWaitingForTables = true;
-            HoxApp.getApp().loginServer();
-        }
-
-        startActivityToListTables();
-    }
-
-    private void startActivityToListTables() {
-        Log.d(TAG, "Start activity (TABLES): ENTER.");
-        Intent intent = new Intent(this, TablesActivity.class);
-        startActivityForResult(intent, JOIN_TABLE_REQUEST);
-    }
-
-    public void updateBoardWithNewAIMove(MoveInfo move) {
-        Log.d(TAG, "Update board with a new AI move = " + move);
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.makeMove(move, true);
-        }
-
-        if (HoxApp.getApp().getReferee().getMoveCount() == 2) { // The game has started?
-            onGameStatusChanged();
-        }
-    }
-    
-    public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
-        Log.d(TAG, "Update board with new network Table info (I_TABLE)...");
-        
-        setAndShowTitle(tableInfo.tableId);
-        invalidateOptionsMenu(); // Recreate the options menu
-
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.resetBoard();
-        }
-
-        PlayersFragment playersFragment = myPlayersFragment_.get();
-        if (playersFragment != null) {
-            playersFragment.refreshPlayersIfNeeded();
-        }
-    }
-
-    public void resetBoardWithNewMoves(MoveInfo[] moves) {
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.resetBoardWithNewMoves(moves);
-        }
-
-        adjustScreenOnFlagBasedOnGameStatus();
-    }
-
-    public void openNewPracticeTable() {
-        Log.d(TAG, "Open a new practice table");
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.resetBoard();
-        }
-        tableController_.setTableTitle();
-    }
-    
-    public void updateBoardWithNewMove(MoveInfo move) {
-        Log.d(TAG, "Update board with a new (MOVE): " + move);
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.makeMove(move, true);
-        }
-
-        if (HoxApp.getApp().getReferee().getMoveCount() == 2) { // The game has started?
-            onGameStatusChanged();
-        }
-    }
+//    public void updateBoardWithNewAIMove(MoveInfo move) {
+//        Log.d(TAG, "Update board with a new AI move = " + move);
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.makeMove(move, true);
+//        }
+//
+//        if (HoxApp.getApp().getReferee().getMoveCount() == 2) { // The game has started?
+//            onGameStatusChanged();
+//        }
+//    }
+//
+//    public void updateBoardWithNewTableInfo(TableInfo tableInfo) {
+//        Log.d(TAG, "Update board with new network Table info (I_TABLE)...");
+//
+//        setAndShowTitle(tableInfo.tableId);
+//        invalidateOptionsMenu(); // Recreate the options menu
+//
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.resetBoard();
+//        }
+//
+//        PlayersFragment playersFragment = myPlayersFragment_.get();
+//        if (playersFragment != null) {
+//            playersFragment.refreshPlayersIfNeeded();
+//        }
+//    }
+//
+//    public void resetBoardWithNewMoves(MoveInfo[] moves) {
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.resetBoardWithNewMoves(moves);
+//        }
+//
+//        adjustScreenOnFlagBasedOnGameStatus();
+//    }
+//
+//    public void openNewPracticeTable() {
+//        Log.d(TAG, "Open a new practice table");
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.resetBoard();
+//        }
+//        tableController_.setTableTitle();
+//    }
+//
+//    public void updateBoardWithNewMove(MoveInfo move) {
+//        Log.d(TAG, "Update board with a new (MOVE): " + move);
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.makeMove(move, true);
+//        }
+//
+//        if (HoxApp.getApp().getReferee().getMoveCount() == 2) { // The game has started?
+//            onGameStatusChanged();
+//        }
+//    }
 
     /**
      * Make the current table an EMPTY one.
      */
-    public void clearTable() {
-        Log.d(TAG, "Clear the table. Make it an empty one.");
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
-        } else {
-            Log.w(TAG, "clearTable: getSupportActionBar() = null. Do not set Display options!");
-        }
-        invalidateOptionsMenu(); // Recreate the options menu
+//    public void clearTable() {
+//        Log.d(TAG, "Clear the table. Make it an empty one.");
+//        if (getSupportActionBar() != null) {
+//            getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
+//        } else {
+//            Log.w(TAG, "clearTable: getSupportActionBar() = null. Do not set Display options!");
+//        }
+//        invalidateOptionsMenu(); // Recreate the options menu
+//
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.resetBoard();
+//        }
+//
+//        ChatFragment chatFragment = myChatFragment_.get();
+//        if (chatFragment != null) {
+//            chatFragment.clearAll();
+//        }
+//
+//        PlayersFragment playersFragment = myPlayersFragment_.get();
+//        if (playersFragment != null) {
+//            playersFragment.clearAll();
+//        }
+//
+//        //tableController_.onTableClear();
+//        MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
+//
+//        adjustScreenOnFlagBasedOnGameStatus();
+//    }
 
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.resetBoard();
-        }
-
-        ChatFragment chatFragment = myChatFragment_.get();
-        if (chatFragment != null) {
-            chatFragment.clearAll();
-        }
-
-        PlayersFragment playersFragment = myPlayersFragment_.get();
-        if (playersFragment != null) {
-            playersFragment.clearAll();
-        }
-
-        //tableController_.onTableClear();
-        MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
-
-        adjustScreenOnFlagBasedOnGameStatus();
-    }
-    
 //    public void onLocalPlayerJoined(ColorEnum myColor) {
 //        BoardFragment boardFragment = myBoardFragment_.get();
 //        if (boardFragment != null) {
@@ -612,7 +619,7 @@ public class MainActivity extends AppCompatActivity
             notifCount_++;
             invalidateOptionsMenu(); // Recreate the options menu
 
-        } else if (messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE) {
+        } /*else if (messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE) {
             int currentPageIndex = viewPager_.getCurrentItem();
             if (currentPageIndex == MainPagerAdapter.POSITION_BOARD) {
                 BoardFragment boardFragment = myBoardFragment_.get();
@@ -629,29 +636,39 @@ public class MainActivity extends AppCompatActivity
                 }
                 MessageManager.getInstance().removeMessage(messageInfo);
             }
-        }
+        }*/
     }
 
     public void showBriefMessage(int resId, int duration) {
-        Snackbar.make(viewPager_, resId, duration).show();
+        View view = findViewById(R.id.main_container);
+        Snackbar.make(view /*viewPager_*/, resId, duration).show();
     }
 
     public void showBriefMessage(CharSequence text, int duration) {
-        Snackbar.make(viewPager_, text, duration).show();
+        View view = findViewById(R.id.main_container);
+        Snackbar.make(view /*viewPager_*/, text, duration).show();
     }
 
+    @Override
     public void onLoginSuccess() {
-        Log.d(TAG, "On Login Success...");
-        if (isWaitingForTables) {
-            isWaitingForTables = false;
-            askNetworkControllerForTableList();
-        }
+        Log.d(TAG, "onLoginSuccess:...");
+        showBriefMessage(R.string.msg_login_success, Snackbar.LENGTH_SHORT);
+        //if (isWaitingForTables) {
+        //    isWaitingForTables = false;
+        //    askNetworkControllerForTableList();
+        //}
+    }
+    @Override
+    public void onLogout() {
+        Log.d(TAG, "onLogout:...");
+        showBriefMessage(R.string.msg_logout_done, Snackbar.LENGTH_SHORT);
     }
 
-    public void showGameMessage_DRAW(String pid) {
-        Snackbar.make(viewPager_,
-                getString(R.string.msg_player_offered_draw, pid), Snackbar.LENGTH_LONG).show();
-    }
+
+//    public void showGameMessage_DRAW(String pid) {
+//        Snackbar.make(viewPager_,
+//                getString(R.string.msg_player_offered_draw, pid), Snackbar.LENGTH_LONG).show();
+//    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -690,84 +707,84 @@ public class MainActivity extends AppCompatActivity
     /**
      * Implementation of BoardFragment.OnFragmentInteractionListener
      */
-    @Override
-    public void onTableMenuClick(View view) {
-        //tableController_.handleTableMenuOnClick(this);
-    }
+//    @Override
+//    public void onTableMenuClick(View view) {
+//        //tableController_.handleTableMenuOnClick(this);
+//    }
 
-    @Override
-    public void onShowMessageViewClick(View v) {
-        Utils.animatePagerTransition(viewPager_, true /* forward */, 500);
-        //viewPager_.setCurrentItem(1);
-        //viewPager_.setCurrentItem(1, true /* smooth scroll */);
+//    @Override
+//    public void onShowMessageViewClick(View v) {
+//        Utils.animatePagerTransition(viewPager_, true /* forward */, 500);
+//        //viewPager_.setCurrentItem(1);
+//        //viewPager_.setCurrentItem(1, true /* smooth scroll */);
+//
+////        TableInfo tableInfo = new TableInfo();
+////        tableInfo.tableId = "14";
+////        tableInfo.itimes = Enums.DEFAULT_INITIAL_GAME_TIMES;
+////        final ChatInTableSheet dialog = new ChatInTableSheet(this, tableController_, tableInfo);
+////        dialog.show();
+//    }
 
-//        TableInfo tableInfo = new TableInfo();
-//        tableInfo.tableId = "14";
-//        tableInfo.itimes = Enums.DEFAULT_INITIAL_GAME_TIMES;
-//        final ChatInTableSheet dialog = new ChatInTableSheet(this, tableController_, tableInfo);
-//        dialog.show();
-    }
-
-    @Override
-    public void onChangeRoleRequest(Enums.ColorEnum clickedColor) {
-        tableController_.handlePlayerButtonClick(clickedColor);
-    }
+//    @Override
+//    public void onChangeRoleRequest(Enums.ColorEnum clickedColor) {
+//        tableController_.handlePlayerButtonClick(clickedColor);
+//    }
 
     /**
      * Implementation of BoardFragment.OnFragmentInteractionListener
      */
-    @Override
-    public void onBoardFragment_CreateView(BoardFragment fragment) {
-        myBoardFragment_ = new WeakReference<BoardFragment>(fragment);
+//    @Override
+//    public void onBoardFragment_CreateView(BoardFragment fragment) {
+//        myBoardFragment_ = new WeakReference<BoardFragment>(fragment);
+//
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.setBoardEventListener(tableController_);
+//        }
+//
+//        tableController_.setTableTitle();
+//    }
 
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.setBoardEventListener(tableController_);
-        }
+//    @Override
+//    public void onBoardFragment_DestroyView(BoardFragment fragment) {
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null && boardFragment == fragment) {
+//            Log.d(TAG, "Board fragment view destroyed. Release weak reference.");
+//            myBoardFragment_ = new WeakReference<BoardFragment>(null);
+//        }
+//    }
 
-        tableController_.setTableTitle();
-    }
-
-    @Override
-    public void onBoardFragment_DestroyView(BoardFragment fragment) {
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null && boardFragment == fragment) {
-            Log.d(TAG, "Board fragment view destroyed. Release weak reference.");
-            myBoardFragment_ = new WeakReference<BoardFragment>(null);
-        }
-    }
-
-    @Override
-    public void onBoardFragment_ReverseView() {
-        //timeTracker_.reverseView();
-    }
-
-    /**
-     * Implementation of PlayersFragment.OnFragmentInteractionListener
-     */
-    @Override
-    public void onPlayersFragment_CreateView(PlayersFragment fragment) {
-        myPlayersFragment_ = new WeakReference<PlayersFragment>(fragment);
-    }
+//    @Override
+//    public void onBoardFragment_ReverseView() {
+//        //timeTracker_.reverseView();
+//    }
 
     /**
      * Implementation of PlayersFragment.OnFragmentInteractionListener
      */
-    @Override
-    public void onPlayersFragment_DestroyView(PlayersFragment fragment) {
-        PlayersFragment playersFragment = myPlayersFragment_.get();
-        if (playersFragment != null && playersFragment == fragment) {
-            myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
-            Log.d(TAG, "Release Players fragment: " + playersFragment);
-        }
-    }
+//    @Override
+//    public void onPlayersFragment_CreateView(PlayersFragment fragment) {
+//        myPlayersFragment_ = new WeakReference<PlayersFragment>(fragment);
+//    }
 
     /**
      * Implementation of PlayersFragment.OnFragmentInteractionListener
      */
-    @Override
-    public List<PlayerInfo> onRequestToRefreshPlayers() {
-        List<PlayerInfo> players = new ArrayList<PlayerInfo>();
+//    @Override
+//    public void onPlayersFragment_DestroyView(PlayersFragment fragment) {
+//        PlayersFragment playersFragment = myPlayersFragment_.get();
+//        if (playersFragment != null && playersFragment == fragment) {
+//            myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
+//            Log.d(TAG, "Release Players fragment: " + playersFragment);
+//        }
+//    }
+
+    /**
+     * Implementation of PlayersFragment.OnFragmentInteractionListener
+     */
+//    @Override
+//    public List<PlayerInfo> onRequestToRefreshPlayers() {
+//        List<PlayerInfo> players = new ArrayList<PlayerInfo>();
 //        TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
 //
 //        PlayerInfo redPlayer = playerTracker.getRedPlayer();
@@ -780,32 +797,30 @@ public class MainActivity extends AppCompatActivity
 //        for (HashMap.Entry<String, PlayerInfo> entry : observers.entrySet()) {
 //            players.add(entry.getValue());
 //        }
-
-        return players;
-    }
+//
+//        return players;
+//    }
 
     /**
      * Implementation of PlayersFragment.OnFragmentInteractionListener
      */
-    @Override
-    public void onPlayerClick(PlayerInfo playerInfo, String tableId) {
-        tableController_.handlePlayerOnClickInTable(playerInfo, tableId);
-    }
+//    @Override
+//    public void onPlayerClick(PlayerInfo playerInfo, String tableId) {
+//        tableController_.handlePlayerOnClickInTable(playerInfo, tableId);
+//    }
 
     // **** Implementation of HomeFragment.OnHomeFragmentListener ***
     @Override
     public void OnEditAccountViewClick() {
         Log.d(TAG, "OnEditAccountViewClick");
-        //Intent intent = new Intent(this, SettingsActivity.class);
-        //startActivityForResult(intent, CHANGE_SETTINGS_REQUEST);
         openSettingsView();
     }
 
     /**
      * Implementation ViewPager.OnPageChangeListener
      */
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-    }
+//    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+//    }
 
     /**
      * This method will be invoked when a new page becomes selected. Animation is not
@@ -813,25 +828,25 @@ public class MainActivity extends AppCompatActivity
      *
      * @param position Position index of the new selected page.
      */
-    public void onPageSelected(int position) {
-        Log.d(TAG, "onPageSelected: position:"+ position);
-        if (position == MainPagerAdapter.POSITION_BOARD) {
-            int messageCount = MessageManager.getInstance().getMessageCount(
-                    MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
-            Log.d(TAG, "onPageSelected: ... table-message count = " + messageCount);
-            BoardFragment boardFragment = myBoardFragment_.get();
-            if (boardFragment != null) {
-                boardFragment.setTableMessageCount(messageCount);
-            }
-        } else if (position == MainPagerAdapter.POSITION_CHAT) {
-            List<MessageInfo> newMessages = MessageManager.getInstance().getMessages();
-            ChatFragment chatFragment = myChatFragment_.get();
-            if (chatFragment != null) {
-                chatFragment.addNewMessages(newMessages);
-            }
-            MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
-        }
-    }
+//    public void onPageSelected(int position) {
+//        Log.d(TAG, "onPageSelected: position:"+ position);
+//        if (position == MainPagerAdapter.POSITION_BOARD) {
+//            int messageCount = MessageManager.getInstance().getMessageCount(
+//                    MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
+//            Log.d(TAG, "onPageSelected: ... table-message count = " + messageCount);
+//            BoardFragment boardFragment = myBoardFragment_.get();
+//            if (boardFragment != null) {
+//                boardFragment.setTableMessageCount(messageCount);
+//            }
+//        } else if (position == MainPagerAdapter.POSITION_CHAT) {
+//            List<MessageInfo> newMessages = MessageManager.getInstance().getMessages();
+//            ChatFragment chatFragment = myChatFragment_.get();
+//            if (chatFragment != null) {
+//                chatFragment.addNewMessages(newMessages);
+//            }
+//            MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
+//        }
+//    }
 
     /**
      * Called when the scroll state changes. Useful for discovering when the user
@@ -843,8 +858,8 @@ public class MainActivity extends AppCompatActivity
      * @see ViewPager#SCROLL_STATE_DRAGGING
      * @see ViewPager#SCROLL_STATE_SETTLING
      */
-    public void onPageScrollStateChanged(int state) {
-    }
+//    public void onPageScrollStateChanged(int state) {
+//    }
 
     // ******
 
@@ -853,71 +868,71 @@ public class MainActivity extends AppCompatActivity
 //        myChatFragment_ = new WeakReference<ChatFragment>(fragment);
 //    }
 
-    public void setAndShowTitle(String title) {
-        if (getSupportActionBar() == null) {
-            Log.w(TAG, "setAndShowTitle: getSupportActionBar() = null. Do not set Display options!");
-        } else if (TextUtils.isEmpty(title)) {
-            getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
-        } else {
-            getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
-            getSupportActionBar().setTitle(getString(R.string.title_table, title));
-        }
-    }
+//    public void setAndShowTitle(String title) {
+//        if (getSupportActionBar() == null) {
+//            Log.w(TAG, "setAndShowTitle: getSupportActionBar() = null. Do not set Display options!");
+//        } else if (TextUtils.isEmpty(title)) {
+//            getSupportActionBar().setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE); // No title.
+//        } else {
+//            getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
+//            getSupportActionBar().setTitle(getString(R.string.title_table, title));
+//        }
+//    }
 
-    public void reverseBoardView() {
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.reverseView();
-        }
-    }
+//    public void reverseBoardView() {
+//        BoardFragment boardFragment = myBoardFragment_.get();
+//        if (boardFragment != null) {
+//            boardFragment.reverseView();
+//        }
+//    }
 
     /**
      * The ViewPager adapter for the main page.
      */
-    public static class MainPagerAdapter extends FragmentPagerAdapter {
-        private final Context context_;
-
-        public static final int POSITION_BOARD = 0;
-        public static final int POSITION_CHAT = 1;
-
-        public MainPagerAdapter(Context context, FragmentManager fragmentManager) {
-            super(fragmentManager);
-            context_ = context;
-        }
-
-        @Override
-        public int getCount() {
-            return 3;
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            switch (position) {
-                case 0: return BoardFragment.newInstance("AI"); //PlaceholderFragment();
-                case 1: return new ChatFragment();
-                default: return new PlayersFragment();
-            }
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            switch (position) {
-                case 0: return context_.getString(R.string.label_table);
-                case 1: return context_.getString(R.string.title_activity_chat);
-                default: return context_.getString(R.string.action_view_players);
-            }
-        }
-
-        /**
-         * Reference: https://guides.codepath.com/android/ViewPager-with-FragmentPagerAdapter
-         */
-        @Override
-        public float getPageWidth (int position) {
-            switch (position) {
-                case 0: return 1f; // 0.95f;
-                case 1: return 1f; // 0.9f;
-                default: return 1f;
-            }
-        }
-    }
+//    public static class MainPagerAdapter extends FragmentPagerAdapter {
+//        private final Context context_;
+//
+//        public static final int POSITION_BOARD = 0;
+//        public static final int POSITION_CHAT = 1;
+//
+//        public MainPagerAdapter(Context context, FragmentManager fragmentManager) {
+//            super(fragmentManager);
+//            context_ = context;
+//        }
+//
+//        @Override
+//        public int getCount() {
+//            return 3;
+//        }
+//
+//        @Override
+//        public Fragment getItem(int position) {
+//            switch (position) {
+//                case 0: return BoardFragment.newInstance("AI"); //PlaceholderFragment();
+//                case 1: return new ChatFragment();
+//                default: return new PlayersFragment();
+//            }
+//        }
+//
+//        @Override
+//        public CharSequence getPageTitle(int position) {
+//            switch (position) {
+//                case 0: return context_.getString(R.string.label_table);
+//                case 1: return context_.getString(R.string.title_activity_chat);
+//                default: return context_.getString(R.string.action_view_players);
+//            }
+//        }
+//
+//        /**
+//         * Reference: https://guides.codepath.com/android/ViewPager-with-FragmentPagerAdapter
+//         */
+//        @Override
+//        public float getPageWidth (int position) {
+//            switch (position) {
+//                case 0: return 1f; // 0.95f;
+//                case 1: return 1f; // 0.9f;
+//                default: return 1f;
+//            }
+//        }
+//    }
 }

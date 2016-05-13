@@ -268,7 +268,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         if (resId != -1) {
-            BaseTableController.getCurrentController().onNetworkCode(resId);
+            BaseTableController.getNetworkController().onNetworkCode(resId);
         }
     }
 
@@ -279,7 +279,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
         if (!isLoginOK_) {  // Error
             Log.w(TAG, "Login failed. Code: [" + code + "], Error: [" + content + "]");
-            BaseTableController.getCurrentController().onNetworkLoginFailure(getLocalizedLoginError(code));
+            BaseTableController.getNetworkController().onNetworkLoginFailure(getLocalizedLoginError(code));
             networkPlayer_.disconnectFromServer();
             return;
         }
@@ -584,7 +584,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         }
 
         if (myTable_.hasId(tableId)) {
-            BaseTableController.getCurrentController().onPlayerRatingUpdate(pid, rating);
+            BaseTableController.getNetworkController().onPlayerRatingUpdate(pid, rating);
         }
     }
 
@@ -614,7 +614,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
             gameStatus_ = GameStatus.GAME_STATUS_UNKNOWN;
         }
 
-        BaseTableController.getCurrentController().onNetworkError();
+        BaseTableController.getNetworkController().onNetworkError();
     }
 
     public void handleRequestToSendMove(Position fromPos, Position toPos) {

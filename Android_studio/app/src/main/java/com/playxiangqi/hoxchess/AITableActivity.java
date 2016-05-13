@@ -79,7 +79,7 @@ public class AITableActivity extends AppCompatActivity
             }
         }
 
-        BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_LOCAL);
+        //BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_LOCAL);
         aiController_.setBoardController(this);
 
         setupNewTable();

@@ -5,7 +5,8 @@
         <item
             android:id="@+id/action_view_tables"
             android:icon="@drawable/ic_action_tables"
-            android:title="@string/action_view_tables" />
+            android:title="@string/action_view_tables"
+            android:visible="false" /> <!-- Hidden by default -->
         <!--<item
             android:id="@+id/action_view_players"
             android:icon="@drawable/ic_group_white"
@@ -13,8 +14,8 @@
         <item
             android:id="@+id/action_logout"
             android:icon="@drawable/ic_exit_to_app_black"
-            android:title="@string/action_logout"
-            android:visible="false" /> <!-- Hidden by default -->
+            android:title="@string/action_login"
+            android:visible="true" />
     </group>
 
     <item android:title="@string/version">

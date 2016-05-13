@@ -101,7 +101,7 @@ public class NetworkTableActivity extends AppCompatActivity
         viewPager_.setOffscreenPageLimit(2); // Performance: Keep the 3rd page from being destroyed!
         viewPager_.addOnPageChangeListener(this);
 
-        BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_NETWORK);
+        //BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_NETWORK);
         tableController_ = BaseTableController.getNetworkController();
         tableController_.setBoardController(this);
 

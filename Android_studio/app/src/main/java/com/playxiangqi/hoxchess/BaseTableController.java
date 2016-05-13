@@ -44,7 +44,7 @@ public class BaseTableController implements BoardView.BoardEventListener {
     //private static LocalTableController localTableController_;
     private static NetworkTableController networkTableController_;
 
-    private static BaseTableController currentController_;
+    //private static BaseTableController currentController_;
 
     protected WeakReference<MainActivity> mainActivity_ = new WeakReference<MainActivity>(null);
 
@@ -90,8 +90,8 @@ public class BaseTableController implements BoardView.BoardEventListener {
     public void setupNewTable() {
     }
 
-    public void onNetworkLoginSuccess() {
-    }
+//    public void onNetworkLoginSuccess() {
+//    }
 
     public void onNetworkLoginFailure(int errorMessageResId) {
         Log.d(TAG, "onNetworkLoginFailure:...");
@@ -335,20 +335,20 @@ public class BaseTableController implements BoardView.BoardEventListener {
         return controller;
     }
 
-    public static void setCurrentController(TableType tableType) {
-        Log.d(TAG, "setCurrentController: type=" + tableType);
-        BaseTableController oldController = currentController_;
-        currentController_ = getTableController(tableType);
+//    public static void setCurrentController(TableType tableType) {
+//        Log.d(TAG, "setCurrentController: type=" + tableType);
+//        BaseTableController oldController = currentController_;
+//        currentController_ = getTableController(tableType);
+//
+//        // Transfer the UI control to the new controller.
+//        if (oldController != null && oldController != currentController_) {
+//            currentController_.setMainActivityFromController(oldController);
+//        }
+//    }
 
-        // Transfer the UI control to the new controller.
-        if (oldController != null && oldController != currentController_) {
-            currentController_.setMainActivityFromController(oldController);
-        }
-    }
-
-    public static BaseTableController getCurrentController() {
-        return currentController_;
-    }
+//    public static BaseTableController getCurrentController() {
+//        return currentController_;
+//    }
 
     public static NetworkTableController getNetworkController() {
         return (NetworkTableController) getTableController(TableType.TABLE_TYPE_NETWORK);

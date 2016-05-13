@@ -47,22 +47,22 @@ public class NetworkTableController extends BaseTableController {
     public TableTimeTracker getTimeTracker() { return timeTracker_; }
     public TablePlayerTracker getPlayerTracker() { return playerTracker_; }
 
-    @Override
-    public void onNetworkLoginSuccess() {
-        Log.d(TAG, "onNetworkLoginSuccess: Set table-type to EMPTY...");
-        myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
-
-        playerTracker_.setTableType(myTableType_);
-        playerTracker_.clearAllPlayers();
-        playerTracker_.syncUI();
-
-        //MainActivity mainActivity = mainActivity_.get();
-        //if (mainActivity != null) {
-        //    mainActivity.setTableController(this);
-        //    mainActivity.clearTable();
-        //    mainActivity.onLoginSuccess();
-        //}
-    }
+//    @Override
+//    public void onNetworkLoginSuccess() {
+//        Log.d(TAG, "onNetworkLoginSuccess: Set table-type to EMPTY...");
+//        myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
+//
+//        playerTracker_.setTableType(myTableType_);
+//        playerTracker_.clearAllPlayers();
+//        playerTracker_.syncUI();
+//
+//        //MainActivity mainActivity = mainActivity_.get();
+//        //if (mainActivity != null) {
+//        //    mainActivity.setTableController(this);
+//        //    mainActivity.clearTable();
+//        //    mainActivity.onLoginSuccess();
+//        //}
+//    }
 
     @Override
     public void onNetworkError() {
@@ -233,14 +233,14 @@ public class NetworkTableController extends BaseTableController {
         playerTracker_.syncUI();
     }
 
-    @Override
-    public void setTableTitle() {
-        MainActivity mainActivity = mainActivity_.get();
-        if (mainActivity != null) {
-            mainActivity.setAndShowTitle(
-                    HoxApp.getApp().getNetworkController().getMyTableId());
-        }
-    }
+//    @Override
+//    public void setTableTitle() {
+//        MainActivity mainActivity = mainActivity_.get();
+//        if (mainActivity != null) {
+//            mainActivity.setAndShowTitle(
+//                    HoxApp.getApp().getNetworkController().getMyTableId());
+//        }
+//    }
 
     @Override
     public boolean handleBackPressed() {
@@ -513,10 +513,10 @@ public class NetworkTableController extends BaseTableController {
         if (!isTableEmpty()) { // Are we in a network table?
             Log.d(TAG, "Clear the current table...");
             timeTracker_.stop();
-            MainActivity mainActivity = mainActivity_.get();
-            if (mainActivity != null) {
-                mainActivity.clearTable();
-            }
+            //MainActivity mainActivity = mainActivity_.get();
+            //if (mainActivity != null) {
+            //    mainActivity.clearTable();
+            //}
         }
 
         Log.d(TAG, "clearCurrentTableIfNeeded: Set table-type to EMPTY...");
