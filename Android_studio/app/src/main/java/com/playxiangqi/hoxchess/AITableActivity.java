@@ -79,10 +79,14 @@ public class AITableActivity extends AppCompatActivity
             }
         }
 
-        //BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_LOCAL);
         aiController_.setBoardController(this);
 
         setupNewTable();
+
+        // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
+        // Reference:
+        //    http://developer.android.com/training/managing-audio/volume-playback.html
+        setVolumeControlStream(SoundManager.getInstance().getStreamType());
     }
 
     @Override

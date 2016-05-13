@@ -102,7 +102,6 @@ public class NetworkTableActivity extends AppCompatActivity
         viewPager_.setOffscreenPageLimit(2); // Performance: Keep the 3rd page from being destroyed!
         viewPager_.addOnPageChangeListener(this);
 
-        //BaseTableController.setCurrentController(Enums.TableType.TABLE_TYPE_NETWORK);
         tableController_ = BaseTableController.getNetworkController();
         tableController_.setBoardController(this);
 
@@ -116,6 +115,11 @@ public class NetworkTableActivity extends AppCompatActivity
         } else {
             NetworkController.getInstance().handleTableSelection(tableId_);
         }
+
+        // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
+        // Reference:
+        //    http://developer.android.com/training/managing-audio/volume-playback.html
+        setVolumeControlStream(SoundManager.getInstance().getStreamType());
     }
 
     @Override

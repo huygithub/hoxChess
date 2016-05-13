@@ -90,18 +90,13 @@ public class MainActivity extends AppCompatActivity
         // the main_container FrameLayout
         if (findViewById(R.id.main_container) != null) {
             // However, if we're being restored from a previous state,
-            // then we don't need to do anything and should return or else
-            // we could end up with overlapping fragments.
-            if (savedInstanceState != null) {
-                return; // FIXME: We should not return here!!!
+            // then we don't want to create another fragment, which would create the problem
+            // of overlapping fragments.
+            if (savedInstanceState == null) {
+                HomeFragment homeFragment = HomeFragment.newInstance();
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.main_container, homeFragment).commit();
             }
-
-            // Create a new Fragment to be placed in the activity layout
-            HomeFragment homeFragment = HomeFragment.newInstance();
-
-            // Add the fragment to the 'fragment_container' FrameLayout
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.main_container, homeFragment).commit();
         }
 
         // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
@@ -110,7 +105,6 @@ public class MainActivity extends AppCompatActivity
         setVolumeControlStream(SoundManager.getInstance().getStreamType());
 
         SoundManager.getInstance().initialize(this);
-        // FIXME: BaseTableController.getCurrentController().onMainActivityCreate(this);
 
         // Auto login the server.
         handler_.post(new Runnable() {
@@ -276,7 +270,6 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
-        // FIXME: BaseTableController.getCurrentController().onMainActivityDestroy(this);
     }
     
     @Override
