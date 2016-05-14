@@ -290,7 +290,7 @@ public class TablePlayerTracker {
             case TABLE_TYPE_NETWORK:
             {
                 final String myPid = HoxApp.getApp().getMyPid();
-                boolean isGameStarted = (HoxApp.getApp().getReferee().getMoveCount() > 1);
+                boolean isGameStarted = (NetworkTableController.getInstance().getMoveCount() > 1);
                 boolean isGameOver = HoxApp.getApp().isGameOver();
                 
                 if (blackPlayer_.hasPid(myPid)) { // I play BLACK?

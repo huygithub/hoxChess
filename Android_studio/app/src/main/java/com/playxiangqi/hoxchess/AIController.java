@@ -40,7 +40,7 @@ public class AIController {
     //    and pay attention to the "static hoxReferee *referee_".
     // As a result, we must share the global referee under HoxApp.
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    private final Referee referee_ =  HoxApp.getApp().getReferee(); // new Referee();
+    private Referee referee_;
 
     private List<Piece.Move> historyMoves_ = new ArrayList<Piece.Move>();
 
@@ -66,6 +66,10 @@ public class AIController {
 
     public void setBoardController(AIListener controller) {
         boardController_ = controller;
+    }
+
+    public void setReferee(Referee referee) {
+        referee_ = referee;
     }
 
     public Referee getReferee() {

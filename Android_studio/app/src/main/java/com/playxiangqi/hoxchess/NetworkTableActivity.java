@@ -67,6 +67,7 @@ public class NetworkTableActivity extends AppCompatActivity
     private WeakReference<PlayersFragment> myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
 
     private final NetworkTableController tableController_ = NetworkTableController.getInstance();
+    private final Referee referee_ = tableController_.getReferee();
     private TableTimeTracker timeTracker_;
     private TablePlayerTracker playerTracker_;
 
@@ -311,7 +312,7 @@ public class NetworkTableActivity extends AppCompatActivity
             final boolean isGameOver = HoxApp.getApp().isGameOver();
             final Enums.ColorEnum myColor = HoxApp.getApp().getNetworkController().getMyColor();
             final boolean amIPlaying = (myColor == Enums.ColorEnum.COLOR_BLACK || myColor == Enums.ColorEnum.COLOR_RED);
-            final int moveCount = HoxApp.getApp().getReferee().getMoveCount();
+            final int moveCount = referee_.getMoveCount();
 
             actionSheet.hideAction(TableActionSheet.Action.ACTION_NEW_TABLE);
             if (isGameOver) {
@@ -407,7 +408,7 @@ public class NetworkTableActivity extends AppCompatActivity
             boardFragment.makeMove(move, true);
         }
 
-        if (HoxApp.getApp().getReferee().getMoveCount() == 2) { // The game has started?
+        if (referee_.getMoveCount() == 2) { // The game has started?
             adjustScreenOnFlagBasedOnGameStatus();
         }
     }
@@ -428,7 +429,7 @@ public class NetworkTableActivity extends AppCompatActivity
         setAndShowTitle(tableInfo.tableId);
         invalidateOptionsMenu(); // Recreate the options menu
 
-        HoxApp.getApp().getReferee().resetGame();
+        referee_.resetGame();
 
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
@@ -465,7 +466,7 @@ public class NetworkTableActivity extends AppCompatActivity
         }
         invalidateOptionsMenu(); // Recreate the options menu
 
-        HoxApp.getApp().getReferee().resetGame();
+        referee_.resetGame();
 
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
@@ -528,7 +529,7 @@ public class NetworkTableActivity extends AppCompatActivity
 
     @Override
     public void onGameReset() {
-        HoxApp.getApp().getReferee().resetGame();
+        referee_.resetGame();
 
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
@@ -576,17 +577,16 @@ public class NetworkTableActivity extends AppCompatActivity
     // **** Implementation of BoardView.BoardEventListener ****
     @Override
     public void onLocalMove(Position fromPos, Position toPos, Enums.GameStatus gameStatus) {
-        Referee referee = HoxApp.getApp().getReferee();
-        Log.d(TAG, "Handle local move: referee 's moveCount = " + referee.getMoveCount());
+        Log.d(TAG, "Handle local move: referee 's moveCount = " + referee_.getMoveCount());
 
         timeTracker_.nextColor();
 
-        if (referee.getMoveCount() == 2) {
+        if (referee_.getMoveCount() == 2) {
             timeTracker_.start();
             adjustScreenOnFlagBasedOnGameStatus();
         }
 
-        if (referee.getMoveCount() > 1) { // The game has started?
+        if (referee_.getMoveCount() > 1) { // The game has started?
             playerTracker_.syncUI();
         }
 
@@ -598,18 +598,18 @@ public class NetworkTableActivity extends AppCompatActivity
         final Enums.ColorEnum myColor = HoxApp.getApp().getNetworkController().getMyColor();
         return ((myColor == Enums.ColorEnum.COLOR_RED || myColor == Enums.ColorEnum.COLOR_BLACK) &&
                 playerTracker_.hasEnoughPlayers() &&
-                myColor == HoxApp.getApp().getReferee().getNextColor());
+                myColor == referee_.getNextColor());
     }
 
     @Override
     public int validateMove(Position fromPos, Position toPos) {
-        return HoxApp.getApp().getReferee().validateMove(
+        return referee_.validateMove(
                 fromPos.row, fromPos.column, toPos.row, toPos.column);
     }
 
     // *****
     private void adjustScreenOnFlagBasedOnGameStatus() {
-        if (HoxApp.getApp().isGameInProgress()) {
+        if (tableController_.isGameInProgress()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);

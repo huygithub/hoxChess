@@ -29,6 +29,14 @@ public class NetworkTableController {
 
     private static final String TAG = "NetworkTableController";
 
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // NOTE: The referee (JNI based) has a limitation that it has ONLY one instance created!
+    //    For more details, see ./app/src/main/jni/Referee.cpp
+    //    and pay attention to the "static hoxReferee *referee_".
+    // As a result, we must share the global referee under HoxApp.
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    private Referee referee_;
+
     private Enums.TableType myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
     private TableTimeTracker timeTracker_ = new TableTimeTracker();
     private TablePlayerTracker playerTracker_ = new TablePlayerTracker(Enums.TableType.TABLE_TYPE_EMPTY);
@@ -74,8 +82,20 @@ public class NetworkTableController {
         Log.v(TAG, "[CONSTRUCTOR]: ...");
     }
 
+    public void setReferee(Referee referee) { referee_ = referee; }
+
+    public Referee getReferee() { return referee_; }
     public TableTimeTracker getTimeTracker() { return timeTracker_; }
     public TablePlayerTracker getPlayerTracker() { return playerTracker_; }
+
+    public int getMoveCount() {
+        return referee_.getMoveCount();
+    }
+
+    public boolean isGameInProgress() {
+        return ( !HoxApp.getApp().getNetworkController().isGameOver() &&
+                 referee_.getMoveCount() > 1 );
+    }
 
     public void onNetworkTableEnter(TableInfo tableInfo) {
         Log.d(TAG, "onNetworkTableEnter: Set table-type to NETWORK...");
@@ -187,7 +207,7 @@ public class NetworkTableController {
     }
 
     public void onNetworkMove(MoveInfo move) {
-        move.gameStatus = HoxApp.getApp().getReferee().validateMove(
+        move.gameStatus = referee_.validateMove(
                 move.fromPosition.row, move.fromPosition.column,
                 move.toPosition.row, move.toPosition.column);
 
@@ -206,7 +226,7 @@ public class NetworkTableController {
 
     public void onResetBoardWithMoves(MoveInfo[] moves) {
         for (MoveInfo move : moves) {
-            move.gameStatus = HoxApp.getApp().getReferee().validateMove(
+            move.gameStatus = referee_.validateMove(
                     move.fromPosition.row, move.fromPosition.column,
                     move.toPosition.row, move.toPosition.column);
 
@@ -220,7 +240,7 @@ public class NetworkTableController {
             boardController_.resetBoardWithNewMoves(moves);
         }
 
-        timeTracker_.setInitialColor(HoxApp.getApp().getReferee().getNextColor());
+        timeTracker_.setInitialColor(referee_.getNextColor());
         timeTracker_.start();
     }
 

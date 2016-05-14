@@ -33,8 +33,7 @@ public class HoxApp extends Application {
     
     private String pid_ = ""; // My player 's ID.
     private String password_ = ""; // My player 's password.
-    
-    private final Referee referee_ = new Referee();
+
     private final AIEngine aiEngine_ = new AIEngine();
 
     private NetworkController networkController_;
@@ -51,6 +50,16 @@ public class HoxApp extends Application {
 
         aiEngine_.setAILevel(SettingsActivity.getAILevel(this));
         networkController_ = NetworkController.getInstance();
+
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // NOTE: The referee (JNI based) has a limitation that it has ONLY one instance created!
+        //    For more details, see ./app/src/main/jni/Referee.cpp
+        //    and pay attention to the "static hoxReferee *referee_".
+        // As a result, we must share the global referee under HoxApp.
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        Referee theSharedReferee = new Referee();
+        AIController.getInstance().setReferee(theSharedReferee);
+        NetworkTableController.getInstance().setReferee(theSharedReferee);
     }
 
     public static HoxApp getApp() {
@@ -115,21 +124,11 @@ public class HoxApp extends Application {
     }
 
     public String getMyPid() { return pid_; }
-    public Referee getReferee() { return referee_; }
     public AIEngine getAiEngine() { return aiEngine_; }
     public NetworkController getNetworkController() { return networkController_; }
     public boolean isOnline() { return networkController_.isOnline(); }
     public boolean isGameOver() { return networkController_.isGameOver(); }
     public GameStatus getGameStatus() { return networkController_.getGameStatus(); }
-
-    public boolean isGameInProgress() {
-        return ( !isGameOver() &&
-                referee_.getMoveCount() > 1 );
-    }
-
-    public boolean isOnlineAndLoginOK() {
-        return (networkController_.isOnline() && networkController_.isLoginOK());
-    }
 
     public void loginServer() {
         loadPreferences_Account(); // to get pid_ and password_

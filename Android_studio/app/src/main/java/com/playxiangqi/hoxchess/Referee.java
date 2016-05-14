@@ -30,6 +30,11 @@ import android.util.Log;
 
 /**
  * This referee is based on native code (based on NDK).
+ *
+ *  NOTE: The referee (JNI based) has a limitation that it has ONLY one instance created!
+ *    For more details, see ./app/src/main/jni/Referee.cpp
+ *    and pay attention to the "static hoxReferee *referee_".
+ *    As a result, we must share the global referee under HoxApp.
  */
 public class Referee {
 

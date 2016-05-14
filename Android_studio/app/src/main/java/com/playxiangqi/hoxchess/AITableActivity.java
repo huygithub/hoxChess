@@ -343,7 +343,7 @@ public class AITableActivity extends AppCompatActivity
         timeTracker_.setBlackTime(initialTime);
         timeTracker_.setRedTime(initialTime);
 
-        playerTracker_.setTableType(Enums.TableType.TABLE_TYPE_LOCAL); // A new practice table.
+        //playerTracker_.setTableType(Enums.TableType.TABLE_TYPE_LOCAL); // A new practice table.
         playerTracker_.setRedInfo(HoxApp.getApp().getString(R.string.you_label), "1501");
         playerTracker_.setBlackInfo(HoxApp.getApp().getString(R.string.ai_label), "1502");
 

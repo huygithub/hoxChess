@@ -37,7 +37,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.TextView;
 
 /**
@@ -246,7 +245,6 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "onResume");
         NetworkController.getInstance().addListener(this);
         MessageManager.getInstance().addListener(this);
-        adjustScreenOnFlagBasedOnGameStatus();
     }
 
     @Override
@@ -255,15 +253,6 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "onPause");
         NetworkController.getInstance().removeListener(this);
         MessageManager.getInstance().removeListener(this);
-        adjustScreenOnFlagBasedOnGameStatus();
-    }
-    
-    private void adjustScreenOnFlagBasedOnGameStatus() {
-        if (HoxApp.getApp().isGameInProgress()) {
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        } else {
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        }
     }
     
     @Override
