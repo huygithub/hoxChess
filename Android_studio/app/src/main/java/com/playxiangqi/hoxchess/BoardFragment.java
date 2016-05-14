@@ -152,27 +152,6 @@ public class BoardFragment extends Fragment {
         bottomGameTimeView = (TextView) view.findViewById(R.id.bottom_game_time);
         bottomMoveTimeView = (TextView) view.findViewById(R.id.bottom_move_time);
 
-        //TableTimeTracker timeTracker = HoxApp.getApp().getTimeTracker();
-        //timeTracker.setUITextViews(
-        //        topGameTimeView, topMoveTimeView, bottomGameTimeView, bottomMoveTimeView);
-        //timeTracker.syncUI();
-
-        // Player tracker.
-        //TablePlayerTracker playerTracker = HoxApp.getApp().getPlayerTracker();
-        //playerTracker.setUIViews(
-        //        topPlayerLabel, topPlayerButton, bottomPlayerLabel, bottomPlayerButton);
-
-        // Restore the previous state of the board.
-        List<Piece.Move> historyMoves = HoxApp.getApp().getReferee().getHistoryMoves();
-        int moveCount = historyMoves.size();
-        int moveIndex = 0;
-        for (Piece.Move move : historyMoves) {
-            Log.d(TAG, "Update board with a new AI move = " + move.fromPosition + " => " + move.toPosition);
-            final boolean isLastMove = (moveIndex == (moveCount - 1));
-            boardView_.restoreMove(move.fromPosition, move.toPosition, isLastMove);
-            ++moveIndex;
-        }
-
         if (HoxApp.getApp().isGameOver()) {
             final Enums.GameStatus gameStatus = HoxApp.getApp().getGameStatus();
             Log.d(TAG, "... Game Over: gameStatus = " + gameStatus);
@@ -266,6 +245,10 @@ public class BoardFragment extends Fragment {
 
     public void makeMove(MoveInfo move, boolean animated) {
         boardView_.makeMove(move.fromPosition, move.toPosition, move.gameStatus, animated);
+    }
+
+    public void restoreMoveHistory(List<Piece.Move> historyMoves, int lastGameStatus) {
+        boardView_.restoreMoveHistory(historyMoves, lastGameStatus);
     }
 
     public void resetBoard() {

@@ -31,6 +31,7 @@ import android.view.View;
 import android.view.WindowManager;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 public class AITableActivity extends AppCompatActivity
                 implements BoardFragment.OnFragmentInteractionListener,
@@ -52,6 +53,7 @@ public class AITableActivity extends AppCompatActivity
     private final Enums.ColorEnum myColorInLocalTable_ = Enums.ColorEnum.COLOR_RED;
 
     private final AIController aiController_ = AIController.getInstance();
+    private final Referee referee_ = aiController_.getReferee();
     private final TableTimeTracker timeTracker_ = new TableTimeTracker();
     private final TablePlayerTracker playerTracker_ = new TablePlayerTracker(Enums.TableType.TABLE_TYPE_LOCAL);
 
@@ -107,10 +109,18 @@ public class AITableActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onStop");
+        aiController_.saveHistoryMoves();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onDestroy");
         timeTracker_.stop();
+        aiController_.setBoardController(null);
     }
 
     @Override
@@ -172,6 +182,7 @@ public class AITableActivity extends AppCompatActivity
 
     @Override
     public void onBoardFragment_CreateView(BoardFragment fragment) {
+        Log.d(TAG, "Board fragment view created");
         myBoardFragment_ = new WeakReference<BoardFragment>(fragment);
 
         BoardFragment boardFragment = myBoardFragment_.get();
@@ -185,6 +196,8 @@ public class AITableActivity extends AppCompatActivity
             playerTracker_.syncUI();
 
             boardFragment.hideMessageBadgeView();
+
+            restoreHistoryMoves(boardFragment);
         }
     }
 
@@ -225,21 +238,20 @@ public class AITableActivity extends AppCompatActivity
     // **** Implementation of BoardView.BoardEventListener ****
     @Override
     public void onLocalMove(Position fromPos, Position toPos, Enums.GameStatus gameStatus) {
-        Referee referee = HoxApp.getApp().getReferee();
-        Log.d(TAG, "On local move: referee 's moveCount = " + referee.getMoveCount());
+        Log.d(TAG, "On local move: referee 's moveCount = " + referee_.getMoveCount());
 
         timeTracker_.nextColor();
 
-        if (referee.getMoveCount() == 2) {
+        if (referee_.getMoveCount() == 2) {
             timeTracker_.start();
             adjustScreenOnFlagBasedOnGameStatus();
         }
 
-        if (referee.getMoveCount() > 1) { // The game has started?
+        if (referee_.getMoveCount() > 1) { // The game has started?
             playerTracker_.syncUI();
         }
 
-        if (referee.isGameInProgress()) {
+        if (referee_.isGameInProgress()) {
             aiController_.onHumanMove(fromPos, toPos);
         } else {
             onGameEnded(gameStatus); // The game has ended. Do nothing
@@ -248,7 +260,13 @@ public class AITableActivity extends AppCompatActivity
 
     @Override
     public boolean isMyTurn() {
-        return (myColorInLocalTable_ == HoxApp.getApp().getReferee().getNextColor());
+        return (myColorInLocalTable_ == referee_.getNextColor());
+    }
+
+    @Override
+    public int validateMove(Position fromPos, Position toPos) {
+        return referee_.validateMove(
+                fromPos.row, fromPos.column, toPos.row, toPos.column);
     }
 
     // **** Implementation of AIController.AIListener ****
@@ -262,12 +280,12 @@ public class AITableActivity extends AppCompatActivity
 
         timeTracker_.nextColor();
 
-        if (HoxApp.getApp().getReferee().getMoveCount() == 2) { // The game has started?
+        if (referee_.getMoveCount() == 2) { // The game has started?
             timeTracker_.start();
             adjustScreenOnFlagBasedOnGameStatus();
         }
 
-        if (!HoxApp.getApp().getReferee().isGameInProgress()) {
+        if (!referee_.isGameInProgress()) {
             Log.i(TAG, "... after AI move => the game has ended.");
             Enums.GameStatus gameStatus = Referee.gameStatusToEnum(move.gameStatus);
             onGameEnded(gameStatus);
@@ -287,17 +305,6 @@ public class AITableActivity extends AppCompatActivity
         }
     }
 
-    private void openNewPracticeTable() {
-        Log.d(TAG, "Open a new practice table");
-        BoardFragment boardFragment = myBoardFragment_.get();
-        if (boardFragment != null) {
-            boardFragment.resetBoard();
-        }
-        Snackbar.make(findViewById(R.id.board_view), R.string.action_reset,
-                Snackbar.LENGTH_SHORT)
-                .show();
-    }
-
     private void onGameEnded(Enums.GameStatus gameStatus) {
         Log.d(TAG, "onGameEnded: gameStatus = " + Utils.gameStatusToString(gameStatus));
         BoardFragment boardFragment = myBoardFragment_.get();
@@ -308,9 +315,8 @@ public class AITableActivity extends AppCompatActivity
     }
 
     private void adjustScreenOnFlagBasedOnGameStatus() {
-        Referee referee = HoxApp.getApp().getReferee();
-        if (referee.getMoveCount() > 1
-                && referee.isGameInProgress()) {
+        if (referee_.getMoveCount() > 1
+                && referee_.isGameInProgress()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -328,7 +334,7 @@ public class AITableActivity extends AppCompatActivity
 
     private void setupNewTable() {
         Log.d(TAG, "setupNewTable:...");
-        HoxApp.getApp().getAiEngine().initGame();
+        //HoxApp.getApp().getAiEngine().initGame();
 
         timeTracker_.stop();
         final TimeInfo initialTime = new TimeInfo(Enums.DEFAULT_INITIAL_GAME_TIMES);
@@ -341,21 +347,48 @@ public class AITableActivity extends AppCompatActivity
         playerTracker_.setRedInfo(HoxApp.getApp().getString(R.string.you_label), "1501");
         playerTracker_.setBlackInfo(HoxApp.getApp().getString(R.string.ai_label), "1502");
 
-        HoxApp.getApp().getReferee().resetGame();
+        referee_.resetGame();
+    }
+
+    private void restoreHistoryMoves(BoardFragment boardFragment) {
+        List<Piece.Move> historyMoves = aiController_.getHistoryMoves();
+        if (historyMoves.size() > 0) {
+            Log.d(TAG, "Restore history moves: size = " + historyMoves.size());
+            for (Piece.Move move : historyMoves) {
+                referee_.validateMove(move.fromPosition.row, move.fromPosition.column,
+                        move.toPosition.row, move.toPosition.column);
+            }
+
+            int lastGameStatus = referee_.getGameStatus();
+            boardFragment.restoreMoveHistory(historyMoves, lastGameStatus);
+        }
+    }
+
+    private void resetCurrentGame() {
+        Log.d(TAG, "Reset the current game...");
+
+        aiController_.resetGame();
+        referee_.resetGame();
+
+        playerTracker_.syncUI();
+
+        timeTracker_.stop();
+        timeTracker_.reset();
+
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.resetBoard();
+        }
+        Snackbar.make(findViewById(R.id.board_view), R.string.action_reset,
+                Snackbar.LENGTH_SHORT)
+                .show();
     }
 
     private void setupListenersInTableActionSheet(final TableActionSheet actionSheet) {
         actionSheet.setOnClickListener_ResetTable(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                aiController_.resetGame();
-
-                playerTracker_.syncUI();
-
-                timeTracker_.stop();
-                timeTracker_.reset();
-
-                openNewPracticeTable();
+                resetCurrentGame();
                 actionSheet.dismiss();
             }
         });

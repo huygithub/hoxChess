@@ -22,6 +22,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * The controller that controls the AI engine in the AI table.
  */
@@ -30,6 +33,16 @@ public class AIController {
     private static final String TAG = "AIController";
 
     private AIListener boardController_;
+
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // NOTE: The referee (JNI based) has a limitation that it has ONLY one instance created!
+    //    For more details, see ./app/src/main/jni/Referee.cpp
+    //    and pay attention to the "static hoxReferee *referee_".
+    // As a result, we must share the global referee under HoxApp.
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    private final Referee referee_ =  HoxApp.getApp().getReferee(); // new Referee();
+
+    private List<Piece.Move> historyMoves_ = new ArrayList<Piece.Move>();
 
     public interface AIListener {
         void onAINewMove(MoveInfo move);
@@ -53,6 +66,10 @@ public class AIController {
 
     public void setBoardController(AIListener controller) {
         boardController_ = controller;
+    }
+
+    public Referee getReferee() {
+        return referee_;
     }
 
     /**
@@ -116,6 +133,12 @@ public class AIController {
         HoxApp.getApp().getAiEngine().initGame();;
     }
 
+    // ***************************************************************************
+    //
+    //         Private APIs
+    //
+    // ***************************************************************************
+
     private void onAIMoveMade(String aiMove) {
         Log.d(TAG, "AI returned this move [" + aiMove + "].");
 
@@ -123,7 +146,7 @@ public class AIController {
         Position toPos = new Position(aiMove.charAt(2) - '0', aiMove.charAt(3) - '0');
         MoveInfo move = new MoveInfo(fromPos, toPos);
 
-        move.gameStatus = HoxApp.getApp().getReferee().validateMove(
+        move.gameStatus = referee_.validateMove(
                 fromPos.row, fromPos.column,
                 toPos.row, toPos.column);
 
@@ -135,6 +158,16 @@ public class AIController {
         if (boardController_ != null) {
             boardController_.onAINewMove(move);
         }
+    }
+
+    public void saveHistoryMoves() {
+        List<Piece.Move> currentMoves = referee_.getHistoryMoves();
+        historyMoves_.clear();
+        historyMoves_.addAll(currentMoves);
+    }
+
+    public List<Piece.Move> getHistoryMoves() {
+        return historyMoves_;
     }
 
 }

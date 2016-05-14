@@ -97,9 +97,8 @@ public class BoardView extends ImageView
     private Piece selectedPiece_ = null;
     private Position selectedPosition_ = null;
     
-    private Piece recentPiece_ = null;    
-    private final Referee referee_ = HoxApp.getApp().getReferee();
-    
+    private Piece recentPiece_ = null;
+
     /**
      * History index.
      * NOTE: Do not change the constants 'values below.
@@ -118,6 +117,7 @@ public class BoardView extends ImageView
      * The Container of this Board must implement this interface.
      */
     public interface BoardEventListener {
+        int validateMove(Position fromPos, Position toPos);
         void onLocalMove(Position fromPos, Position toPos, Enums.GameStatus gameStatus);
         boolean isMyTurn();
     }
@@ -621,8 +621,7 @@ public class BoardView extends ImageView
         }
         // CASE 2: A piece has been selected already.
         else if ( ! Position.equals(selectedPosition_, viewPos) ) { // different location?
-            final int status = referee_.validateMove(selectedPosition_.row, selectedPosition_.column,
-                                                     viewPos.row, viewPos.column);
+            final int status = boardEventListener_ .validateMove(selectedPosition_, viewPos);
             Log.d(TAG, "... (native referee) move-validation returned status = " + status);
             
             if (status == Referee.hoxGAME_STATUS_UNKNOWN) { // Move is not valid?
@@ -727,8 +726,18 @@ public class BoardView extends ImageView
         }
     }
 
-    public void restoreMove(Position fromPos, Position toPos, boolean isLastMove) {
-        Log.d(TAG, "Restore move = " + fromPos + " => " + toPos + ". isLastMove:" + isLastMove);
+    public void restoreMoveHistory(List<Piece.Move> historyMoves, int lastGameStatus) {
+        for (Piece.Move move : historyMoves) {
+            restoreMove(move.fromPosition, move.toPosition);
+        }
+
+        if (historyMoves.size() > 0) {
+            gameStatus_ = lastGameStatus;
+        }
+    }
+
+    private void restoreMove(Position fromPos, Position toPos) {
+        Log.d(TAG, "Restore move = " + fromPos + " => " + toPos);
         
         Piece capture = tryCapturePieceAtPosition(toPos);
         addMoveToHistory(fromPos, toPos, capture);
@@ -741,10 +750,6 @@ public class BoardView extends ImageView
         
         fromPiece.setPosition(toPos);
         recentPiece_ = fromPiece;
-        
-        if (isLastMove) {
-            gameStatus_ = referee_.getGameStatus(); // Get the last status.
-        }
         
         if (capture != null) {
             captureStack_.add(capture);
@@ -857,8 +862,6 @@ public class BoardView extends ImageView
             Log.i(TAG, "Reset board: Move animation is running. End it now!");
             animator_.end();
         }
-
-        referee_.resetGame();
         
         // Reset the pieces.
         Piece piece;

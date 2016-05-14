@@ -141,6 +141,7 @@ public class NetworkTableActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         Log.v(TAG, "onDestroy");
+        tableController_.setBoardController(null);
     }
 
 
@@ -427,6 +428,8 @@ public class NetworkTableActivity extends AppCompatActivity
         setAndShowTitle(tableInfo.tableId);
         invalidateOptionsMenu(); // Recreate the options menu
 
+        HoxApp.getApp().getReferee().resetGame();
+
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
             boardFragment.resetBoard();
@@ -461,6 +464,8 @@ public class NetworkTableActivity extends AppCompatActivity
             Log.w(TAG, "clearTable: getSupportActionBar() = null. Do not set Display options!");
         }
         invalidateOptionsMenu(); // Recreate the options menu
+
+        HoxApp.getApp().getReferee().resetGame();
 
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
@@ -523,6 +528,8 @@ public class NetworkTableActivity extends AppCompatActivity
 
     @Override
     public void onGameReset() {
+        HoxApp.getApp().getReferee().resetGame();
+
         BoardFragment boardFragment = myBoardFragment_.get();
         if (boardFragment != null) {
             boardFragment.resetBoard();
@@ -592,6 +599,12 @@ public class NetworkTableActivity extends AppCompatActivity
         return ((myColor == Enums.ColorEnum.COLOR_RED || myColor == Enums.ColorEnum.COLOR_BLACK) &&
                 playerTracker_.hasEnoughPlayers() &&
                 myColor == HoxApp.getApp().getReferee().getNextColor());
+    }
+
+    @Override
+    public int validateMove(Position fromPos, Position toPos) {
+        return HoxApp.getApp().getReferee().validateMove(
+                fromPos.row, fromPos.column, toPos.row, toPos.column);
     }
 
     // *****
