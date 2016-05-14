@@ -20,6 +20,7 @@ package com.playxiangqi.hoxchess;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -176,27 +178,15 @@ public class NetworkTableActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.d(TAG, "(ActionBar) onOptionsItemSelected");
-
-        // Pass the event to ActionBarDrawerToggle, if it returns
-        // true, then it has handled the app icon touch event
-        //if (drawerToggle_.onOptionsItemSelected(item)) {
-        //    return true;
-        //}
-        // Handle your other action bar items...
-
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
             case android.R.id.home:  // NOTE: This is the BACK key!
-                //tableController_.handleRequestToCloseCurrentTable();
-                closeCurrentTable();
+                confirmUserLeavingTable();
                 return true;
             //case R.id.action_new_table:
             //    tableController_.handleRequestToOpenNewTable();
-            //    return true;
-            //case R.id.action_close_table:
-            //    tableController_.handleRequestToCloseCurrentTable();
             //    return true;
             case R.id.action_view_tables:
                 displayTableList();
@@ -212,10 +202,7 @@ public class NetworkTableActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         Log.d(TAG, "onBackPressed");
-        //if (!tableController_.handleBackPressed()) { // not already handled?
-        //    super.onBackPressed();
-        //
-        closeCurrentTable();
+        confirmUserLeavingTable();
     }
 
     @Override
@@ -683,6 +670,32 @@ public class NetworkTableActivity extends AppCompatActivity
         startActivityForResult(intent, JOIN_TABLE_REQUEST);
     }
 
+    private void confirmUserLeavingTable() {
+        // If I am not playing, then go ahead to leave without confirmation.
+        if (!NetworkController.getInstance().amIPlaying()) {
+            closeCurrentTable();
+            return;
+        }
+
+        Log.d(TAG, "Confirm that the user really wants to leave...");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.dialog_leave_table_confirm_message);
+        builder.setPositiveButton(R.string.button_leave, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                closeCurrentTable();
+            }
+        });
+        builder.setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                Log.d(TAG, "Cancel the request to leave the table. Do nothing.");
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
     private void closeCurrentTable() {
         Log.d(TAG, "Close the current table...");
         NetworkController.getInstance().handleRequestToCloseCurrentTable();
@@ -729,7 +742,7 @@ public class NetworkTableActivity extends AppCompatActivity
         actionSheet.setOnClickListener_Close(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                closeCurrentTable();
+                confirmUserLeavingTable();
                 actionSheet.dismiss();
             }
         });

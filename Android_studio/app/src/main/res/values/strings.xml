@@ -121,5 +121,8 @@
     <string name="action_login">Login</string>
     <string name="msg_login_success">Login success</string>
     <string name="msg_logout_done">Logout done</string>
+    <string name="dialog_leave_table_confirm_message">Leave table?</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="button_leave">Leave</string>
 
 </resources>

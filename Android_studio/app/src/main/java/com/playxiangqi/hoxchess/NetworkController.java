@@ -832,6 +832,10 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         return networkPlayer_.isOnline();
     }
 
+    public boolean amIPlaying() {
+        return (myColor_ == ColorEnum.COLOR_RED || myColor_ == ColorEnum.COLOR_BLACK);
+    }
+
     private int getLocalizedLoginError(int code) {
         switch (code)
         {
