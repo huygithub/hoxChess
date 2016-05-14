@@ -61,6 +61,7 @@ public class NetworkTableActivity extends AppCompatActivity
     private ViewPager viewPager_;
 
     private static final String EXTRA_TABLE_ID = "extra.table.id";
+    private static final int JOIN_TABLE_REQUEST = 1;
 
     private WeakReference<BoardFragment> myBoardFragment_ = new WeakReference<BoardFragment>(null);
     private WeakReference<ChatFragment> myChatFragment_ = new WeakReference<ChatFragment>(null);
@@ -197,9 +198,9 @@ public class NetworkTableActivity extends AppCompatActivity
             //case R.id.action_close_table:
             //    tableController_.handleRequestToCloseCurrentTable();
             //    return true;
-            //case R.id.action_view_tables:
-            //    onViewTablesClicked();
-            //    return true;
+            case R.id.action_view_tables:
+                displayTableList();
+                return true;
             case R.id.action_notifications:
                 openNotificationView();
                 return true;
@@ -215,6 +216,21 @@ public class NetworkTableActivity extends AppCompatActivity
         //    super.onBackPressed();
         //
         closeCurrentTable();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult: requestCode:" + requestCode + ", resultCode:" + resultCode);
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+
+        if (requestCode == JOIN_TABLE_REQUEST) {
+            final String tableId = data.getStringExtra("tid");
+            Log.d(TAG, "onActivityResult: Get new tableId = " + tableId);
+            tableId_ = tableId;
+            NetworkController.getInstance().handleTableSelection(tableId_);
+        }
     }
 
     /**
@@ -266,6 +282,7 @@ public class NetworkTableActivity extends AppCompatActivity
     // **** Implements BoardFragment.OnFragmentInteractionListener ***
     @Override
     public void onBoardFragment_CreateView(BoardFragment fragment) {
+        Log.d(TAG, "Board fragment view created");
         myBoardFragment_ = new WeakReference<BoardFragment>(fragment);
 
         BoardFragment boardFragment = myBoardFragment_.get();
@@ -275,6 +292,7 @@ public class NetworkTableActivity extends AppCompatActivity
             boardFragment.setupUIForPlayerTracker(playerTracker_);
             timeTracker_.syncUI();
             playerTracker_.syncUI();
+            restoreHistoryMoves(boardFragment);
         }
     }
 
@@ -607,7 +625,28 @@ public class NetworkTableActivity extends AppCompatActivity
                 fromPos.row, fromPos.column, toPos.row, toPos.column);
     }
 
-    // *****
+    // ***************************************************************
+    //
+    //              Private APIs
+    //
+    // ***************************************************************
+
+    private void restoreHistoryMoves(BoardFragment boardFragment) {
+        List<Piece.Move> historyMoves = referee_.getHistoryMoves();
+        if (historyMoves.size() > 0) {
+            Log.d(TAG, "Restore history moves: size = " + historyMoves.size());
+            // Make a copy of the list before accessing it to avoid "concurrent" exception.
+            Piece.Move[] moves = historyMoves.toArray(new Piece.Move[historyMoves.size()]);
+            for (Piece.Move move : moves) {
+                referee_.validateMove(move.fromPosition.row, move.fromPosition.column,
+                        move.toPosition.row, move.toPosition.column);
+            }
+
+            int lastGameStatus = referee_.getGameStatus();
+            boardFragment.restoreMoveHistory(historyMoves, lastGameStatus);
+        }
+    }
+
     private void adjustScreenOnFlagBasedOnGameStatus() {
         if (tableController_.isGameInProgress()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -634,6 +673,14 @@ public class NetworkTableActivity extends AppCompatActivity
 
         notifCount_ = 0;
         invalidateOptionsMenu();
+    }
+
+    private void displayTableList() {
+        PlayerManager.getInstance().clearTables(); // will get a new list
+        NetworkController.getInstance().sendRequestForTableList();
+
+        Intent intent = new Intent(this, TablesActivity.class);
+        startActivityForResult(intent, JOIN_TABLE_REQUEST);
     }
 
     private void closeCurrentTable() {
@@ -666,7 +713,6 @@ public class NetworkTableActivity extends AppCompatActivity
         actionSheet.setOnClickListener_ResetTable(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //handleRequestToResetTable();
                 NetworkController.getInstance().handleRequestToResetTable();
                 actionSheet.dismiss();
             }
@@ -675,13 +721,6 @@ public class NetworkTableActivity extends AppCompatActivity
         actionSheet.setOnClickListener_ReverseBoard(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //MainActivity mainActivity = mainActivity_.get();
-                //if (mainActivity != null) {
-                //    mainActivity.reverseBoardView();
-                //}
-                //if (boardController_ != null) {
-                //    boardController_.reverseBoardView();
-                //}
                 reverseBoardView();
                 actionSheet.dismiss();
             }
@@ -698,14 +737,7 @@ public class NetworkTableActivity extends AppCompatActivity
         actionSheet.setOnClickListener_OfferDrawn(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //handleRequestToOfferDraw();
                 NetworkController.getInstance().handleRequestToOfferDraw();
-//                MainActivity mainActivity = mainActivity_.get();
-//                if (mainActivity != null) {
-//                    Toast.makeText(HoxApp.getApp(),
-//                            mainActivity.getString(R.string.action_draw),
-//                            Toast.LENGTH_SHORT).show();
-//                }
                 actionSheet.dismiss();
             }
         });
@@ -713,14 +745,7 @@ public class NetworkTableActivity extends AppCompatActivity
         actionSheet.setOnClickListener_OfferResign(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //handleRequestToOfferResign();
                 NetworkController.getInstance().handleRequestToOfferResign();
-//                MainActivity mainActivity = mainActivity_.get();
-//                if (mainActivity != null) {
-//                    Toast.makeText(HoxApp.getApp(),
-//                            mainActivity.getString(R.string.action_resign),
-//                            Toast.LENGTH_SHORT).show();
-//                }
                 actionSheet.dismiss();
             }
         });
@@ -728,8 +753,6 @@ public class NetworkTableActivity extends AppCompatActivity
         actionSheet.setOnClickListener_NewTable(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // FIXME: handleRequestToOpenNewTable();
-                //actionSheet.dismiss();
                 throw new RuntimeException("This action should not be enabled!");
             }
         });
