@@ -38,8 +38,8 @@ public class NetworkTableController {
     private Referee referee_;
 
     private Enums.TableType myTableType_ = Enums.TableType.TABLE_TYPE_EMPTY;
-    private TableTimeTracker timeTracker_ = new TableTimeTracker();
-    private TablePlayerTracker playerTracker_ = new TablePlayerTracker(Enums.TableType.TABLE_TYPE_EMPTY);
+    private final TableTimeTracker timeTracker_ = new TableTimeTracker();
+    private final TablePlayerTracker playerTracker_ = new TablePlayerTracker(Enums.TableType.TABLE_TYPE_EMPTY);
 
     // ***************************
     private BoardController boardController_;

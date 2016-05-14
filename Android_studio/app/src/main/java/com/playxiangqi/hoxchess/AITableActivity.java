@@ -54,8 +54,8 @@ public class AITableActivity extends AppCompatActivity
 
     private final AIController aiController_ = AIController.getInstance();
     private final Referee referee_ = aiController_.getReferee();
-    private final TableTimeTracker timeTracker_ = new TableTimeTracker();
-    private final TablePlayerTracker playerTracker_ = new TablePlayerTracker(Enums.TableType.TABLE_TYPE_LOCAL);
+    private final TableTimeTracker timeTracker_ = aiController_.getTimeTracker();
+    private final TablePlayerTracker playerTracker_ = aiController_.getPlayerTracker();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,7 +83,7 @@ public class AITableActivity extends AppCompatActivity
 
         aiController_.setBoardController(this);
 
-        setupNewTable();
+        prepareTableOnCreate();
 
         // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
         // Reference:
@@ -332,21 +332,9 @@ public class AITableActivity extends AppCompatActivity
         invalidateOptionsMenu();
     }
 
-    private void setupNewTable() {
-        Log.d(TAG, "setupNewTable:...");
-        //HoxApp.getApp().getAiEngine().initGame();
-
+    private void prepareTableOnCreate() {
+        Log.d(TAG, "Prepare table on create:...");
         timeTracker_.stop();
-        final TimeInfo initialTime = new TimeInfo(Enums.DEFAULT_INITIAL_GAME_TIMES);
-        timeTracker_.setInitialColor(Enums.ColorEnum.COLOR_RED);
-        timeTracker_.setInitialTime(initialTime);
-        timeTracker_.setBlackTime(initialTime);
-        timeTracker_.setRedTime(initialTime);
-
-        //playerTracker_.setTableType(Enums.TableType.TABLE_TYPE_LOCAL); // A new practice table.
-        playerTracker_.setRedInfo(HoxApp.getApp().getString(R.string.you_label), "1501");
-        playerTracker_.setBlackInfo(HoxApp.getApp().getString(R.string.ai_label), "1502");
-
         referee_.resetGame();
     }
 
@@ -361,6 +349,8 @@ public class AITableActivity extends AppCompatActivity
 
             int lastGameStatus = referee_.getGameStatus();
             boardFragment.restoreMoveHistory(historyMoves, lastGameStatus);
+
+            timeTracker_.start();
         }
     }
 
@@ -380,8 +370,7 @@ public class AITableActivity extends AppCompatActivity
             boardFragment.resetBoard();
         }
         Snackbar.make(findViewById(R.id.board_view), R.string.action_reset,
-                Snackbar.LENGTH_SHORT)
-                .show();
+                Snackbar.LENGTH_SHORT).show();
     }
 
     private void setupListenersInTableActionSheet(final TableActionSheet actionSheet) {

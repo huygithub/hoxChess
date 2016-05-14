@@ -71,8 +71,8 @@ public class NetworkTableActivity extends AppCompatActivity
 
     private final NetworkTableController tableController_ = NetworkTableController.getInstance();
     private final Referee referee_ = tableController_.getReferee();
-    private TableTimeTracker timeTracker_;
-    private TablePlayerTracker playerTracker_;
+    private TableTimeTracker timeTracker_ = tableController_.getTimeTracker();
+    private TablePlayerTracker playerTracker_ = tableController_.getPlayerTracker();
 
     private String tableId_;
 
@@ -108,15 +108,18 @@ public class NetworkTableActivity extends AppCompatActivity
 
         tableController_.setBoardController(this);
 
-        timeTracker_ = tableController_.getTimeTracker();
-        playerTracker_ = tableController_.getPlayerTracker();
-
-        tableId_ = getIntent().getStringExtra(EXTRA_TABLE_ID);
-        Log.d(TAG, "onCreate: tableId = [" + tableId_ + "]");
-        if (TextUtils.isEmpty(tableId_)) { // Requesting for a NEW table?
-            NetworkController.getInstance().sendRequestToOpenNewTable();
+        if (savedInstanceState == null) {
+            tableId_ = getIntent().getStringExtra(EXTRA_TABLE_ID);
+            Log.d(TAG, "onCreate: tableId = [" + tableId_ + "]");
+            if (TextUtils.isEmpty(tableId_)) { // Requesting for a NEW table?
+                NetworkController.getInstance().sendRequestToOpenNewTable();
+            } else {
+                NetworkController.getInstance().handleTableSelection(tableId_);
+            }
         } else {
-            NetworkController.getInstance().handleTableSelection(tableId_);
+            tableId_ = NetworkController.getInstance().getMyTableId();
+            Log.d(TAG, "onCreate: (from Network controller) tableId = [" + tableId_ + "]");
+            setAndShowTitle(tableId_);
         }
 
         // NOTE: It is important to control our App 's audio volume using the Hardware Control Keys.
@@ -431,7 +434,7 @@ public class NetworkTableActivity extends AppCompatActivity
 
         tableId_ = tableInfo.tableId;
 
-        setAndShowTitle(tableInfo.tableId);
+        setAndShowTitle(tableId_);
         invalidateOptionsMenu(); // Recreate the options menu
 
         referee_.resetGame();

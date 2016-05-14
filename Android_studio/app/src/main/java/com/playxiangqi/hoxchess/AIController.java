@@ -42,6 +42,10 @@ public class AIController {
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     private Referee referee_;
 
+    // Keep the time/player trackers here to keep them alive beyond the activity 's life cycle.
+    private final TableTimeTracker timeTracker_ = new TableTimeTracker();
+    private final TablePlayerTracker playerTracker_ = new TablePlayerTracker(Enums.TableType.TABLE_TYPE_LOCAL);
+
     private List<Piece.Move> historyMoves_ = new ArrayList<Piece.Move>();
 
     public interface AIListener {
@@ -62,6 +66,15 @@ public class AIController {
     private AIController() {
         Log.v(TAG, "[CONSTRUCTOR]: ...");
         HoxApp.getApp().getAiEngine().initGame();
+
+        final TimeInfo initialTime = new TimeInfo(Enums.DEFAULT_INITIAL_GAME_TIMES);
+        timeTracker_.setInitialColor(Enums.ColorEnum.COLOR_RED);
+        timeTracker_.setInitialTime(initialTime);
+        timeTracker_.setBlackTime(initialTime);
+        timeTracker_.setRedTime(initialTime);
+
+        playerTracker_.setRedInfo(HoxApp.getApp().getString(R.string.you_label), "1501");
+        playerTracker_.setBlackInfo(HoxApp.getApp().getString(R.string.ai_label), "1502");
     }
 
     public void setBoardController(AIListener controller) {
@@ -72,9 +85,9 @@ public class AIController {
         referee_ = referee;
     }
 
-    public Referee getReferee() {
-        return referee_;
-    }
+    public Referee getReferee() { return referee_; }
+    public TableTimeTracker getTimeTracker() { return timeTracker_; }
+    public TablePlayerTracker getPlayerTracker() { return playerTracker_; }
 
     /**
      * A message handler to handle UI related tasks.
