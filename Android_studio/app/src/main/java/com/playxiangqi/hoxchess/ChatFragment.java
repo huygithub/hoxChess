@@ -205,8 +205,13 @@ public class ChatFragment extends Fragment {
 
     protected ChatMessage processMessage(MessageInfo messageInfo) {
         switch (messageInfo.type) {
-            case MESSAGE_TYPE_CHAT_IN_TABLE: // fall through
-                return new ChatMessage(true, messageInfo.getFormattedString());
+            case MESSAGE_TYPE_CHAT_IN_TABLE:
+                if (HoxApp.getApp().getMyPid().equals(messageInfo.senderPid)) { // my own message?
+                    return new ChatMessage(false, messageInfo.content);
+                } else {
+                    return new ChatMessage(true,
+                            messageInfo.senderPid + ": " + messageInfo.content);
+                }
             default:
                 return null;
         }

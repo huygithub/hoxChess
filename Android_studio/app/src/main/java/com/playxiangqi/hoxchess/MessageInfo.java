@@ -36,6 +36,8 @@ public class MessageInfo {
     private final static AtomicInteger messageIdGenerator_ = new AtomicInteger(0);
     private final int messageId_;
 
+    private boolean isRead_ = false;  // Whether it has been read or not?
+
     public final MessageType type;
     public final String senderPid;
 
@@ -54,6 +56,8 @@ public class MessageInfo {
     }
 
     public int getId() { return messageId_; }
+    public boolean isRead() { return isRead_; }
+    public void markRead() { isRead_ = true; }
 
     @Override
     public String toString() {
@@ -61,22 +65,22 @@ public class MessageInfo {
                 type.toString(), senderPid, senderRating, toPid, content, tableId);
     }
 
-    public String getFormattedString() {
-        switch (type) {
-            case MESSAGE_TYPE_CHAT_IN_TABLE: {
-                return senderPid + ": " + content;
-            }
-            case MESSAGE_TYPE_INVITE_TO_PLAY: {
-                final String tableIdString = (TextUtils.isEmpty(tableId) ? "?" : tableId);
-                return "*INVITE: From [" + senderPid + " (" + senderRating + ")]"
-                        + " @ [" + tableIdString + "]";
-            }
-            case MESSAGE_TYPE_CHAT_PRIVATE: {
-                return "(PRIVATE) " + senderPid + ": " + content;
-            }
-            default:
-                return "[]";
-        }
-    }
+//    public String getFormattedString() {
+//        switch (type) {
+//            case MESSAGE_TYPE_CHAT_IN_TABLE: {
+//                return senderPid + ": " + content;
+//            }
+//            case MESSAGE_TYPE_INVITE_TO_PLAY: {
+//                final String tableIdString = (TextUtils.isEmpty(tableId) ? "?" : tableId);
+//                return "*INVITE: From [" + senderPid + " (" + senderRating + ")]"
+//                        + " @ [" + tableIdString + "]";
+//            }
+//            case MESSAGE_TYPE_CHAT_PRIVATE: {
+//                return "(PRIVATE) " + senderPid + ": " + content;
+//            }
+//            default:
+//                return "[]";
+//        }
+//    }
 
 }

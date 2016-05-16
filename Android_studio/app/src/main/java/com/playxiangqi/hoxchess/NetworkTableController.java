@@ -60,6 +60,7 @@ public class NetworkTableController {
         void onGameEnded(Enums.GameStatus gameStatus);
         void onGameReset();
         void onPlayerInfoReceived(String pid, String rating, String wins, String draws, String losses);
+        void onNetworkError();
     }
     public void setBoardController(BoardController controller) {
         boardController_ = controller;
@@ -249,7 +250,10 @@ public class NetworkTableController {
     }
 
     public void onNetworkError() {
-        Log.w(TAG, "onNetworkCode:..."); // FIXME
+        Log.w(TAG, "onNetworkCode:...");
+        if (boardController_ != null) {
+            boardController_.onNetworkError();
+        }
     }
 
     // ***************************************************************************

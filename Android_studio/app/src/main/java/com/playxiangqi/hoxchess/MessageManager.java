@@ -107,12 +107,35 @@ public class MessageManager {
         return messageCount;
     }
 
+    public int getUnreadCount(MessageInfo.MessageType messageType) {
+        int unreadCount = 0;
+        for (MessageInfo message : messages_) {
+            if (message.type == messageType && !message.isRead()) {
+                ++unreadCount;
+            }
+        }
+        return unreadCount;
+    }
+
     public void addMessage(MessageInfo messageInfo) {
         messages_.add(messageInfo);
         Log.d(TAG, "addMessage: Notify listeners-size:" + listeners_.size());
         for (EventListener listener : listeners_) {
             listener.onMessageReceived(messageInfo);
         }
+    }
+
+    /** Add my own message in a table. No need to notify listeners */
+    public void addMyMessageInTable(String userText, String tableId) {
+        MessageInfo myMessage = new MessageInfo(
+                MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE,
+                HoxApp.getApp().getMyPid());
+        myMessage.content = userText;
+        myMessage.tableId = tableId;
+        myMessage.markRead(); // I have read my own message
+
+        messages_.add(myMessage);
+        // NOTE: No need to notify listeners
     }
 
     public void removeMessages(MessageInfo.MessageType messageType) {
@@ -137,11 +160,37 @@ public class MessageManager {
             }
         }
     }
+
+    public boolean markMessageRead(MessageInfo messageInfo) {
+        MessageInfo foundMessage = getMessageById(messageInfo.getId());
+        if (foundMessage == null) { // not found?
+            return false;
+        }
+        foundMessage.markRead();
+        return true;
+    }
+
+    public void markMessagesOfTypeRead(MessageInfo.MessageType messageType) {
+        for (MessageInfo message : messages_) {
+            if (message.type == messageType && !message.isRead()) {
+                message.markRead();
+            }
+        }
+    }
+
     // ***************************************************************
     //
     //              Private APIs
     //
     // ***************************************************************
 
+    MessageInfo getMessageById(int messageId) {
+        for (MessageInfo message : messages_) {
+            if (message.getId() == messageId) {
+                return message;
+            }
+        }
+        return null; // not found
+    }
 
 }

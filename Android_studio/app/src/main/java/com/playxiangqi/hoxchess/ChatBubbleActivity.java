@@ -24,6 +24,7 @@ import java.util.List;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -111,8 +112,7 @@ public class ChatBubbleActivity extends AppCompatActivity
             switch (messageInfo.type) {
                 case MESSAGE_TYPE_INVITE_TO_PLAY: // fall through
                 case MESSAGE_TYPE_CHAT_PRIVATE:
-                    ChatMessage chatMsg = new ChatMessage(true, messageInfo.getFormattedString());
-                    return chatMsg;
+                    return new ChatMessage(true, getFormattedString(messageInfo));
                 default:
                     return null;
             }
@@ -132,6 +132,21 @@ public class ChatBubbleActivity extends AppCompatActivity
 
             MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY);
             MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE);
+        }
+
+        private static String getFormattedString(MessageInfo message) {
+            switch (message.type) {
+                case MESSAGE_TYPE_INVITE_TO_PLAY: {
+                    final String tableIdString = (TextUtils.isEmpty(message.tableId) ? "?" : message.tableId);
+                    return "*INVITE: From [" + message.senderPid + " (" + message.senderRating + ")]"
+                            + " @ [" + tableIdString + "]";
+                }
+                case MESSAGE_TYPE_CHAT_PRIVATE: {
+                    return "(PRIVATE) " + message.senderPid + ": " + message.content;
+                }
+                default:
+                    return "[]";
+            }
         }
 
     }

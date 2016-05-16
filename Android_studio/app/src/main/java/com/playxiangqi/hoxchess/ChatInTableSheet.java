@@ -19,244 +19,152 @@
 package com.playxiangqi.hoxchess;
 
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.BottomSheetDialog;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/** TODO: A work-in-progress */
+/**
+ * A bottom sheet based dialog to display comments/chat in the current network table.
+ *
+ * */
 public class ChatInTableSheet extends BottomSheetDialog {
-    private FloatingActionButton editModeButton;
 
-    public ChatInTableSheet(final Activity activity, final NetworkTableController tableController, TableInfo tableInfo) {
+    private static final String TAG = "ChatInTableSheet";
+
+    private final TableInfo tableInfo_;
+
+    private RecyclerView recyclerView_;
+    private ChatInTableAdapter adapter_;
+
+    private EditText editText_;
+
+    /**
+     * Constructor
+     * */
+    public ChatInTableSheet(final Activity activity, List<MessageInfo> newMessages, TableInfo tableInfo) {
         super(activity);
+        Log.d(TAG, "[CONSTRUCTOR]");
+
+        tableInfo_ = tableInfo;
 
         View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_table_chat, null);
         setContentView(sheetView);
 
         final TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
-        playerInfoView.setText("Conversation (Table #" + tableInfo.tableId + ")");
+        playerInfoView.setText(
+                activity.getString(R.string.chat_table_title, tableInfo_.tableId));
 
-        final View inputHeader = sheetView.findViewById(R.id.chat_input_layout_header);
-        final View sendButton = sheetView.findViewById(R.id.sheet_comment_button_header);
-
-        final EditText editText = (EditText) sheetView.findViewById(R.id.sheet_edit_text);
-        editText.addTextChangedListener(new TextWatcher(){
-            public void afterTextChanged(Editable s) {
-                int len = editText.getText().toString().length();
-                //Log.d("ChatInTableSheet", "# of chars = " + len);
-                if (len > 0 && editModeButton.getVisibility() == View.VISIBLE) {
-                    editModeButton.setVisibility(View.GONE);
-                    sendButton.setVisibility(View.VISIBLE);
-                } else if (len == 0 && editModeButton.getVisibility() == View.GONE) {
-                    editModeButton.setVisibility(View.VISIBLE);
-                    sendButton.setVisibility(View.GONE);
+        editText_ = (EditText) sheetView.findViewById(R.id.sheet_edit_text);
+        editText_.setOnKeyListener(new View.OnKeyListener() {
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                    return sendMyInput();
                 }
+                return false;
             }
-            public void beforeTextChanged(CharSequence s, int start, int count, int after){}
-            public void onTextChanged(CharSequence s, int start, int before, int count){}
         });
 
-        editModeButton = (FloatingActionButton) sheetView.findViewById(R.id.floating_action_edit_mode);
-        editModeButton.setOnClickListener(new View.OnClickListener() {
+        final View sendButton = sheetView.findViewById(R.id.sheet_comment_button);
+        sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("ChatInTableSheet", "Edit mode button clicked!");
-                if (playerInfoView.getVisibility() == View.VISIBLE) {
-                    playerInfoView.setVisibility(View.GONE);
-                    //editModeButton.setVisibility(View.GONE);
-                    //editText.setVisibility(View.VISIBLE);
-                    inputHeader.setVisibility(View.VISIBLE);
-                } else {
-                    playerInfoView.setVisibility(View.VISIBLE);
-                    //editText.setVisibility(View.GONE);
-                    inputHeader.setVisibility(View.GONE);
-                    sendButton.setFocusable(false);
-                    InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
-                }
-                //Toast.makeText(activity, "Edit mode button clicked", Toast.LENGTH_SHORT).show();
+                sendMyInput();
             }
         });
-        //---
 
-
-        // *******************
-        //final BottomSheetBehavior behavior = BottomSheetBehavior.from(sheetView);
-        //if (behavior == null) {
-        //    Toast.makeText(activity, "Could not find behavior!", Toast.LENGTH_LONG);
-        //}
-        // *******************
-
-        /*
-        final ListView listView = (ListView) sheetView.findViewById(R.id.sheet_chat_listView);
-        //listView.setEmptyView(view.findViewById(R.id.emptyView));
-        final SheetChatArrayAdapter chatArrayAdapter = new SheetChatArrayAdapter(activity, R.layout.activity_chat_singlemessage);
-        listView.setAdapter(chatArrayAdapter);
-
-        for (int i = 1; i < 2; ++i) {
-            chatArrayAdapter.add(new ChatMessage(true, "Message #" + i));
-        }
-        chatArrayAdapter.add(new ChatMessage(false, "This is my message"));
-        chatArrayAdapter.add(new ChatMessage(true, "Another friend 's message #3"));
-
-        // Scroll to bottom.
-        listView.post(new Runnable() {
-            @Override
-            public void run() {
-                // Select the last row so it will scroll into view...
-                listView.setSelection(chatArrayAdapter.getCount() - 1);
-            }
-        });
-        */
-
-
-
+        // Process the initial list of messages.
         List<ChatMessage> chatMessages = new ArrayList<ChatMessage>();
-        for (int i = 1; i < 3; ++i) {
-            chatMessages.add(new ChatMessage(true, "(RecycleView) Message #" + i));
-        }
-
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.sheet_chat_recycler_view);
-
-        MoviesAdapter mAdapter = new MoviesAdapter(chatMessages);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(activity);
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(mAdapter);
-
-        //recyclerView.setNestedScrollingEnabled(false);
-
-//        closeTableView_.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                tableController.handleRequestToCloseCurrentTable();
-//                dismiss(); // this the dialog.
-//            }
-//        });
-
-//        resetTableView_.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //handleRequestToResetTable();
-//                //HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
-//                dismiss(); // this the dialog.
-//            }
-//        });
-
-        //joinView_.setVisibility(View.GONE);
-    }
-
-//    public void hideAction(String action) {
-//        if ("close".equals(action)) {
-//            closeTableView_.setVisibility(View.GONE);
-//        }
-//    }
-//
-//    public void setOnClickListener_Reset(View.OnClickListener listener) {
-//        resetTableView_.setOnClickListener(listener);
-//    }
-//
-//    public void setOnClickListener_ReverseBoardView(View.OnClickListener listener) {
-//        reverseBoardView_.setOnClickListener(listener);
-//    }
-
-
-    private static class SheetChatArrayAdapter extends ArrayAdapter<ChatMessage> {
-
-        private TextView chatText;
-        private List<ChatMessage> chatMessageList = new ArrayList<ChatMessage>();
-        private LinearLayout singleMessageContainer;
-
-        @Override
-        public void add(ChatMessage object) {
-            chatMessageList.add(object);
-            super.add(object);
-        }
-
-        @Override
-        public void clear() {
-            chatMessageList.clear();
-            super.clear();
-        }
-
-        public SheetChatArrayAdapter(Context context, int textViewResourceId) {
-            super(context, textViewResourceId);
-        }
-
-        public int getCount() {
-            return this.chatMessageList.size();
-        }
-
-        public ChatMessage getItem(int index) {
-            return this.chatMessageList.get(index);
-        }
-
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View row = convertView;
-            if (row == null) {
-                LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                row = inflater.inflate(R.layout.activity_chat_singlemessage, parent, false);
+        Log.d(TAG, "Initial list count: " + newMessages.size());
+        for (MessageInfo messageInfo : newMessages) {
+            ChatMessage chatMsg = processMessage(messageInfo);
+            if (chatMsg != null) {
+                chatMessages.add(0, chatMsg);
             }
-            singleMessageContainer = (LinearLayout) row.findViewById(R.id.singleMessageContainer);
-            ChatMessage chatMessageObj = getItem(position);
-            chatText = (TextView) row.findViewById(R.id.singleMessage);
-            chatText.setText(chatMessageObj.message);
-            chatText.setBackgroundResource(chatMessageObj.left ? R.drawable.bubble_b : R.drawable.bubble_a);
-            singleMessageContainer.setGravity(chatMessageObj.left ? Gravity.LEFT : Gravity.RIGHT);
-            return row;
         }
 
-        public Bitmap decodeToBitmap(byte[] decodedByte) {
-            return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
-        }
+        recyclerView_ = (RecyclerView) findViewById(R.id.sheet_chat_recycler_view);
 
+        adapter_ = new ChatInTableAdapter(chatMessages);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(activity);
+        recyclerView_.setLayoutManager(mLayoutManager);
+        recyclerView_.setItemAnimator(new DefaultItemAnimator());
+        recyclerView_.setAdapter(adapter_);
     }
 
-    public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MyViewHolder> {
+    public void addNewMessage(MessageInfo messageInfo) {
+        ChatMessage chatMsg = processMessage(messageInfo);
+        if (chatMsg != null) {
+            adapter_.addMessage(chatMsg);
+            recyclerView_.scrollToPosition(0);
+        }
+    }
+
+    private ChatMessage processMessage(MessageInfo messageInfo) {
+        switch (messageInfo.type) {
+            case MESSAGE_TYPE_CHAT_IN_TABLE:
+                if (HoxApp.getApp().getMyPid().equals(messageInfo.senderPid)) { // my own message?
+                    return new ChatMessage(false, messageInfo.content);
+                } else {
+                    return new ChatMessage(true,
+                            messageInfo.senderPid + ": " + messageInfo.content);
+                }
+            default:
+                return null;
+        }
+    }
+
+    private boolean sendMyInput() {
+        final String userText = editText_.getText().toString();
+        if (TextUtils.isEmpty(userText)) {
+            return false;
+        }
+        editText_.setText("");
+
+        Log.d(TAG, "Send my input: [" + userText + "]");
+        ChatMessage chatMsg = new ChatMessage(false, userText);
+        adapter_.addMessage(chatMsg);
+        recyclerView_.scrollToPosition(0);
+
+        MessageManager.getInstance().addMyMessageInTable(userText, tableInfo_.tableId);
+        HoxApp.getApp().getNetworkController().onLocalMessage(chatMsg);
+        return true;
+    }
+
+    /**
+     * The adapter for this table sheet.
+     */
+    private static class ChatInTableAdapter
+            extends RecyclerView.Adapter<ChatInTableAdapter.MyViewHolder> {
 
         private List<ChatMessage> messages_;
 
         public class MyViewHolder extends RecyclerView.ViewHolder {
-            //public TextView title, year, genre;
             public LinearLayout singleMessageContainer;
             private TextView chatText;
 
             public MyViewHolder(View view) {
                 super(view);
-                //title = (TextView) view.findViewById(R.id.title);
-                //genre = (TextView) view.findViewById(R.id.genre);
-                //year = (TextView) view.findViewById(R.id.year);
                 singleMessageContainer = (LinearLayout) view.findViewById(R.id.singleMessageContainer);
                 chatText = (TextView) view.findViewById(R.id.singleMessage);
             }
         }
 
-
-        public MoviesAdapter(List<ChatMessage> moviesList) {
-            this.messages_ = moviesList;
+        public ChatInTableAdapter(List<ChatMessage> messageList) {
+            messages_ = messageList;
         }
 
         @Override
@@ -269,16 +177,26 @@ public class ChatInTableSheet extends BottomSheetDialog {
 
         @Override
         public void onBindViewHolder(MyViewHolder holder, int position) {
-            ChatMessage msg = messages_.get(position);
-            //holder.title.setText(movie.getTitle());
-            //holder.genre.setText(movie.getGenre());
-            //holder.year.setText(movie.getYear());
+            ChatMessage msg = messages_.get(position);;
             holder.chatText.setText(msg.message);
+            holder.chatText.setBackgroundResource(msg.left ? R.drawable.bubble_b : R.drawable.bubble_a);
+            holder.singleMessageContainer.setGravity(msg.left ? Gravity.LEFT : Gravity.RIGHT);
         }
 
         @Override
         public int getItemCount() {
             return messages_.size();
+        }
+
+        // ******************************************************************************
+        //
+        //               Other public APIs
+        //
+        // *******************************************************************************
+
+        public void addMessage(ChatMessage message) {
+            messages_.add(0, message);
+            this.notifyItemInserted(0);
         }
     }
 

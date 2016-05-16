@@ -53,7 +53,7 @@ public class NetworkTableActivity extends AppCompatActivity
                     implements ViewPager.OnPageChangeListener,
                                BoardFragment.OnFragmentInteractionListener,
                                PlayersFragment.OnFragmentInteractionListener,
-                               ChatFragment.OnChatFragmentListener,
+                               //ChatFragment.OnChatFragmentListener,
                                NetworkTableController.BoardController,
                                MessageManager.EventListener,
                                BoardView.BoardEventListener {
@@ -66,8 +66,10 @@ public class NetworkTableActivity extends AppCompatActivity
     private static final int JOIN_TABLE_REQUEST = 1;
 
     private WeakReference<BoardFragment> myBoardFragment_ = new WeakReference<BoardFragment>(null);
-    private WeakReference<ChatFragment> myChatFragment_ = new WeakReference<ChatFragment>(null);
+    //private WeakReference<ChatFragment> myChatFragment_ = new WeakReference<ChatFragment>(null);
     private WeakReference<PlayersFragment> myPlayersFragment_ = new WeakReference<PlayersFragment>(null);
+
+    private ChatInTableSheet chatSheet_;
 
     private final NetworkTableController tableController_ = NetworkTableController.getInstance();
     private final Referee referee_ = tableController_.getReferee();
@@ -238,21 +240,21 @@ public class NetworkTableActivity extends AppCompatActivity
     public void onPageSelected(int position) {
         Log.d(TAG, "onPageSelected: position:"+ position);
         if (position == MainPagerAdapter.POSITION_BOARD) {
-            int messageCount = MessageManager.getInstance().getMessageCount(
+            int unreadCount = MessageManager.getInstance().getUnreadCount(
                     MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
-            Log.d(TAG, "onPageSelected: ... table-message count = " + messageCount);
+            Log.d(TAG, "onPageSelected: ... unreadCount = " + unreadCount);
             BoardFragment boardFragment = myBoardFragment_.get();
             if (boardFragment != null) {
-                boardFragment.setTableMessageCount(messageCount);
+                boardFragment.setTableMessageCount(unreadCount);
             }
-        } else if (position == MainPagerAdapter.POSITION_CHAT) {
+        } /*else if (position == MainPagerAdapter.POSITION_CHAT) {
             List<MessageInfo> newMessages = MessageManager.getInstance().getMessages();
             ChatFragment chatFragment = myChatFragment_.get();
             if (chatFragment != null) {
                 chatFragment.addNewMessages(newMessages);
             }
             MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
-        }
+        }*/
     }
 
     /**
@@ -344,8 +346,41 @@ public class NetworkTableActivity extends AppCompatActivity
 
     @Override
     public void onShowMessageViewClick(View v) {
-        Utils.animatePagerTransition(viewPager_, true /* forward */, 500);
+        // OPTION #1:
+        // Utils.animatePagerTransition(viewPager_, true /* forward */, 500);
+
+        // OPTION #2:
+        // Using the BottomSheet.
+
+        List<MessageInfo> newMessages =
+                MessageManager.getInstance().getMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
+        //ChatFragment chatFragment = myChatFragment_.get();
+        //if (chatFragment != null) {
+        //    chatFragment.addNewMessages(newMessages);
+        //}
+
+        TableInfo tableInfo = new TableInfo();
+        tableInfo.tableId = tableId_;
+        tableInfo.itimes = Enums.DEFAULT_INITIAL_GAME_TIMES;
+        chatSheet_ = new ChatInTableSheet(this, newMessages, tableInfo);
+        chatSheet_.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                Log.d(TAG, "ChatInTableSheet dismissed!");
+                chatSheet_ = null;
+            }
+        });
+        Log.d(TAG, "Show chatSheet... #1");
+        chatSheet_.show();
+        Log.d(TAG, "After showing chatSheet... #2");
+
+        BoardFragment boardFragment = myBoardFragment_.get();
+        if (boardFragment != null) {
+            boardFragment.setTableMessageCount(0);
+        }
+        MessageManager.getInstance().markMessagesOfTypeRead(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
     }
+
     @Override
     public void onChangeRoleRequest(Enums.ColorEnum clickedColor) {
         tableController_.handlePlayerButtonClick(clickedColor);
@@ -393,19 +428,19 @@ public class NetworkTableActivity extends AppCompatActivity
     }
 
     // **** Implementation of ChatFragment.OnChatFragmentListener
-    @Override
-    public void onChatFragment_CreateView(ChatFragment fragment) {
-        myChatFragment_ = new WeakReference<ChatFragment>(fragment);
-    }
-
-    @Override
-    public void onChatFragment_DestroyView(ChatFragment fragment) {
-        ChatFragment chatFragment = myChatFragment_.get();
-        if (chatFragment != null && chatFragment == fragment) {
-            myChatFragment_ = new WeakReference<ChatFragment>(null);
-            Log.d(TAG, "Release Chat fragment: " + chatFragment);
-        }
-    }
+//    @Override
+//    public void onChatFragment_CreateView(ChatFragment fragment) {
+//        myChatFragment_ = new WeakReference<ChatFragment>(fragment);
+//    }
+//
+//    @Override
+//    public void onChatFragment_DestroyView(ChatFragment fragment) {
+//        ChatFragment chatFragment = myChatFragment_.get();
+//        if (chatFragment != null && chatFragment == fragment) {
+//            myChatFragment_ = new WeakReference<ChatFragment>(null);
+//            Log.d(TAG, "Release Chat fragment: " + chatFragment);
+//        }
+//    }
 
     // **** Implementation of BaseTableController.BoardController ****
     @Override
@@ -481,10 +516,10 @@ public class NetworkTableActivity extends AppCompatActivity
             boardFragment.resetBoard();
         }
 
-        ChatFragment chatFragment = myChatFragment_.get();
-        if (chatFragment != null) {
-            chatFragment.clearAll();
-        }
+        //ChatFragment chatFragment = myChatFragment_.get();
+        //if (chatFragment != null) {
+        //    chatFragment.clearAll();
+        //}
 
         PlayersFragment playersFragment = myPlayersFragment_.get();
         if (playersFragment != null) {
@@ -552,6 +587,13 @@ public class NetworkTableActivity extends AppCompatActivity
                 Snackbar.LENGTH_LONG);
     }
 
+    @Override
+    public void onNetworkError() {
+        showBriefMessage(
+                getString(R.string.msg_network_error_io_exception_exception),
+                Snackbar.LENGTH_LONG);
+    }
+
     // **** Implementation of MessageManager.EventListener ****
     @Override
     public void onMessageReceived(MessageInfo messageInfo) {
@@ -563,22 +605,29 @@ public class NetworkTableActivity extends AppCompatActivity
             invalidateOptionsMenu(); // Recreate the options menu
 
         } else if (messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE) {
+
+            if (chatSheet_ != null) { // The chat sheet is visible to the user?
+                chatSheet_.addNewMessage(messageInfo);
+                messageInfo.markRead();
+                return;
+            }
+
             int currentPageIndex = viewPager_.getCurrentItem();
             if (currentPageIndex == MainPagerAdapter.POSITION_BOARD) {
                 BoardFragment boardFragment = myBoardFragment_.get();
                 if (boardFragment != null) {
-                    int messageCount = MessageManager.getInstance().getMessageCount(
+                    int unreadCount = MessageManager.getInstance().getUnreadCount(
                             MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
-                    Log.d(TAG, "On new message: ... table-message count = " + messageCount);
-                    boardFragment.setTableMessageCount(messageCount);
+                    Log.d(TAG, "On new message: ... unreadCount = " + unreadCount);
+                    boardFragment.setTableMessageCount(unreadCount);
                 }
-            } else if (currentPageIndex == MainPagerAdapter.POSITION_CHAT) {
+            } /*else if (currentPageIndex == MainPagerAdapter.POSITION_CHAT) {
                 ChatFragment chatFragment = myChatFragment_.get();
                 if (chatFragment != null) {
                     chatFragment.addNewMessage(messageInfo);
                 }
                 MessageManager.getInstance().removeMessage(messageInfo);
-            }
+            }*/
         }
     }
 
@@ -702,6 +751,7 @@ public class NetworkTableActivity extends AppCompatActivity
     private void closeCurrentTable() {
         Log.d(TAG, "Close the current table...");
         NetworkController.getInstance().handleRequestToCloseCurrentTable();
+        MessageManager.getInstance().removeMessages(MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE);
         finish();
     }
 
@@ -785,7 +835,7 @@ public class NetworkTableActivity extends AppCompatActivity
         private final Context context_;
 
         public static final int POSITION_BOARD = 0;
-        public static final int POSITION_CHAT = 1;
+        //public static final int POSITION_CHAT = 1;
 
         public MainPagerAdapter(Context context, FragmentManager fragmentManager) {
             super(fragmentManager);
@@ -794,14 +844,14 @@ public class NetworkTableActivity extends AppCompatActivity
 
         @Override
         public int getCount() {
-            return 3;
+            return 2;
         }
 
         @Override
         public Fragment getItem(int position) {
             switch (position) {
                 case 0: return BoardFragment.newInstance("NETWORK");
-                case 1: return new ChatFragment();
+                //case 1: return new ChatFragment();
                 default: return new PlayersFragment();
             }
         }
@@ -810,7 +860,7 @@ public class NetworkTableActivity extends AppCompatActivity
         public CharSequence getPageTitle(int position) {
             switch (position) {
                 case 0: return context_.getString(R.string.label_table);
-                case 1: return context_.getString(R.string.title_activity_chat);
+                //case 1: return context_.getString(R.string.title_activity_chat);
                 default: return context_.getString(R.string.action_view_players);
             }
         }
@@ -822,7 +872,7 @@ public class NetworkTableActivity extends AppCompatActivity
         public float getPageWidth (int position) {
             switch (position) {
                 case 0: return 1f; // 0.95f;
-                case 1: return 1f; // 0.9f;
+                //case 1: return 1f; // 0.9f;
                 default: return 1f;
             }
         }
