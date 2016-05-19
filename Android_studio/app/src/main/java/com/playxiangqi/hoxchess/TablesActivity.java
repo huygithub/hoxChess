@@ -230,7 +230,7 @@ public class TablesActivity extends AppCompatActivity
         dialog.show();
     }
 
-    private static class AllPlayersSheetDialog extends BottomSheetDialog {
+    private class AllPlayersSheetDialog extends BottomSheetDialog {
         public AllPlayersSheetDialog(final Activity activity, PlayerInfo playerInfo, final String tableId) {
             super(activity);
 
@@ -275,9 +275,8 @@ public class TablesActivity extends AppCompatActivity
                 joinView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        HoxApp.getApp().getNetworkController().handleTableSelection(tableId);
                         dismiss(); // this the dialog.
-                        activity.finish();
+                        onTableSelected(tableId);
                     }
                 });
             }
