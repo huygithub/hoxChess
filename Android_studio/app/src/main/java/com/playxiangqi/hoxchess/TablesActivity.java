@@ -25,23 +25,17 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.BottomSheetDialog;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
 
 public class TablesActivity extends AppCompatActivity
                 implements TablesFragment.OnFragmentInteractionListener,
@@ -223,94 +217,36 @@ public class TablesActivity extends AppCompatActivity
         return players;
     }
 
-    private void onSendMessageSelected(final String playerId) {
-        Log.d(TAG, "onSendMessageSelected: playerId = " + playerId);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        // Set up the input
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
-
-        builder.setMessage(getString(R.string.dialog_private_message_title, playerId));
-        builder.setPositiveButton(R.string.button_send, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                final String msg = input.getText().toString();
-                if (!TextUtils.isEmpty(msg)) {
-                    NetworkController.getInstance().handlePrivateMessage(playerId, msg);
-                }
-            }
-        });
-        builder.setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                Log.d(TAG, "Cancel the request to send a private message to a player");
-            }
-        });
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
-
     /**
      * Implementation of PlayersFragment.OnFragmentInteractionListener
      */
     @Override
-    public void onPlayerClick(PlayerInfo playerInfo, String tableId) {
-        final AllPlayersSheetDialog dialog = new AllPlayersSheetDialog(this, playerInfo, tableId);
-        dialog.show();
-    }
+    public void onPlayerClick(PlayerInfo playerInfo, final String tableId) {
+        final String playerId = playerInfo.pid;
+        final Activity activity = this;
+        final PlayerActionSheet dialog = new PlayerActionSheet(this, playerInfo);
 
-    private class AllPlayersSheetDialog extends BottomSheetDialog {
-        public AllPlayersSheetDialog(final Activity activity, PlayerInfo playerInfo, final String tableId) {
-            super(activity);
-
-            final String playerId = playerInfo.pid;
-            View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_player, null);
-            setContentView(sheetView);
-
-            TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
-            View sendMessageView = sheetView.findViewById(R.id.sheet_send_private_message);
-            View inviteView = sheetView.findViewById(R.id.sheet_invite_to_play);
-            View joinView = sheetView.findViewById(R.id.sheet_join_table_of_player);
-
-            playerInfoView.setText(
-                    activity.getString(R.string.msg_player_info, playerId, playerInfo.rating));
-
-            // Setup for "Send Personal Message"
-            sendMessageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dismiss(); // this the dialog.
-                    onSendMessageSelected(playerId);
-                }
-            });
-
-            // Setup for "Invite" or "Join".
-            if (TextUtils.isEmpty(tableId)) {
-                inviteView.setVisibility(View.VISIBLE);
-                joinView.setVisibility(View.GONE);
-
-                inviteView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
-                        dismiss(); // this the dialog.
-                    }
-                });
-            } else {
-                inviteView.setVisibility(View.GONE);
-                joinView.setVisibility(View.VISIBLE);
-
-                joinView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dismiss(); // this the dialog.
-                        onTableSelected(tableId);
-                    }
-                });
-            }
+        // Setup for "Invite" or "Join".
+        if (TextUtils.isEmpty(tableId)) {
+            dialog.hideAction(PlayerActionSheet.Action.ACTION_JOIN_TABLE);
+        } else {
+            dialog.hideAction(PlayerActionSheet.Action.ACTION_INVITE_PLAYER);
         }
+
+        dialog.setActionListener(new PlayerActionSheet.ActionListener() {
+            @Override
+            public void onActionClick(PlayerActionSheet.Action action) {
+                if (action == PlayerActionSheet.Action.ACTION_SEND_MESSAGE) {
+                    PlayerActionSheet.sendMessageToPlayer(activity, playerId);
+                } else if (action == PlayerActionSheet.Action.ACTION_INVITE_PLAYER) {
+                    HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
+                } else if (action == PlayerActionSheet.Action.ACTION_JOIN_TABLE) {
+                    onTableSelected(tableId);
+                }
+            }
+        });
+
+        dialog.show();
     }
 
     /**

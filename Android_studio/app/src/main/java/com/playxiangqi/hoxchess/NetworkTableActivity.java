@@ -24,7 +24,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
-import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -41,8 +40,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -428,10 +425,27 @@ public class NetworkTableActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayerClick(PlayerInfo playerInfo, String tableId) {
+    public void onPlayerClick(PlayerInfo playerInfo, final String tableId) {
+        // Ask for PLAYER-INFO.
         HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
 
-        PlayersInTableSheetDialog dialog = new PlayersInTableSheetDialog(this, playerInfo);
+        final String playerId = playerInfo.pid;
+        final Activity activity = this;
+        final PlayerActionSheet dialog = new PlayerActionSheet(this, playerInfo);
+
+        dialog.hideAction(PlayerActionSheet.Action.ACTION_JOIN_TABLE);
+
+        dialog.setActionListener(new PlayerActionSheet.ActionListener() {
+            @Override
+            public void onActionClick(PlayerActionSheet.Action action) {
+                if (action == PlayerActionSheet.Action.ACTION_SEND_MESSAGE) {
+                    PlayerActionSheet.sendMessageToPlayer(activity, playerId);
+                } else if (action == PlayerActionSheet.Action.ACTION_INVITE_PLAYER) {
+                    HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
+                }
+            }
+        });
+
         dialog.show();
     }
 
@@ -906,39 +920,4 @@ public class NetworkTableActivity extends AppCompatActivity
         }
     }
 
-    private static class PlayersInTableSheetDialog extends BottomSheetDialog {
-        public PlayersInTableSheetDialog(final Activity activity, PlayerInfo playerInfo) {
-            super(activity);
-
-            final String playerId = playerInfo.pid;
-            View sheetView = activity.getLayoutInflater().inflate(R.layout.sheet_dialog_player, null);
-            setContentView(sheetView);
-
-            TextView playerInfoView = (TextView) sheetView.findViewById(R.id.sheet_player_info);
-            View sendMessageView = sheetView.findViewById(R.id.sheet_send_private_message);
-            View inviteView = sheetView.findViewById(R.id.sheet_invite_to_play);
-            View joinView = sheetView.findViewById(R.id.sheet_join_table_of_player);
-
-            playerInfoView.setText(
-                    activity.getString(R.string.msg_player_info, playerId, playerInfo.rating));
-
-            sendMessageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(activity, "Not yet implement Send Personal Message", Toast.LENGTH_LONG).show();
-                    dismiss(); // this the dialog.
-                }
-            });
-
-            inviteView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    HoxApp.getApp().getNetworkController().handleRequestToInvite(playerId);
-                    dismiss(); // this the dialog.
-                }
-            });
-
-            joinView.setVisibility(View.GONE);
-        }
-    }
 }

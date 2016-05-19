@@ -62,7 +62,7 @@ public class PlayersFragment extends Fragment {
         void onPlayersFragment_CreateView(PlayersFragment fragment);
         void onPlayersFragment_DestroyView(PlayersFragment fragment);
         List<PlayerInfo> onRequestToRefreshPlayers();
-        void onPlayerClick(PlayerInfo playerInfo, String tableId);
+        void onPlayerClick(PlayerInfo playerInfo, final String tableId);
     }
 
     public PlayersFragment() {
