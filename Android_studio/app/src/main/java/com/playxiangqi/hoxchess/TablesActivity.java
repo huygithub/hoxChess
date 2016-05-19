@@ -25,6 +25,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.BottomSheetDialog;
@@ -32,13 +33,15 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class TablesActivity extends AppCompatActivity
                 implements TablesFragment.OnFragmentInteractionListener,
@@ -220,12 +223,40 @@ public class TablesActivity extends AppCompatActivity
         return players;
     }
 
+    private void onSendMessageSelected(final String playerId) {
+        Log.d(TAG, "onSendMessageSelected: playerId = " + playerId);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        builder.setMessage(getString(R.string.dialog_private_message_title, playerId));
+        builder.setPositiveButton(R.string.button_send, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                final String msg = input.getText().toString();
+                if (!TextUtils.isEmpty(msg)) {
+                    NetworkController.getInstance().handlePrivateMessage(playerId, msg);
+                }
+            }
+        });
+        builder.setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                Log.d(TAG, "Cancel the request to send a private message to a player");
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
     /**
      * Implementation of PlayersFragment.OnFragmentInteractionListener
      */
     @Override
     public void onPlayerClick(PlayerInfo playerInfo, String tableId) {
-        //HoxApp.getApp().getNetworkController().handleRequestToGetPlayerInfo(playerInfo.pid);
         final AllPlayersSheetDialog dialog = new AllPlayersSheetDialog(this, playerInfo, tableId);
         dialog.show();
     }
@@ -250,9 +281,8 @@ public class TablesActivity extends AppCompatActivity
             sendMessageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(activity, "Not yet implement Send Personal Message",
-                            Toast.LENGTH_SHORT).show();
                     dismiss(); // this the dialog.
+                    onSendMessageSelected(playerId);
                 }
             });
 

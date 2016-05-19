@@ -136,7 +136,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
     }
 
     public void onLocalMessage(ChatMessage chatMsg) {
-        handleLocalMessage(chatMsg);
+        handleLocalTableMessage(chatMsg.message);
     }
 
     /**
@@ -687,13 +687,18 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         networkPlayer_.sendRequest_JOIN(tableId, "None");
     }
 
-    private void handleLocalMessage(ChatMessage chatMsg) {
-        Log.d(TAG, "Handle local message: [" + chatMsg.message + "]");
+    private void handleLocalTableMessage(String msg) {
+        Log.d(TAG, "Handle local table message: [" + msg + "]");
         if (!isMyTableValid()) { // Not a network table?
-            Log.i(TAG, "No network table. Ignore the local message.");
+            Log.i(TAG, "No network table. Ignore the local message in the table.");
             return;
         }
-        networkPlayer_.sendRequest_MSG(myTable_.tableId, chatMsg.message);
+        networkPlayer_.sendRequest_MSG(myTable_.tableId, null, msg);
+    }
+
+    public void handlePrivateMessage(String otherPID, String msg) {
+        Log.d(TAG, "Handle private message: [" + otherPID + ": " + msg + "]");
+        networkPlayer_.sendRequest_MSG(null, otherPID, msg);
     }
 
     /**

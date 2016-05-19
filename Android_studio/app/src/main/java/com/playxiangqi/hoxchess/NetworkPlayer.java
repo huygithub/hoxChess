@@ -203,9 +203,14 @@ class NetworkPlayer extends Thread {
         handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
     
-    public void sendRequest_MSG(String tableId, String msg) {
+    public void sendRequest_MSG(String tableId, String otherPID, String msg) {
         Log.d(TAG, "Send 'MSG' request to server...");
-        String request = "op=MSG&pid=" + pid_ + "&tid=" + tableId + "&msg=" + msg;
+        String request;
+        if (tableId != null) {
+            request = "op=MSG&pid=" + pid_ + "&tid=" + tableId + "&msg=" + msg;
+        } else {
+            request = "op=MSG&pid=" + pid_ + "&oid=" + otherPID + "&msg=" + msg;
+        }
         handler_.sendMessage(handler_.obtainMessage(MSG_NETWORK_SEND_REQUEST, request));
     }
     

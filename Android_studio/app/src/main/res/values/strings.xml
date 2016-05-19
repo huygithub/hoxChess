@@ -124,7 +124,9 @@
     <string name="dialog_leave_table_confirm_message">Leave table?</string>
     <string name="button_cancel">Cancel</string>
     <string name="button_leave">Leave</string>
+    <string name="button_send">Send</string>
     <string name="chat_table_title">Conversation (#%1$s)</string>
     <string name="dialog_error_table_not_found">Table #%1$s not found</string>
+    <string name="dialog_private_message_title">Message to %1$s</string>
 
 </resources>
