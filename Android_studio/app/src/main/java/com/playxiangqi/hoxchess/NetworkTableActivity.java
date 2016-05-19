@@ -40,6 +40,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -60,6 +61,7 @@ public class NetworkTableActivity extends AppCompatActivity
 
     private static final String TAG = "NetworkTableActivity";
 
+    private ProgressBar progressBar_;
     private ViewPager viewPager_;
 
     private static final String EXTRA_TABLE_ID = "extra.table.id";
@@ -100,6 +102,8 @@ public class NetworkTableActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(toolbar);
 
+        progressBar_ = (ProgressBar) findViewById(R.id.progress_spinner);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         MainPagerAdapter pagerAdapter = new MainPagerAdapter(this, getSupportFragmentManager());
@@ -116,6 +120,7 @@ public class NetworkTableActivity extends AppCompatActivity
             if (TextUtils.isEmpty(tableId_)) { // Requesting for a NEW table?
                 NetworkController.getInstance().sendRequestToOpenNewTable();
             } else {
+                progressBar_.setVisibility(View.VISIBLE);
                 NetworkController.getInstance().handleTableSelection(tableId_);
             }
         } else {
@@ -220,8 +225,11 @@ public class NetworkTableActivity extends AppCompatActivity
         if (requestCode == JOIN_TABLE_REQUEST) {
             final String tableId = data.getStringExtra("tid");
             Log.d(TAG, "onActivityResult: Get new tableId = " + tableId);
-            tableId_ = tableId;
-            NetworkController.getInstance().handleTableSelection(tableId_);
+            if (!TextUtils.equals(tableId, tableId_)) {
+                tableId_ = tableId;
+                progressBar_.setVisibility(View.VISIBLE);
+                NetworkController.getInstance().handleTableSelection(tableId_);
+            }
         }
     }
 
@@ -470,6 +478,7 @@ public class NetworkTableActivity extends AppCompatActivity
         tableId_ = tableInfo.tableId;
 
         setAndShowTitle(tableId_);
+        progressBar_.setVisibility(View.GONE);
         invalidateOptionsMenu(); // Recreate the options menu
 
         referee_.resetGame();
@@ -585,6 +594,25 @@ public class NetworkTableActivity extends AppCompatActivity
         showBriefMessage(
                 getString(R.string.msg_player_record, pid, rating, wins, draws, losses),
                 Snackbar.LENGTH_LONG);
+    }
+
+    @Override
+    public void onJoinTableError(String errorMessage, Enums.ErrorCode errorCode) {
+        Log.i(TAG, "Error in joining a table: " + errorMessage);
+        progressBar_.setVisibility(View.GONE);
+
+        if (errorCode == Enums.ErrorCode.ERROR_CODE_NOT_FOUND) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(getString(R.string.dialog_error_table_not_found, tableId_));
+            builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    finish();
+                }
+            });
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+        }
     }
 
     @Override

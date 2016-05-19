@@ -60,6 +60,7 @@ public class NetworkTableController {
         void onGameEnded(Enums.GameStatus gameStatus);
         void onGameReset();
         void onPlayerInfoReceived(String pid, String rating, String wins, String draws, String losses);
+        void onJoinTableError(String errorMessage, Enums.ErrorCode errorCode);
         void onNetworkError();
     }
     public void setBoardController(BoardController controller) {
@@ -243,6 +244,13 @@ public class NetworkTableController {
 
         timeTracker_.setInitialColor(referee_.getNextColor());
         timeTracker_.start();
+    }
+
+    public void onJoinTableError(String errorMessage, Enums.ErrorCode errorCode) {
+        Log.d(TAG, "onJoinTableError:...");
+        if (boardController_ != null) {
+            boardController_.onJoinTableError(errorMessage, errorCode);
+        }
     }
 
     public void onNetworkCode(int errorMessageResId) {

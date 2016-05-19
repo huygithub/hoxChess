@@ -202,7 +202,7 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
         if ("LOGIN".equals(op)) {
             handleNetworkEvent_LOGIN(code, content);
         } else if (code != 0) {  // Error
-            Log.i(TAG, "... Received an ERROR event: [" + code + ": " + content + "]");
+            handleNetworkEvent_Error(code, op, content);
         } else if ("LIST".equals(op)) {
             handleNetworkEvent_LIST(content);
         } else if ("I_TABLE".equals(op)) {
@@ -303,6 +303,15 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
 
         } else { // Other player 's LOGIN?
             Log.d(TAG, "Received other player LOGIN info [" + pid + " " + rating + "].");
+        }
+    }
+
+    private void handleNetworkEvent_Error(int code, String op, String content) {
+        Log.i(TAG, "Received ERROR event: [" + code + ": " + content + "], op=[" + op + "].");
+        if ("JOIN".equals(op)) {
+            // NOTE: The error code is usual 7, which means "NOT FOUND".
+            // Currently, we will assume that this is the only error code returned by the server.
+            NetworkTableController.getInstance().onJoinTableError(content, Enums.ErrorCode.ERROR_CODE_NOT_FOUND);
         }
     }
 

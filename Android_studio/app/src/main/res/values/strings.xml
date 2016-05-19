@@ -125,5 +125,6 @@
     <string name="button_cancel">Cancel</string>
     <string name="button_leave">Leave</string>
     <string name="chat_table_title">Conversation (#%1$s)</string>
+    <string name="dialog_error_table_not_found">Table #%1$s not found</string>
 
 </resources>
