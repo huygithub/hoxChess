@@ -131,7 +131,8 @@ public class HoxApp extends Application {
     public GameStatus getGameStatus() { return networkController_.getGameStatus(); }
 
     public void loginServer() {
-        loadPreferences_Account(); // to get pid_ and password_
+        // NOTE: Do not call loadPreferences_Account() again because it may generate
+        //       another new Guest ID while the existing one is being used by network controller.
         networkController_.setLoginInfo(pid_,  password_);
         networkController_.connectToServer();
     }
