@@ -21,7 +21,6 @@ package com.playxiangqi.hoxchess;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -56,9 +55,7 @@ public class MainActivity extends AppCompatActivity
     private DrawerLayout drawerLayout_;
     private ActionBarDrawerToggle drawerToggle_;
 
-    // TODO: We should persist this counter somewhere else because it is lost when the
-    //       device is rotated, for example.
-    private int notifCount_ = 0;
+    private MenuItem notificationMenuItem_;
 
     private SettingsActivity.SettingsInfo settingsInfo_;
 
@@ -243,16 +240,22 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
-        NetworkController.getInstance().addListener(this);
+
+        if (notificationMenuItem_ != null) {
+            BadgeDrawable.setBadgeCount(this, notificationMenuItem_,
+                    MessageManager.getInstance().getNotificationCount());
+        }
         MessageManager.getInstance().addListener(this);
+
+        NetworkController.getInstance().addListener(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
-        NetworkController.getInstance().removeListener(this);
         MessageManager.getInstance().removeListener(this);
+        NetworkController.getInstance().removeListener(this);
     }
     
     @Override
@@ -264,15 +267,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.d(TAG, "(ActionBar) onCreateOptionsMenu");
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_activity_actions, menu);
 
         // Set up the notification item.
-        // Reference:
-        //  http://stackoverflow.com/questions/18156477/how-to-make-an-icon-in-the-action-bar-with-the-number-of-notification
-        MenuItem item = menu.findItem(R.id.action_notifications);
-        LayerDrawable icon = (LayerDrawable) item.getIcon();
-        BadgeDrawable.setBadgeCount(this, icon, notifCount_);
+        notificationMenuItem_ = menu.findItem(R.id.action_notifications);
+        BadgeDrawable.setBadgeCount(this, notificationMenuItem_,
+                MessageManager.getInstance().getNotificationCount());
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -307,7 +307,7 @@ public class MainActivity extends AppCompatActivity
             //    tableController_.handleRequestToCloseCurrentTable();
             //    return true;
             case R.id.action_notifications:
-                openChatView();
+                openNotificationView();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -341,24 +341,17 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void openChatView() {
-        Log.d(TAG, "Open 'Chat' view...");
-        Intent intent = new Intent(this, ChatBubbleActivity.class);
-        startActivity(intent);
-
-        notifCount_ = 0;
-        invalidateOptionsMenu();
+    private void openNotificationView() {
+        Log.d(TAG, "Open 'Notification' view...");
+        startActivity(new Intent(this, ChatBubbleActivity.class));
+        invalidateOptionsMenu(); // // Recreate the options menu
     }
 
     @Override
     public void onMessageReceived(MessageInfo messageInfo) {
         Log.d(TAG, "On new message: {#" + messageInfo.getId() + " " + messageInfo + "}");
-        // Only interest in certain message-types.
-        if (messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY ||
-                messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE) {
-            notifCount_++;
+        if (MessageManager.getInstance().isNotificationType(messageInfo.type)) {
             invalidateOptionsMenu(); // Recreate the options menu
-
         }
     }
 

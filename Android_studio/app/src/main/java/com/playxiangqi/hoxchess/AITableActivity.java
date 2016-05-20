@@ -19,7 +19,6 @@
 package com.playxiangqi.hoxchess;
 
 import android.content.Intent;
-import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -44,9 +43,7 @@ public class AITableActivity extends AppCompatActivity
 
     private WeakReference<BoardFragment> myBoardFragment_ = new WeakReference<BoardFragment>(null);
 
-    // TODO: We should persist this counter somewhere else because it is lost when the
-    //       device is rotated, for example.
-    private int notifCount_ = 0;
+    private MenuItem notificationMenuItem_;
 
     // My color in the local table (ie. to practice with AI).
     // NOTE: Currently, we cannot change my role in this type of table.
@@ -95,7 +92,13 @@ public class AITableActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         if (DEBUG_LIFE_CYCLE) Log.v(TAG, "onResume");
+
+        if (notificationMenuItem_ != null) {
+            BadgeDrawable.setBadgeCount(this, notificationMenuItem_,
+                    MessageManager.getInstance().getNotificationCount());
+        }
         MessageManager.getInstance().addListener(this);
+
         //playerTracker_.syncUI(); // AI Level is one that needs to be updated.
         adjustScreenOnFlagBasedOnGameStatus();
     }
@@ -126,15 +129,12 @@ public class AITableActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.d(TAG, "(ActionBar) onCreateOptionsMenu");
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_activity_actions, menu);
 
         // Set up the notification item.
-        // Reference:
-        //  http://stackoverflow.com/questions/18156477/how-to-make-an-icon-in-the-action-bar-with-the-number-of-notification
-        MenuItem item = menu.findItem(R.id.action_notifications);
-        LayerDrawable icon = (LayerDrawable) item.getIcon();
-        BadgeDrawable.setBadgeCount(this, icon, notifCount_);
+        notificationMenuItem_ = menu.findItem(R.id.action_notifications);
+        BadgeDrawable.setBadgeCount(this, notificationMenuItem_,
+                MessageManager.getInstance().getNotificationCount());
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -169,12 +169,8 @@ public class AITableActivity extends AppCompatActivity
     @Override
     public void onMessageReceived(MessageInfo messageInfo) {
         Log.d(TAG, "On new message: {#" + messageInfo.getId() + " " + messageInfo + "}");
-        // Only interest in certain message-types.
-        if (messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY ||
-                messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE) {
-            notifCount_++;
+        if (MessageManager.getInstance().isNotificationType(messageInfo.type)) {
             invalidateOptionsMenu(); // Recreate the options menu
-
         }
     }
 
@@ -325,11 +321,8 @@ public class AITableActivity extends AppCompatActivity
 
     private void openNotificationView() {
         Log.d(TAG, "Open 'Notification' view...");
-        Intent intent = new Intent(this, ChatBubbleActivity.class);
-        startActivity(intent);
-
-        notifCount_ = 0;
-        invalidateOptionsMenu();
+        startActivity(new Intent(this, ChatBubbleActivity.class));
+        invalidateOptionsMenu(); // // Recreate the options menu
     }
 
     private void prepareTableOnCreate() {

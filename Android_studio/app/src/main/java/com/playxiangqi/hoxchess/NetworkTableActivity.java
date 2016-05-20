@@ -22,7 +22,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -77,9 +76,7 @@ public class NetworkTableActivity extends AppCompatActivity
 
     private String tableId_;
 
-    // TODO: We should persist this counter somewhere else because it is lost when the
-    //       device is rotated, for example.
-    private int notifCount_ = 0;
+    private MenuItem notificationMenuItem_;
 
     /**
      * Starts the table activity with the given tableID.
@@ -136,6 +133,10 @@ public class NetworkTableActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
+        if (notificationMenuItem_ != null) {
+            BadgeDrawable.setBadgeCount(this, notificationMenuItem_,
+                    MessageManager.getInstance().getNotificationCount());
+        }
         MessageManager.getInstance().addListener(this);
         adjustScreenOnFlagBasedOnGameStatus();
     }
@@ -159,15 +160,12 @@ public class NetworkTableActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.d(TAG, "(ActionBar) onCreateOptionsMenu");
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_activity_actions, menu);
 
         // Set up the notification item.
-        // Reference:
-        //  http://stackoverflow.com/questions/18156477/how-to-make-an-icon-in-the-action-bar-with-the-number-of-notification
-        MenuItem item = menu.findItem(R.id.action_notifications);
-        LayerDrawable icon = (LayerDrawable) item.getIcon();
-        BadgeDrawable.setBadgeCount(this, icon, notifCount_);
+        notificationMenuItem_ = menu.findItem(R.id.action_notifications);
+        BadgeDrawable.setBadgeCount(this, notificationMenuItem_,
+                MessageManager.getInstance().getNotificationCount());
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -640,10 +638,7 @@ public class NetworkTableActivity extends AppCompatActivity
     @Override
     public void onMessageReceived(MessageInfo messageInfo) {
         Log.d(TAG, "On new message: {#" + messageInfo.getId() + " " + messageInfo + "}");
-        // Only interest in certain message-types.
-        if (messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY ||
-                messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE) {
-            notifCount_++;
+        if (MessageManager.getInstance().isNotificationType(messageInfo.type)) {
             invalidateOptionsMenu(); // Recreate the options menu
 
         } else if (messageInfo.type == MessageInfo.MessageType.MESSAGE_TYPE_CHAT_IN_TABLE) {
@@ -749,11 +744,8 @@ public class NetworkTableActivity extends AppCompatActivity
 
     private void openNotificationView() {
         Log.d(TAG, "Open 'Notification' view...");
-        Intent intent = new Intent(this, ChatBubbleActivity.class);
-        startActivity(intent);
-
-        notifCount_ = 0;
-        invalidateOptionsMenu();
+        startActivity(new Intent(this, ChatBubbleActivity.class));
+        invalidateOptionsMenu(); // // Recreate the options menu
     }
 
     private void displayTableList() {

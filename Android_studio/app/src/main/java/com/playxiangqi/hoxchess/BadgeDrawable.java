@@ -16,6 +16,7 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.view.MenuItem;
 
 public class BadgeDrawable extends Drawable {
 
@@ -97,8 +98,7 @@ public class BadgeDrawable extends Drawable {
     /**
      * A helper function to update LayerDrawable's BadgeDrawable
      */
-    public static void setBadgeCount(Context context, LayerDrawable icon, int count) {
-
+    private static void setBadgeCount(Context context, LayerDrawable icon, int count) {
         BadgeDrawable badge;
 
         // Reuse drawable if possible
@@ -112,5 +112,12 @@ public class BadgeDrawable extends Drawable {
         badge.setCount(count);
         icon.mutate();
         icon.setDrawableByLayerId(R.id.ic_badge, badge);
+    }
+
+    public static void setBadgeCount(Context context, MenuItem menuItem, int count) {
+        if (menuItem != null) {
+            LayerDrawable icon = (LayerDrawable) menuItem.getIcon();
+            BadgeDrawable.setBadgeCount(context, icon, count);
+        }
     }
 }

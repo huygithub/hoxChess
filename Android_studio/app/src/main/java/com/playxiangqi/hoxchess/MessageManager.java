@@ -107,6 +107,22 @@ public class MessageManager {
         return messageCount;
     }
 
+    /** Get the count of INVITE + PRIVATE-Message */
+    public int getNotificationCount() {
+        int messageCount = 0;
+        for (MessageInfo message : messages_) {
+            if (isNotificationType(message.type)) {
+                ++messageCount;
+            }
+        }
+        return messageCount;
+    }
+
+    public boolean isNotificationType(MessageInfo.MessageType messageType) {
+        return (messageType == MessageInfo.MessageType.MESSAGE_TYPE_CHAT_PRIVATE
+                || messageType == MessageInfo.MessageType.MESSAGE_TYPE_INVITE_TO_PLAY);
+    }
+
     public int getUnreadCount(MessageInfo.MessageType messageType) {
         int unreadCount = 0;
         for (MessageInfo message : messages_) {
