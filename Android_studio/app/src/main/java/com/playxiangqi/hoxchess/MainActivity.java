@@ -281,7 +281,7 @@ public class MainActivity extends AppCompatActivity
     public boolean onPrepareOptionsMenu(Menu menu) {
         Log.d(TAG, "(ActionBar) onPrepareOptionsMenu");
         super.onPrepareOptionsMenu(menu);
-        // FIXME: return tableController_.onPrepareOptionsMenu(this, menu);
+
         menu.findItem(R.id.action_new_table).setVisible(false);
         menu.findItem(R.id.action_close_table).setVisible(false);
         menu.findItem(R.id.action_view_tables).setVisible(false);
@@ -343,7 +343,7 @@ public class MainActivity extends AppCompatActivity
 
     private void openNotificationView() {
         Log.d(TAG, "Open 'Notification' view...");
-        startActivity(new Intent(this, ChatBubbleActivity.class));
+        startActivity(new Intent(this, NotificationActivity.class));
         invalidateOptionsMenu(); // // Recreate the options menu
     }
 

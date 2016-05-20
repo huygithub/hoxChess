@@ -28,10 +28,10 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 
-public class ChatBubbleActivity extends AppCompatActivity
+public class NotificationActivity extends AppCompatActivity
                     implements ChatFragment.OnChatFragmentListener {
 
-    private static final String TAG = "ChatBubbleActivity";
+    private static final String TAG = "NotificationActivity";
 
     private Fragment notificationFragment_;
 

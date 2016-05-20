@@ -41,7 +41,7 @@
                 android:value="com.playxiangqi.hoxchess.MainActivity" />
         </activity>
         <activity
-            android:name=".ChatBubbleActivity"
+            android:name=".NotificationActivity"
             android:label="@string/title_activity_notifications"
             android:theme="@style/Theme.AppCompat.Light"
             android:parentActivityName=".MainActivity" >

@@ -321,7 +321,7 @@ public class AITableActivity extends AppCompatActivity
 
     private void openNotificationView() {
         Log.d(TAG, "Open 'Notification' view...");
-        startActivity(new Intent(this, ChatBubbleActivity.class));
+        startActivity(new Intent(this, NotificationActivity.class));
         invalidateOptionsMenu(); // // Recreate the options menu
     }
 
