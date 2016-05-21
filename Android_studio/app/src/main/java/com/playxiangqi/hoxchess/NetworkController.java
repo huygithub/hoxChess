@@ -261,6 +261,9 @@ public class NetworkController implements NetworkPlayer.NetworkEventListener {
                 processFirstPendingRequest();
                 break;
             }
+            case NetworkPlayer.NETWORK_CODE_CLOSED:
+                Log.i(TAG, "The network connection has been closed.");
+                break;
             default:
                 break;
         }

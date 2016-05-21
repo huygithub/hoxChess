@@ -21,6 +21,7 @@ package com.playxiangqi.hoxchess;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -73,6 +74,7 @@ class NetworkPlayer extends Thread {
     public static final int NETWORK_CODE_UNRESOLVED_ADDRESS = 2;
     public static final int NETWORK_CODE_IO_EXCEPTION = 3;
     public static final int NETWORK_CODE_DISCONNECTED = 4;
+    public static final int NETWORK_CODE_CLOSED = 5;
 
     // -------------------------------------------------------------------------------------
     public interface NetworkEventListener {
@@ -120,6 +122,12 @@ class NetworkPlayer extends Thread {
                         
                         default:
                             break;
+                    }
+                } catch (ClosedChannelException e) {
+                    Log.w(TAG, "The connection has been closed while handling network messages.");
+                    connectionState_ = ConnectionState.CONNECTION_STATE_NONE;
+                    if (networkEventListener_ != null) {
+                        networkEventListener_.onNetworkCode(NETWORK_CODE_CLOSED);
                     }
                 } catch (IOException e) {
                     Log.w(TAG, "An IOException exception while handling network messages.");
@@ -403,7 +411,7 @@ class NetworkPlayer extends Thread {
                 //  http://stackoverflow.com/questions/14010194/detecting-socket-disconnection
                 //
                 Log.w(TAG, "READ (data): ... bytesRead returns -1, which is an orderly close.");
-                throw new IOException("READ returns -1 (an orderly close detected)");
+                throw new ClosedChannelException();
                 
             } else if (bytesRead <= 0) {
                 break;
