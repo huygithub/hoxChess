@@ -95,5 +95,40 @@
     <string name="msg_connection_failed_unresolved_address_exception">Không thể kết nối đến máy chủ (UnresolvedAddressException)!</string>
     <string name="msg_network_error_io_exception_exception">Mạng bị lỗi trong khi xử lý tin nhắn!</string>
     <string name="settings_sound_enabled_label">Âm thanh</string>
+    <string name="action_login">Nhập</string>
+    <string name="home_text_practice_ai">Chơi với AI</string>
+    <string name="home_text_open_table">Mở bàn mới</string>
+    <string name="home_text_join_table">Nhập bàn </string>
+    <string name="action_join_table">Nhập bàn</string>
+    <string name="action_send_personal_message">Nhắn tin</string>
+    <string name="action_view_tables">Danh sách các bàn</string>
+    <string name="label_table">Bàn </string>
+    <string name="will_log_in_as_player"><![CDATA[Ký Danh: <font color="#0033b5e5">%1$s</font>]]></string>
+    <string name="logged_in_as_player"><![CDATA[Đăng nhập: <font color="#0033b5e5">%1$s (%2$s)</font>]]></string>
+    <string name="title_activity_notifications">Thông báo</string>
+    <string name="title_table_ai">Bàn: AI</string>
+    <string name="msg_login_success">Đăng nhập xong</string>
+    <string name="msg_logout_done">Thoát xong</string>
+    <string name="action_view_players">Mọi người</string>
+    <string name="guest_id_default">Guest</string>
+    <string name="label_player_rating">Số điểm</string>
+    <string name="label_player_id">Ký danh</string>
+    <string name="action_invite_to_play">Mời chơi</string>
+    <string name="action_get_player_info">Thông tin</string>
+    <string name="msg_player_info">%1$s (%2$s)</string>
+    <string name="msg_player_record">*TIN: %1$s %2$s W%3$s D%4$s L%5$s</string>
+    <string name="table_network_info">Bàn: #%1$s (%2$s)</string>
+    <string name="guest_account_name"> Tài khoản thử</string>
+    <string name="dialog_leave_table_confirm_message">Rời khỏi bàn?</string>
+    <string name="dialog_error_table_not_found">Không tìm thấy bàn #%1$s</string>
+    <string name="button_cancel">Hủy bỏ</string>
+    <string name="button_leave">Rời khỏi</string>
+    <string name="button_send">Gửi tin</string>
+    <string name="chat_edit_text_hint">Nhập bình luận của bạn…</string>
+    <string name="chat_table_title">Bình luận (#%1$s)</string>
+    <string name="dialog_private_message_title">Tin nhắn cho %1$s</string>
+    <string name="action_table_menu">Table menu</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
 
 </resources>
