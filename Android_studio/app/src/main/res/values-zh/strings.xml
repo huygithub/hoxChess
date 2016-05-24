@@ -95,5 +95,40 @@
     <string name="msg_connection_failed_unresolved_address_exception">未能连接到游戏服务器 (UnresolvedAddressException)!</string>
     <string name="msg_network_error_io_exception_exception">错误在处理网络消息！</string>
     <string name="settings_sound_enabled_label">声音</string>
+    <string name="guest_account_name">Guest帐户</string>
+    <string name="action_login">登录</string>
+    <string name="home_text_practice_ai">与AI玩</string>
+    <string name="home_text_open_table">新的表</string>
+    <string name="home_text_join_table">加入表</string>
+    <string name="label_player_id">Id</string>
+    <string name="label_player_rating">评分</string>
+    <string name="label_table">桌子</string>
+    <string name="action_view_tables">桌子</string>
+    <string name="guest_id_default">来宾</string>
+    <string name="title_table_ai">桌子: AI</string>
+    <string name="logged_in_as_player"><![CDATA[登录: <font color="#0033b5e5">%1$s (%2$s)</font>]]></string>
+    <string name="will_log_in_as_player"><![CDATA[用户名: <font color="#0033b5e5">%1$s</font>]]></string>
+    <string name="msg_login_success">登陆成功</string>
+    <string name="msg_logout_done">登出</string>
+    <string name="title_activity_notifications">通知</string>
+    <string name="table_network_info">桌子: #%1$s (%2$s)</string>
+    <string name="msg_player_record">*信息: %1$s %2$s W%3$s D%4$s L%5$s</string>
+    <string name="msg_player_info">%1$s (%2$s)</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="action_get_player_info">信息</string>
+    <string name="action_invite_to_play">邀请</string>
+    <string name="action_join_table">加入表</string>
+    <string name="action_send_personal_message">发信息</string>
+    <string name="action_table_menu">Table menu</string>
+    <string name="action_view_players">球员</string>
+    <string name="button_cancel">取消</string>
+    <string name="button_leave">离开</string>
+    <string name="button_send">发送</string>
+    <string name="chat_table_title">会话 (#%1$s)</string>
+    <string name="chat_edit_text_hint">输入您的评论…</string>
+    <string name="dialog_error_table_not_found">表＃%1$s未找到</string>
+    <string name="dialog_leave_table_confirm_message">离开桌子吗？</string>
+    <string name="dialog_private_message_title">消息%1$s</string>
 
 </resources>
