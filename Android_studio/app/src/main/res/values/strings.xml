@@ -116,7 +116,7 @@
     <string name="action_table_menu">Table menu</string>
     <string name="table_network_info">Table: #%1$s (%2$s)</string>
     <string name="logged_in_player_info">Logged in: %1$s (%2$s)</string>
-    <string name="logged_in_as_player">Logged in as &lt;font color="#0033b5e5">%1$s (%2$s)&lt;/font></string>
+    <string name="logged_in_as_player">Logged in: &lt;font color="#0033b5e5">%1$s (%2$s)&lt;/font></string>
     <string name="will_log_in_as_player">Username: &lt;font color="#0033b5e5">%1$s&lt;/font></string>
     <string name="action_login">Login</string>
     <string name="msg_login_success">Login success</string>
@@ -128,5 +128,8 @@
     <string name="chat_table_title">Conversation (#%1$s)</string>
     <string name="dialog_error_table_not_found">Table #%1$s not found</string>
     <string name="dialog_private_message_title">Message to %1$s</string>
+    <string name="home_text_practice_ai">Practice with AI</string>
+    <string name="home_text_open_table">Open new table</string>
+    <string name="home_text_join_table">Join existing tables</string>
 
 </resources>

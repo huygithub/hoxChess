@@ -9,46 +9,54 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".BoardFragment" >
 
-    <RelativeLayout
+    <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-    
-	    <TextView
-	        android:id="@+id/top_player_label"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:layout_alignParentLeft="true"
-	        android:layout_centerInParent="true"
-	        android:text="@string/ai_label" />
-	    
-        <Button
-              android:id="@+id/top_button"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:layout_toRightOf="@id/top_player_label"
-              android:text="@string/button_play_black"
-              android:textSize="12sp"
-              android:minHeight="0dp" />
+        android:layout_height="wrap_content"
+        android:gravity="left" >
+
+        <RelativeLayout
+            android:orientation="horizontal"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:gravity="left" >
+
+            <Button
+                android:id="@+id/top_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:text="@string/button_play_black"
+                android:textSize="12sp"
+                android:minHeight="0dp" />
+
+            <TextView
+                android:id="@+id/top_player_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@id/top_button"
+                android:layout_centerInParent="true"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="Guest#hpTop1234567890123 (1500)" />
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/top_game_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="8dp"
+            android:text="@string/label_game_time_zero" />
 
         <TextView
             android:id="@+id/top_move_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_centerInParent="true"            
+            android:layout_gravity="center_vertical"
             android:text="@string/label_move_time_zero" />
-        
-        <TextView
-            android:id="@+id/top_game_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toLeftOf="@id/top_move_time"
-            android:layout_centerInParent="true"
-            android:layout_marginRight="8dp"          
-            android:text="@string/label_game_time_zero" />
-        
-    </RelativeLayout>
+    </LinearLayout>
     
     <com.playxiangqi.hoxchess.BoardView
         android:id="@+id/board_view"
@@ -57,48 +65,55 @@
         android:layout_weight="1"
         android:contentDescription="@string/board_alt" />
 
-    <RelativeLayout
+    <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="left" >
-    
-        <TextView
-            android:id="@+id/bottom_player_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_centerInParent="true"
-            android:text="@string/you_label" />
-        
-        <Button
-              android:id="@+id/bottom_button"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:layout_toRightOf="@id/bottom_player_label"
-              android:text="@string/button_play_red"
-              android:textSize="12sp"
-              android:minHeight="0dp" />
-        
-        <TextView
-            android:id="@+id/bottom_move_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_centerInParent="true"            
-            android:text="@string/label_move_time_zero" />
-        
+
+        <RelativeLayout
+            android:orientation="horizontal"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:gravity="left" >
+
+            <Button
+                android:id="@+id/bottom_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:text="@string/button_play_red"
+                android:textSize="12sp"
+                android:minHeight="0dp" />
+
+            <TextView
+                android:id="@+id/bottom_player_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@id/bottom_button"
+                android:layout_centerInParent="true"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="Guest#hpBottom1234567890(1500)" />
+        </RelativeLayout>
+
         <TextView
             android:id="@+id/bottom_game_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toLeftOf="@id/bottom_move_time"
-            android:layout_centerInParent="true"
-            android:layout_marginRight="8dp"          
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="8dp"
             android:text="@string/label_game_time_zero" />
-        
-    </RelativeLayout>
-    
+
+        <TextView
+            android:id="@+id/bottom_move_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/label_move_time_zero" />
+    </LinearLayout>
+
     <RelativeLayout
 	    android:orientation="horizontal"
 	    android:layout_width="match_parent"

@@ -32,14 +32,14 @@
                 android:layout_height="match_parent"
                 android:paddingRight="@dimen/bottom_sheet_horizontal_margin"
                 android:src="@drawable/ic_computer_black"
-                android:contentDescription="@string/action_new"
+                android:contentDescription="@string/home_text_practice_ai"
                 android:tint="@color/menu_button_material_dark" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
-                android:text="Practice with AI"
+                android:text="@string/home_text_practice_ai"
                 style="@style/Base.TextAppearance.AppCompat.Button" />
         </LinearLayout>
 
@@ -57,13 +57,13 @@
                 android:layout_height="match_parent"
                 android:paddingRight="@dimen/bottom_sheet_horizontal_margin"
                 android:src="@drawable/ic_action_new"
-                android:contentDescription="@string/action_new" />
+                android:contentDescription="@string/home_text_open_table" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
-                android:text="Open new table"
+                android:text="@string/home_text_open_table"
                 style="@style/Base.TextAppearance.AppCompat.Button" />
         </LinearLayout>
 
@@ -81,13 +81,13 @@
                 android:layout_height="match_parent"
                 android:paddingRight="@dimen/bottom_sheet_horizontal_margin"
                 android:src="@drawable/ic_action_tables"
-                android:contentDescription="@string/action_reverse_view" />
+                android:contentDescription="@string/home_text_join_table" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
-                android:text="Join existing tables"
+                android:text="@string/home_text_join_table"
                 style="@style/Base.TextAppearance.AppCompat.Button" />
         </LinearLayout>
 
@@ -97,33 +97,38 @@
             android:layout_height="1dp"
             android:background="#fff5f5f5"/>
 
-        <LinearLayout
+        <RelativeLayout
             android:background="?android:attr/selectableItemBackground"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:id="@+id/home_login_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Logged in: coolplayer"
-                style="@style/Base.TextAppearance.AppCompat.Subhead" />
+            android:gravity="left">
 
             <ImageView
                 android:id="@+id/home_edit_account_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
                 android:layout_marginLeft="8dp"
                 android:paddingRight="@dimen/bottom_sheet_horizontal_margin"
                 android:padding="8dp"
                 android:src="@drawable/ic_mode_edit_black"
                 android:tint="@color/menu_button_material_dark"
-                android:contentDescription="@string/action_reverse_view" />
-        </LinearLayout>
+                android:contentDescription="@string/action_settings" />
+
+            <TextView
+                android:id="@+id/home_login_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@id/home_edit_account_view"
+                android:layout_centerInParent="true"
+                tools:text="Username: Guest#hptest1234567890123456789"
+                android:maxLines="2"
+                android:ellipsize="end"
+                style="@style/Base.TextAppearance.AppCompat.Subhead" />
+        </RelativeLayout>
 
 
     </LinearLayout>
