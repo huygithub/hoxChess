@@ -288,6 +288,15 @@ public class NetworkTableActivity extends AppCompatActivity
             timeTracker_.syncUI();
             playerTracker_.syncUI();
             restoreHistoryMoves(boardFragment);
+
+            // For network tables, the game can be over not just because of the last move
+            // but also because the players have agreed to draw, or one has resigned.
+            // Therefore, we must check with the network controller.
+            if (HoxApp.getApp().getNetworkController().isGameOver()) {
+                final Enums.GameStatus gameStatus = HoxApp.getApp().getGameStatus();
+                Log.d(TAG, "... Game Over: gameStatus = " + Utils.gameStatusToString(gameStatus));
+                boardFragment.onGameEnded(gameStatus);
+            }
         }
     }
 
@@ -711,8 +720,9 @@ public class NetworkTableActivity extends AppCompatActivity
         List<Piece.Move> historyMoves = referee_.getHistoryMoves();
         if (historyMoves.size() > 0) {
             Log.d(TAG, "Restore history moves: size = " + historyMoves.size());
-            // Make a copy of the list before accessing it to avoid "concurrent" exception.
+            // Make a copy of the list before resetting the game.
             Piece.Move[] moves = historyMoves.toArray(new Piece.Move[historyMoves.size()]);
+            referee_.resetGame(); // NOTE: Reset the game!!!
             for (Piece.Move move : moves) {
                 referee_.validateMove(move.fromPosition.row, move.fromPosition.column,
                         move.toPosition.row, move.toPosition.column);

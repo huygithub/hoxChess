@@ -505,7 +505,7 @@ public class BoardView extends ImageView
     
     private void drawReplayStatus(Canvas canvas) {
         canvas.drawText(
-                HoxApp.getApp().getString(R.string.replay_text,
+                getContext().getString(R.string.replay_text,
                         historyIndex_ + 1, historyMoves_.size()),
                 startP_ + cellSize_*2.5f,
                 startP_ + cellSize_*4.7f,
@@ -824,7 +824,7 @@ public class BoardView extends ImageView
     
     private void onGameOver(Canvas canvas) {
         canvas.drawText(
-                this.getContext().getString(R.string.game_over_text),
+                getContext().getString(R.string.game_over_text),
                 startP_ + cellSize_*2.5f,
                 startP_ + cellSize_*4.7f,
                 noticePaint_);

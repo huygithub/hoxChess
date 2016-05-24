@@ -152,12 +152,6 @@ public class BoardFragment extends Fragment {
         bottomGameTimeView = (TextView) view.findViewById(R.id.bottom_game_time);
         bottomMoveTimeView = (TextView) view.findViewById(R.id.bottom_move_time);
 
-        if (HoxApp.getApp().isGameOver()) {
-            final Enums.GameStatus gameStatus = HoxApp.getApp().getGameStatus();
-            Log.d(TAG, "... Game Over: gameStatus = " + gameStatus);
-            boardView_.onGameEnded(gameStatus);
-        }
-
         boardView_.invalidate();
 
         setOnClickHandlers(view);
