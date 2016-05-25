@@ -90,7 +90,6 @@
 </body>
 ]]>
     </string>
-    <string name="msg_get_list_tables"> Lấy danh sách các bàn ...</string>
     <string name="msg_player_offered_draw">%1$s xin huề</string>
     <string name="msg_connection_failed_unresolved_address_exception">Không thể kết nối đến máy chủ (UnresolvedAddressException)!</string>
     <string name="msg_network_error_io_exception_exception">Mạng bị lỗi trong khi xử lý tin nhắn!</string>
@@ -130,5 +129,6 @@
     <string name="action_table_menu">Table menu</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="logged_in_player_info">Đăng nhập: %1$s (%2$s)</string>
 
 </resources>

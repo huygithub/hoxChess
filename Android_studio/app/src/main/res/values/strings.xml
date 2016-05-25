@@ -92,7 +92,6 @@
     </string>
     <string name="msg_connection_failed_unresolved_address_exception">Failed to connect to the game server (UnresolvedAddressException)!</string>
     <string name="msg_network_error_io_exception_exception">IOException exception while handling network messages!</string>
-    <!--<string name="msg_get_list_tables">Get list of tables...</string>-->
     <string name="msg_player_offered_draw">%1$s offered to DRAW the game</string>
     <string name="settings_sound_enabled_label">Sound</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>

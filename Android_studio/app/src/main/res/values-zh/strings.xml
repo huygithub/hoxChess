@@ -90,7 +90,6 @@
     <string name="playxiangqi_username">用户名</string>
     <string name="playxiangqi_password">密码</string>
     <string name="playxiangqi_login_with_account">用账号登录</string>
-    <string name="msg_get_list_tables">获取表列表...</string>
     <string name="msg_player_offered_draw">%1$s 提供绘制游戏</string>
     <string name="msg_connection_failed_unresolved_address_exception">未能连接到游戏服务器 (UnresolvedAddressException)!</string>
     <string name="msg_network_error_io_exception_exception">错误在处理网络消息！</string>
@@ -130,5 +129,6 @@
     <string name="dialog_error_table_not_found">表＃%1$s未找到</string>
     <string name="dialog_leave_table_confirm_message">离开桌子吗？</string>
     <string name="dialog_private_message_title">消息%1$s</string>
+    <string name="logged_in_player_info">登录: %1$s (%2$s)</string>
 
 </resources>
