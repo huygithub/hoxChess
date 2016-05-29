@@ -183,6 +183,12 @@ public class MainActivity extends AppCompatActivity
 
         // Update sub-header items.
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+
+        MenuItem groupItem = navigationView.getMenu().findItem(R.id.item_2nd_group);
+        if (groupItem != null) {
+            groupItem.setTitle(Utils.getVersionString(this));
+        }
+
         MenuItem logoutItem = navigationView.getMenu().findItem(R.id.action_logout);
         if (logoutItem != null) {
             //logoutItem.setVisible(HoxApp.getApp().isOnline());

@@ -69,7 +69,7 @@
     <string name="chat_empty_text">Không có tin nhắn</string>
     
     <string name="about_title">Giới thiệu</string>
-    <string name="version">Phiên Bản 1.2</string>
+    <string name="version">Phiên Bản %1$s</string>
     <string name="copyright">Bản Quyền \u00A9 2016 PlayXiangqi</string>
     
     <string name="about_html">

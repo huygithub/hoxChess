@@ -69,7 +69,7 @@
     <string name="chat_empty_text">No message</string>
 
     <string name="about_title">About</string>
-    <string name="version">Version 1.2</string>
+    <string name="version">Version %1$s</string>
     <string name="copyright">Copyright \u00A9 2016 PlayXiangqi</string>
     
     <string name="about_html">

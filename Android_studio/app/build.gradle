@@ -8,8 +8,8 @@ android {
         applicationId "com.playxiangqi.hoxchess"
         minSdkVersion 11
         targetSdkVersion 23
-        versionCode 3
-        versionName "1.2"
+        versionCode 4
+        versionName "1.2.1"
         compileOptions {
             sourceCompatibility JavaVersion.VERSION_1_6
             targetCompatibility JavaVersion.VERSION_1_6

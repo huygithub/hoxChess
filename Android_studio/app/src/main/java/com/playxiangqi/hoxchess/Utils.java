@@ -21,13 +21,18 @@ package com.playxiangqi.hoxchess;
 import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.animation.AccelerateInterpolator;
 
 import java.util.Random;
 
 public class Utils {
+    public static final String TAG = "Utils";
 
     /**
      * Returns a pseudo-random number between min and max, inclusive.
@@ -139,5 +144,21 @@ public class Utils {
         animator.setDuration(animationDurationInMillSecs);
         viewPager.beginFakeDrag();
         animator.start();
+    }
+
+    /**
+     * Get the version string (e.g., 1.1.x)
+     */
+    public static String getVersionString(Context context) {
+        String versionName;
+        try {
+            PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            versionName = pInfo.versionName;
+        } catch (PackageManager.NameNotFoundException ex) {
+            Log.e(TAG, "The application package was not found!");
+            versionName = "???";
+        }
+
+        return context.getString(R.string.version, versionName);
     }
 }

@@ -18,7 +18,8 @@
             android:visible="true" />
     </group>
 
-    <item android:title="@string/version">
+    <item android:title="@string/version"
+          android:id="@+id/item_2nd_group">
         <menu>
             <item
                 android:id="@+id/action_settings"
